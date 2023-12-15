@@ -15,21 +15,3 @@ type Board struct {
 	blackQueens  Bitboard
 	blackKing    Bitboard
 }
-
-func (b Board) String() string {
-	fields := [64]string{}
-	for _, v := range []struct {
-		b Bitboard
-		c string
-	}{
-		{
-			b.whitePawns,
-			"wP",
-		},
-	} {
-		for _, idx := range SquareIndexSerialization(v.b) {
-			fields[idx] = v.c
-		}
-	}
-	return ""
-}
