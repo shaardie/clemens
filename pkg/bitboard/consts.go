@@ -31,12 +31,12 @@ const (
 	notAFile Bitboard = 0xfefefefefefefefe
 	notHFile Bitboard = 0x7f7f7f7f7f7f7f7f
 
-	fullRank1 Bitboard = 0x00000000000000ff
-	fullRank2 Bitboard = fullRank1 << 2
-	fullRank3 Bitboard = fullRank2 << 2
-	fullRank4 Bitboard = fullRank3 << 2
-	fullRank5 Bitboard = fullRank4 << 2
-	fullRank6 Bitboard = fullRank5 << 2
-	fullRank7 Bitboard = fullRank6 << 2
-	fullRank8 Bitboard = fullRank7 << 2
+	FullRank1 Bitboard = 0x00000000000000ff
+	FullRank2 Bitboard = FullRank1 << 2
+	FullRank3 Bitboard = FullRank2 << 2
+	FullRank4 Bitboard = FullRank3 << 2
+	FullRank5 Bitboard = FullRank4 << 2
+	FullRank6 Bitboard = FullRank5 << 2
+	FullRank7 Bitboard = FullRank6 << 2
+	FullRank8 Bitboard = FullRank7 << 2
 )
