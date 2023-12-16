@@ -13,7 +13,7 @@ func (p WhitePawns) DoublePushTargets(emptySquares bitboard.Bitboard) bitboard.B
 	// Mandatory condition that single push is possible
 	singlePushTargets := p.SinglePushTargets(emptySquares)
 	// White Double Push only possible on empty fields on rank 4
-	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.FullRank4
+	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.RankMask4
 }
 
 func (p WhitePawns) EastAttacks() bitboard.Bitboard {
@@ -34,7 +34,7 @@ func (p BlackPawns) DoublePushTargets(emptySquares bitboard.Bitboard) bitboard.B
 	// Mandatory condition that single push is possible
 	singlePushTargets := p.SinglePushTargets(emptySquares)
 	// Black Double Push only possible on empty fields on rank 5
-	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.FullRank5
+	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.RankMask5
 }
 
 func (p BlackPawns) EastAttacks() bitboard.Bitboard {

@@ -75,15 +75,3 @@ func GeneralShift(b Bitboard, s int) Bitboard {
 		return b
 	}
 }
-
-func SquareFromRankAndFile(rank int, file int) int {
-	return (rank << 3) + file
-}
-
-func BitBySquare(square int) Bitboard {
-	return 1 << square
-}
-
-func BitboardFromRankAndFile(rank int, file int) Bitboard {
-	return BitBySquare(SquareFromRankAndFile(rank, file))
-}

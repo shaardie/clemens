@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/shaardie/clemens/pkg/bitboard"
+	"github.com/shaardie/clemens/pkg/pieces"
 )
 
 func main() {
-	fmt.Println(bitboard.Bitboard(0x00000000000000ff).PrettyString())
+	fmt.Println(pieces.SlidingAttacks(pieces.RookType, bitboard.SQUARE_F3, 0).PrettyString())
 }

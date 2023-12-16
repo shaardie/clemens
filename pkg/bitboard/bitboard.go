@@ -10,14 +10,13 @@ func (b Bitboard) String() string {
 
 func (b Bitboard) PrettyString() string {
 	s := "\n+---+---+---+---+---+---+---+---+\n"
-	for rank := rank8; rank >= rank1; rank-- {
-		for file := file1; file <= file8; file++ {
+	for rank := Rank8; rank >= Rank1; rank-- {
+		for file := FileA; file <= FileH; file++ {
 			if (b & BitboardFromRankAndFile(rank, file)) != Empty {
 				s += "| X "
 			} else {
 				s += "|   "
 			}
-			fmt.Println()
 		}
 		s += fmt.Sprintf("| %d\n+---+---+---+---+---+---+---+---+\n", rank+1)
 	}
