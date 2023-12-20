@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/bitboard"
+	. "github.com/shaardie/clemens/pkg/types"
 )
 
 func TestAttacksBySquare(t *testing.T) {
@@ -19,28 +20,28 @@ func TestAttacksBySquare(t *testing.T) {
 		{
 			name: "middle",
 			args: args{
-				square: bitboard.SQUARE_D4,
+				square: SQUARE_D4,
 			},
 			want: bitboard.BitBySquares(
-				bitboard.SQUARE_C3,
-				bitboard.SQUARE_C4,
-				bitboard.SQUARE_C5,
-				bitboard.SQUARE_D3,
-				bitboard.SQUARE_D5,
-				bitboard.SQUARE_E3,
-				bitboard.SQUARE_E4,
-				bitboard.SQUARE_E5,
+				SQUARE_C3,
+				SQUARE_C4,
+				SQUARE_C5,
+				SQUARE_D3,
+				SQUARE_D5,
+				SQUARE_E3,
+				SQUARE_E4,
+				SQUARE_E5,
 			),
 		},
 		{
 			name: "edge",
 			args: args{
-				square: bitboard.SQUARE_A1,
+				square: SQUARE_A1,
 			},
 			want: bitboard.BitBySquares(
-				bitboard.SQUARE_A2,
-				bitboard.SQUARE_B1,
-				bitboard.SQUARE_B2,
+				SQUARE_A2,
+				SQUARE_B1,
+				SQUARE_B2,
 			),
 		},
 	}

@@ -4,11 +4,12 @@ import (
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/magic"
 	"github.com/shaardie/clemens/pkg/pieces/utils"
+	. "github.com/shaardie/clemens/pkg/types"
 )
 
 var (
 	table  []bitboard.Bitboard
-	magics [bitboard.SQUARE_NUMBER]magic.Magic
+	magics [SQUARE_NUMBER]magic.Magic
 )
 
 func init() {

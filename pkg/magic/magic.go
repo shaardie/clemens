@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/shaardie/clemens/pkg/bitboard"
+	. "github.com/shaardie/clemens/pkg/types"
 )
 
 type Magic struct {
@@ -18,8 +19,8 @@ func (m Magic) Index(occupied bitboard.Bitboard) uint {
 	return uint(((occupied & m.Mask) * m.Magic) >> m.Shift)
 }
 
-func Init(attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) (table []bitboard.Bitboard, magics [bitboard.SQUARE_NUMBER]Magic) {
-	for square := bitboard.SQUARE_A1; square < bitboard.SQUARE_NUMBER; square++ {
+func Init(attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) (table []bitboard.Bitboard, magics [SQUARE_NUMBER]Magic) {
+	for square := SQUARE_A1; square < SQUARE_NUMBER; square++ {
 		edges := (bitboard.RankMask1 | bitboard.RankMask8) & ^bitboard.RankMaskOfSquare(square)
 
 		m := Magic{}

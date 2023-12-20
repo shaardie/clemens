@@ -1,6 +1,10 @@
 package bitboard
 
-import "fmt"
+import (
+	"fmt"
+
+	. "github.com/shaardie/clemens/pkg/types"
+)
 
 type Bitboard uint64
 
