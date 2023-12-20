@@ -2,6 +2,6 @@ package bitboard
 
 import "math/bits"
 
-func PopulationCount(b Bitboard) int {
+func (b Bitboard) PopulationCount() int {
 	return bits.OnesCount64(uint64(b))
 }

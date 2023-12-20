@@ -67,6 +67,7 @@ const (
 	SQUARE_F8
 	SQUARE_G8
 	SQUARE_H8
+	SQUARE_NUMBER
 )
 
 const (
