@@ -1,4 +1,4 @@
-package pieces
+package pawn
 
 import "github.com/shaardie/clemens/pkg/bitboard"
 

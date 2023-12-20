@@ -4,11 +4,11 @@ import "fmt"
 
 type Bitboard uint64
 
-func (b Bitboard) String() string {
+func (b Bitboard) SimpleString() string {
 	return fmt.Sprintf("%064b", b)
 }
 
-func (b Bitboard) PrettyString() string {
+func (b Bitboard) String() string {
 	s := "\n+---+---+---+---+---+---+---+---+\n"
 	for rank := Rank8; rank >= Rank1; rank-- {
 		for file := FileA; file <= FileH; file++ {
