@@ -92,10 +92,10 @@ const (
 	FileNumber
 )
 
-type piece int
+type Piece int
 
 const (
-	PAWN piece = iota
+	PAWN Piece = iota
 	KNIGHT
 	BISHOP
 	ROOK
@@ -104,10 +104,10 @@ const (
 	PIECE_NUMBER
 )
 
-type color int
+type Color int
 
 const (
-	WHITE color = iota
+	WHITE Color = iota
 	BLACK
 	COLOR_NUMBER
 )

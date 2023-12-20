@@ -1,6 +1,42 @@
 package pawn
 
-import "github.com/shaardie/clemens/pkg/bitboard"
+import (
+	"github.com/shaardie/clemens/pkg/bitboard"
+	. "github.com/shaardie/clemens/pkg/types"
+)
+
+var (
+	attackTable [COLOR_NUMBER][SQUARE_NUMBER]bitboard.Bitboard
+)
+
+// init initializes the attack table for knights for all squares
+func init() {
+	for square := SQUARE_A1; square < SQUARE_NUMBER; square++ {
+		attackTable[WHITE][square] = AttacksByBitboard(
+			WHITE, bitboard.BitBySquares(square),
+		)
+		attackTable[BLACK][square] = AttacksByBitboard(
+			BLACK, bitboard.BitBySquares(square),
+		)
+	}
+}
+
+// AttacksBySquare returns the attacks for a given square.
+// This is done by lookup.
+func AttacksBySquare(c Color, square int) bitboard.Bitboard {
+	return attackTable[c][square]
+}
+
+// AttacksByBitboard calculates all attacks for the given bitboard
+func AttacksByBitboard(c Color, pawns bitboard.Bitboard) bitboard.Bitboard {
+	switch c {
+	case WHITE:
+		return bitboard.NorthEastOne(pawns) | bitboard.NorthWestOne(pawns)
+	case BLACK:
+		return bitboard.SouthEastOne(pawns) | bitboard.SouthWestOne(pawns)
+	}
+	panic("unknown color")
+}
 
 type BlackPawns bitboard.Bitboard
 type WhitePawns bitboard.Bitboard
@@ -16,16 +52,6 @@ func (p WhitePawns) DoublePushTargets(emptySquares bitboard.Bitboard) bitboard.B
 	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.RankMask4
 }
 
-func (p WhitePawns) EastAttacks() bitboard.Bitboard {
-	return bitboard.NorthEastOne(bitboard.Bitboard(p))
-}
-func (p WhitePawns) WestAttacks() bitboard.Bitboard {
-	return bitboard.NorthWestOne(bitboard.Bitboard(p))
-}
-func (p WhitePawns) AnyAttacks() bitboard.Bitboard    { return p.EastAttacks() | p.WestAttacks() }
-func (p WhitePawns) DoubleAttacks() bitboard.Bitboard { return p.EastAttacks() & p.WestAttacks() }
-func (p WhitePawns) SingleAttacks() bitboard.Bitboard { return p.EastAttacks() ^ p.WestAttacks() }
-
 func (p BlackPawns) SinglePushTargets(emptySquares bitboard.Bitboard) bitboard.Bitboard {
 	return bitboard.SouthOne(bitboard.Bitboard(p)) & emptySquares
 }
@@ -35,18 +61,4 @@ func (p BlackPawns) DoublePushTargets(emptySquares bitboard.Bitboard) bitboard.B
 	singlePushTargets := p.SinglePushTargets(emptySquares)
 	// Black Double Push only possible on empty fields on rank 5
 	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.RankMask5
-}
-
-func (p BlackPawns) EastAttacks() bitboard.Bitboard {
-	return bitboard.SouthEastOne(bitboard.Bitboard(p))
-}
-func (p BlackPawns) WestAttacks() bitboard.Bitboard {
-	return bitboard.SouthWestOne(bitboard.Bitboard(p))
-}
-func (p BlackPawns) AnyAttacks() bitboard.Bitboard    { return p.EastAttacks() | p.WestAttacks() }
-func (p BlackPawns) DoubleAttacks() bitboard.Bitboard { return p.EastAttacks() & p.WestAttacks() }
-func (p BlackPawns) SingleAttacks() bitboard.Bitboard { return p.EastAttacks() ^ p.WestAttacks() }
-
-func SafePawnSquares(wp WhitePawns, bp BlackPawns) bitboard.Bitboard {
-	return wp.DoubleAttacks() | ^bp.SingleAttacks() | (wp.SingleAttacks() & ^bp.DoubleAttacks())
 }
