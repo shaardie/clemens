@@ -11,15 +11,31 @@ import (
 )
 
 type Position struct {
+	// Array of Pieces on the Board
+	PiecesBoard [SQUARE_NUMBER]Piece
 	// Array of bitboards for all pieces
-	PiecesBB   [COLOR_NUMBER][PIECE_NUMBER]bitboard.Bitboard
-	SideToMove Color
-	// TODO Castling, En Passante, Halfmove Clock
+	PiecesBitboard [COLOR_NUMBER][PIECE_TYPE_NUMBER]bitboard.Bitboard
+	SideToMove     Color
+	// TODO, En Passante, Halfmove Clock
+	castling          Castling
+	enPassante        int
+	halfMoveClock     int
+	numberOfFullMoves int
 }
 
 func New() Position {
 	return Position{
-		PiecesBB: [COLOR_NUMBER][PIECE_NUMBER]bitboard.Bitboard{
+		PiecesBoard: [SQUARE_NUMBER]Piece{
+			WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK,
+			WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
+			NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE,
+			NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE,
+			NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE,
+			NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE, NO_PIECE,
+			BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
+			BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
+		},
+		PiecesBitboard: [COLOR_NUMBER][PIECE_TYPE_NUMBER]bitboard.Bitboard{
 			// White
 			{
 				// Pawns
@@ -53,7 +69,10 @@ func New() Position {
 				bitboard.BitBySquares(SQUARE_E8),
 			},
 		},
-		SideToMove: WHITE,
+		SideToMove:        WHITE,
+		castling:          WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
+		enPassante:        SQUARE_NONE,
+		numberOfFullMoves: 1,
 	}
 
 }
@@ -63,23 +82,38 @@ func New() Position {
 // then intercept this attacks with the pieces capable of this attack pattern.
 func (pos Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	// Knight attacks
-	knights := pos.PiecesBB[WHITE][KNIGHT] | pos.PiecesBB[BLACK][KNIGHT]
+	knights := pos.PiecesBitboard[WHITE][KNIGHT] | pos.PiecesBitboard[BLACK][KNIGHT]
 	attacks := knight.AttacksBySquare(square) & knights
 
 	// King attacks
-	kings := pos.PiecesBB[WHITE][KING] | pos.PiecesBB[BLACK][KING]
+	kings := pos.PiecesBitboard[WHITE][KING] | pos.PiecesBitboard[BLACK][KING]
 	attacks |= king.AttacksBySquare(square) & kings
 
 	// Diagonal attacks
-	diagonalSlider := pos.PiecesBB[WHITE][BISHOP] | pos.PiecesBB[BLACK][BISHOP] | pos.PiecesBB[WHITE][QUEEN] | pos.PiecesBB[BLACK][QUEEN]
+	diagonalSlider := pos.PiecesBitboard[WHITE][BISHOP] | pos.PiecesBitboard[BLACK][BISHOP] | pos.PiecesBitboard[WHITE][QUEEN] | pos.PiecesBitboard[BLACK][QUEEN]
 	attacks |= bishop.AttacksBySquare(square, occupied) & diagonalSlider
 
 	// Vertical attacks
-	verticalAndHorizonalSlider := pos.PiecesBB[WHITE][ROOK] | pos.PiecesBB[BLACK][ROOK] | pos.PiecesBB[WHITE][QUEEN] | pos.PiecesBB[BLACK][QUEEN]
+	verticalAndHorizonalSlider := pos.PiecesBitboard[WHITE][ROOK] | pos.PiecesBitboard[BLACK][ROOK] | pos.PiecesBitboard[WHITE][QUEEN] | pos.PiecesBitboard[BLACK][QUEEN]
 	attacks |= rook.AttacksBySquare(square, occupied) & verticalAndHorizonalSlider
 
 	// Pawn attacks, we need to switch color to emuluate that
-	attacks |= pawn.AttacksBySquare(WHITE, square) & pos.PiecesBB[BLACK][PAWN]
-	attacks |= pawn.AttacksBySquare(BLACK, square) & pos.PiecesBB[WHITE][PAWN]
+	attacks |= pawn.AttacksBySquare(WHITE, square) & pos.PiecesBitboard[BLACK][PAWN]
+	attacks |= pawn.AttacksBySquare(BLACK, square) & pos.PiecesBitboard[WHITE][PAWN]
 	return 0
+}
+
+// Empty return true, if there is no piece on the square
+func (pos Position) Empty(square int) bool {
+	return pos.GetPieceFromSquare(square) == NO_PIECE
+}
+
+// GetPieceFromSquare returns the Piece from the square
+func (pos Position) GetPieceFromSquare(square int) Piece {
+	return pos.PiecesBoard[square]
+}
+
+// GetPieceFromSquare returns the Piece from the square
+func (pos Position) CanCastle(c Castling) bool {
+	return c&pos.castling != NO_CASTLING
 }

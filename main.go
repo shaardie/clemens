@@ -1,9 +1,12 @@
 package main
 
+import (
+	"fmt"
+
+	"github.com/shaardie/clemens/pkg/position"
+)
+
 func main() {
-	// fmt.Println(
-	// 	pieces.RookMagics[SQUARE_A1].
-	// 		Attacks[pieces.RookMagics[SQUARE_A1].
-	// 		Index(bitboard.BitBySquares(SQUARE_A3, SQUARE_G1))],
-	// )
+	fmt.Println(position.New().ToFen())
+
 }

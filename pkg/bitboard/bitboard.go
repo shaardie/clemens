@@ -14,8 +14,8 @@ func (b Bitboard) SimpleString() string {
 
 func (b Bitboard) String() string {
 	s := "\n+---+---+---+---+---+---+---+---+\n"
-	for rank := Rank8; rank >= Rank1; rank-- {
-		for file := FileA; file <= FileH; file++ {
+	for rank := RANK_8; rank >= RANK_1; rank-- {
+		for file := FILE_A; file <= FILE_H; file++ {
 			if (b & BitboardFromRankAndFile(rank, file)) != Empty {
 				s += "| X "
 			} else {

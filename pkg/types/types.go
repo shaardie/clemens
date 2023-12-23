@@ -66,42 +66,63 @@ const (
 	SQUARE_G8
 	SQUARE_H8
 	SQUARE_NUMBER
+	SQUARE_NONE = 64
 )
 
 const (
-	Rank1 int = iota
-	Rank2
-	Rank3
-	Rank4
-	Rank5
-	Rank6
-	Rank7
-	Rank8
-	RankNumber
+	RANK_1 int = iota
+	RANK_2
+	RANK_3
+	RANK_4
+	RANK_5
+	RANK_6
+	RANK_7
+	RANK_8
+	RANK_NUMBER
 )
 
 const (
-	FileA int = iota
-	FileB
-	FileC
-	FileD
-	FileE
-	FileF
-	FileG
-	FileH
-	FileNumber
+	FILE_A int = iota
+	FILE_B
+	FILE_C
+	FILE_D
+	FILE_E
+	FILE_F
+	FILE_G
+	FILE_H
+	FILE_NUMBER
 )
 
-type Piece int
+type PieceType int
 
 const (
-	PAWN Piece = iota
+	PAWN PieceType = iota
 	KNIGHT
 	BISHOP
 	ROOK
 	QUEEN
 	KING
-	PIECE_NUMBER
+	PIECE_TYPE_NUMBER
+)
+
+type Piece int
+
+const (
+	NO_PIECE Piece = iota
+	WHITE_PAWN
+	WHITE_KNIGHT
+	WHITE_BISHOP
+	WHITE_ROOK
+	WHITE_QUEEN
+	WHITE_KING
+	_
+	_
+	BLACK_PAWN
+	BLACK_KNIGHT
+	BLACK_BISHOP
+	BLACK_ROOK
+	BLACK_QUEEN
+	BLACK_KING
 )
 
 type Color int
