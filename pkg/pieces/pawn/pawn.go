@@ -2,37 +2,43 @@ package pawn
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
-	. "github.com/shaardie/clemens/pkg/types"
+	"github.com/shaardie/clemens/pkg/types"
+)
+
+const (
+	WHITE_IDX = iota
+	BLACK_IDX
+	COLOR_NUMBER
 )
 
 var (
-	attackTable [COLOR_NUMBER][SQUARE_NUMBER]bitboard.Bitboard
+	attackTable [COLOR_NUMBER][types.SQUARE_NUMBER]bitboard.Bitboard
 )
 
 // init initializes the attack table for knights for all squares
 func init() {
-	for square := SQUARE_A1; square < SQUARE_NUMBER; square++ {
-		attackTable[WHITE][square] = AttacksByBitboard(
-			WHITE, bitboard.BitBySquares(square),
+	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
+		attackTable[WHITE_IDX][square] = AttacksByBitboard(
+			types.WHITE, bitboard.BitBySquares(square),
 		)
-		attackTable[BLACK][square] = AttacksByBitboard(
-			BLACK, bitboard.BitBySquares(square),
+		attackTable[BLACK_IDX][square] = AttacksByBitboard(
+			types.BLACK, bitboard.BitBySquares(square),
 		)
 	}
 }
 
 // AttacksBySquare returns the attacks for a given square.
 // This is done by lookup.
-func AttacksBySquare(c Color, square int) bitboard.Bitboard {
+func AttacksBySquare(c types.Color, square int) bitboard.Bitboard {
 	return attackTable[c][square]
 }
 
 // AttacksByBitboard calculates all attacks for the given bitboard
-func AttacksByBitboard(c Color, pawns bitboard.Bitboard) bitboard.Bitboard {
+func AttacksByBitboard(c types.Color, pawns bitboard.Bitboard) bitboard.Bitboard {
 	switch c {
-	case WHITE:
+	case types.WHITE:
 		return bitboard.NorthEastOne(pawns) | bitboard.NorthWestOne(pawns)
-	case BLACK:
+	case types.BLACK:
 		return bitboard.SouthEastOne(pawns) | bitboard.SouthWestOne(pawns)
 	}
 	panic("unknown color")

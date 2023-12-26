@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/bitboard"
-	. "github.com/shaardie/clemens/pkg/types"
+	"github.com/shaardie/clemens/pkg/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPosition_SquareAttackedBy(t *testing.T) {
 	type fields struct {
-		PiecesBB   [COLOR_NUMBER][PIECE_TYPE_NUMBER]bitboard.Bitboard
-		SideToMove Color
+		PiecesBB   [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
+		SideToMove types.Color
 	}
 	type args struct {
 		square   int
@@ -26,7 +27,7 @@ func TestPosition_SquareAttackedBy(t *testing.T) {
 		{
 			name: "attacked",
 			fields: fields{
-				PiecesBB: [COLOR_NUMBER][PIECE_TYPE_NUMBER]bitboard.Bitboard{
+				PiecesBB: [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard{
 					{
 						bitboard.BitBySquares(),
 					},
@@ -45,4 +46,9 @@ func TestPosition_SquareAttackedBy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPosition_SetPiece(t *testing.T) {
+	assert.NoError(t, New().validate())
+
 }

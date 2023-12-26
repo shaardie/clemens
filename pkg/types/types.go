@@ -105,6 +105,14 @@ const (
 	PIECE_TYPE_NUMBER
 )
 
+type Color int
+
+const (
+	WHITE Color = iota
+	BLACK
+	COLOR_NUMBER
+)
+
 type Piece int
 
 const (
@@ -115,9 +123,9 @@ const (
 	WHITE_ROOK
 	WHITE_QUEEN
 	WHITE_KING
-	_
-	_
-	BLACK_PAWN
+)
+const (
+	BLACK_PAWN Piece = iota + WHITE_PAWN + 8
 	BLACK_KNIGHT
 	BLACK_BISHOP
 	BLACK_ROOK
@@ -125,10 +133,10 @@ const (
 	BLACK_KING
 )
 
-type Color int
+func (p Piece) Color() Color {
+	return Color(p >> 3)
+}
 
-const (
-	WHITE Color = iota
-	BLACK
-	COLOR_NUMBER
-)
+func (p Piece) Type() PieceType {
+	return PieceType((p & 7) - 1)
+}

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/bitboard"
-	. "github.com/shaardie/clemens/pkg/types"
+	"github.com/shaardie/clemens/pkg/types"
 )
 
 func TestSlidingAttacks(t *testing.T) {
@@ -22,15 +22,15 @@ func TestSlidingAttacks(t *testing.T) {
 		{
 			name: "north",
 			args: args{
-				square: SQUARE_B1,
+				square: types.SQUARE_B1,
 				directions: []func(bitboard.Bitboard) bitboard.Bitboard{
 					bitboard.NorthOne,
 				},
-				occupied: bitboard.BitBySquares(SQUARE_B3),
+				occupied: bitboard.BitBySquares(types.SQUARE_B3),
 			},
 			want: bitboard.BitBySquares(
-				SQUARE_B2,
-				SQUARE_B3,
+				types.SQUARE_B2,
+				types.SQUARE_B3,
 			),
 		},
 	}

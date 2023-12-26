@@ -2,7 +2,7 @@ package board
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
-	. "github.com/shaardie/clemens/pkg/types"
+	"github.com/shaardie/clemens/pkg/types"
 )
 
 type Board struct {
@@ -24,60 +24,60 @@ type Board struct {
 func NewBoard() Board {
 	return Board{
 		whitePawns: bitboard.BitBySquares(
-			SQUARE_A2,
-			SQUARE_B2,
-			SQUARE_C2,
-			SQUARE_D2,
-			SQUARE_E2,
-			SQUARE_F2,
-			SQUARE_G2,
-			SQUARE_H2,
+			types.SQUARE_A2,
+			types.SQUARE_B2,
+			types.SQUARE_C2,
+			types.SQUARE_D2,
+			types.SQUARE_E2,
+			types.SQUARE_F2,
+			types.SQUARE_G2,
+			types.SQUARE_H2,
 		),
 		whiteKnights: bitboard.BitBySquares(
-			SQUARE_B1,
-			SQUARE_G1,
+			types.SQUARE_B1,
+			types.SQUARE_G1,
 		),
 		whiteBishops: bitboard.BitBySquares(
-			SQUARE_C1,
-			SQUARE_F1,
+			types.SQUARE_C1,
+			types.SQUARE_F1,
 		),
 		whiteRooks: bitboard.BitBySquares(
-			SQUARE_A1,
-			SQUARE_H1,
+			types.SQUARE_A1,
+			types.SQUARE_H1,
 		),
 		whiteQueens: bitboard.BitBySquares(
-			SQUARE_D1,
+			types.SQUARE_D1,
 		),
 		whiteKing: bitboard.BitBySquares(
-			SQUARE_E1,
+			types.SQUARE_E1,
 		),
 		blackPawns: bitboard.BitBySquares(
-			SQUARE_A7,
-			SQUARE_B7,
-			SQUARE_C7,
-			SQUARE_D7,
-			SQUARE_E7,
-			SQUARE_F7,
-			SQUARE_G7,
-			SQUARE_H7,
+			types.SQUARE_A7,
+			types.SQUARE_B7,
+			types.SQUARE_C7,
+			types.SQUARE_D7,
+			types.SQUARE_E7,
+			types.SQUARE_F7,
+			types.SQUARE_G7,
+			types.SQUARE_H7,
 		),
 		blackKnights: bitboard.BitBySquares(
-			SQUARE_B8,
-			SQUARE_G8,
+			types.SQUARE_B8,
+			types.SQUARE_G8,
 		),
 		blackBishops: bitboard.BitBySquares(
-			SQUARE_C8,
-			SQUARE_F8,
+			types.SQUARE_C8,
+			types.SQUARE_F8,
 		),
 		blackRooks: bitboard.BitBySquares(
-			SQUARE_A8,
-			SQUARE_H8,
+			types.SQUARE_A8,
+			types.SQUARE_H8,
 		),
 		blackQueens: bitboard.BitBySquares(
-			SQUARE_D8,
+			types.SQUARE_D8,
 		),
 		blackKing: bitboard.BitBySquares(
-			SQUARE_E8,
+			types.SQUARE_E8,
 		),
 	}
 }

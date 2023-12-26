@@ -1,11 +1,13 @@
 package position
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/shaardie/clemens/pkg/bitboard"
-	. "github.com/shaardie/clemens/pkg/types"
+	"github.com/shaardie/clemens/pkg/types"
 )
 
 const (
@@ -13,21 +15,34 @@ const (
 	fileToChar  string = "ABCDEFGH"
 )
 
-// func NewFromFen(fen string) Position {
-// 	reader := strings.NewReader(fen)
-// 	pos := Position{}
-// 	for {
-// 		reader.ReadRune()
-// 	}
-// 	return pos
-// }
+func NewFromFen(fen string) (Position, error) {
+	reader := strings.NewReader(fen)
+	pos := Position{}
+	for {
+		square := types.SQUARE_A1
+		r, _, err := reader.ReadRune()
+		if err != nil {
+			return pos, fmt.Errorf("fail to read piece placement, %w", err)
+		}
+		if unicode.IsSpace(r) {
+			break
+		}
+		switch {
+		case unicode.IsDigit(r):
+			square += int(r - '0')
+		case r == '/':
+			square += 8
+		}
+	}
+	return pos, nil
+}
 
 func (pos Position) ToFen() string {
 	sb := strings.Builder{}
-	for rank := RANK_8; rank >= RANK_1; rank = rank - 1 {
-		for file := FILE_A; file <= FILE_H; file++ {
+	for rank := types.RANK_8; rank >= types.RANK_1; rank = rank - 1 {
+		for file := types.FILE_A; file <= types.FILE_H; file++ {
 			emptyCount := 0
-			for file <= FILE_H && pos.Empty(bitboard.SquareFromRankAndFile(rank, file)) {
+			for file <= types.FILE_H && pos.Empty(bitboard.SquareFromRankAndFile(rank, file)) {
 				emptyCount++
 				file++
 			}
@@ -35,15 +50,15 @@ func (pos Position) ToFen() string {
 				sb.WriteString(strconv.Itoa(emptyCount))
 			}
 
-			if file <= FILE_H {
+			if file <= types.FILE_H {
 				sb.WriteByte(pieceToChar[pos.GetPieceFromSquare(bitboard.SquareFromRankAndFile(rank, file))])
 			}
 		}
-		if rank >= RANK_1 {
+		if rank >= types.RANK_1 {
 			sb.WriteRune('/')
 		}
 	}
-	if pos.SideToMove == WHITE {
+	if pos.SideToMove == types.WHITE {
 		sb.WriteString(" w ")
 	} else {
 		sb.WriteString(" b ")
@@ -66,7 +81,7 @@ func (pos Position) ToFen() string {
 		}
 	}
 
-	if pos.enPassante == SQUARE_NONE {
+	if pos.enPassante == types.SQUARE_NONE {
 		sb.WriteString(" - ")
 	} else {
 		sb.WriteByte(fileToChar[bitboard.FileOfSquare(pos.enPassante)])

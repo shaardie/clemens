@@ -2,14 +2,14 @@ package king
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
-	. "github.com/shaardie/clemens/pkg/types"
+	"github.com/shaardie/clemens/pkg/types"
 )
 
-var attackTable [SQUARE_NUMBER]bitboard.Bitboard
+var attackTable [types.SQUARE_NUMBER]bitboard.Bitboard
 
 // init initializes the attack table for knights for all squares
 func init() {
-	for square := SQUARE_A1; square < SQUARE_NUMBER; square++ {
+	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
 		attackTable[square] = AttacksByBitboard(
 			bitboard.BitBySquares(square))
 	}
