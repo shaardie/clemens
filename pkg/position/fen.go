@@ -18,22 +18,44 @@ const (
 func NewFromFen(fen string) (Position, error) {
 	reader := strings.NewReader(fen)
 	pos := Position{}
+	// Pieces
 	for {
 		square := types.SQUARE_A1
 		r, _, err := reader.ReadRune()
 		if err != nil {
-			return pos, fmt.Errorf("fail to read piece placement, %w", err)
+			return pos, fmt.Errorf("failed to read piece placement, %w", err)
 		}
 		if unicode.IsSpace(r) {
 			break
 		}
-		switch {
-		case unicode.IsDigit(r):
+		if unicode.IsDigit(r) {
 			square += int(r - '0')
-		case r == '/':
+		} else if r == '/' {
 			square += 8
+		} else if unicode.IsSpace(r) {
+			break
 		}
+		p, err := types.PieceFromChar(r)
+		if err != nil {
+			return pos, fmt.Errorf("failed to get piece from rune, %w", err)
+		}
+		pos.SetPiece(p, square)
 	}
+
+	// Side to move
+	r, _, err := reader.ReadRune()
+	if err != nil {
+		return pos, fmt.Errorf("failed to read side to move, %w", err)
+	}
+	switch r {
+	case 'w':
+		pos.SideToMove = types.WHITE
+	case 'b':
+		pos.SideToMove = types.BLACK
+	default:
+		return pos, fmt.Errorf("unknown color for side to move")
+	}
+
 	return pos, nil
 }
 
@@ -51,7 +73,9 @@ func (pos Position) ToFen() string {
 			}
 
 			if file <= types.FILE_H {
-				sb.WriteByte(pieceToChar[pos.GetPieceFromSquare(bitboard.SquareFromRankAndFile(rank, file))])
+				sb.WriteRune(
+					pos.GetPieceFromSquare(bitboard.SquareFromRankAndFile(rank, file)).ToChar(),
+				)
 			}
 		}
 		if rank >= types.RANK_1 {

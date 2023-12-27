@@ -1,5 +1,10 @@
 package types
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
 	SQUARE_A1 int = iota
 	SQUARE_B1
@@ -139,4 +144,23 @@ func (p Piece) Color() Color {
 
 func (p Piece) Type() PieceType {
 	return PieceType((p & 7) - 1)
+}
+
+const pieceToChar string = " PNBRQK  pnbrqk"
+
+func (p Piece) ToChar() rune {
+	for idx, r := range pieceToChar {
+		if idx == int(p) {
+			return r
+		}
+	}
+	panic("rune not found")
+}
+
+func PieceFromChar(r rune) (Piece, error) {
+	idx := strings.IndexRune(pieceToChar, r)
+	if idx == -1 {
+		return 0, fmt.Errorf("%v is no valid piece", r)
+	}
+	return Piece(idx), nil
 }
