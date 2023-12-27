@@ -26,8 +26,8 @@ type Position struct {
 	numberOfFullMoves int
 }
 
-func New() Position {
-	pos := Position{
+func New() *Position {
+	pos := &Position{
 		PiecesBoard: [types.SQUARE_NUMBER]types.Piece{
 			types.WHITE_ROOK, types.WHITE_KNIGHT, types.WHITE_BISHOP, types.WHITE_QUEEN, types.WHITE_KING, types.WHITE_BISHOP, types.WHITE_KNIGHT, types.WHITE_ROOK,
 			types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN,
@@ -50,7 +50,7 @@ func New() Position {
 // SquareAttackedBy returns a bitboard with all pieces attacking the specified square.
 // The main idea behind the implementation is to use a piece on the specified square and let it attack all other pieces with all attack pattern,
 // then intercept this attacks with the pieces capable of this attack pattern.
-func (pos Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+func (pos *Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	// Knight attacks
 	knights := pos.PiecesBitboard[types.WHITE][types.KNIGHT] | pos.PiecesBitboard[types.BLACK][types.KNIGHT]
 	attacks := knight.AttacksBySquare(square) & knights
@@ -74,26 +74,26 @@ func (pos Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bit
 }
 
 // Empty return true, if there is no piece on the square
-func (pos Position) Empty(square int) bool {
+func (pos *Position) Empty(square int) bool {
 	return pos.GetPieceFromSquare(square) == types.NO_PIECE
 }
 
 // GetPieceFromSquare returns the Piece from the square
-func (pos Position) GetPieceFromSquare(square int) types.Piece {
+func (pos *Position) GetPieceFromSquare(square int) types.Piece {
 	return pos.PiecesBoard[square]
 }
 
 // GetPieceFromSquare returns the Piece from the square
-func (pos Position) CanCastle(c Castling) bool {
+func (pos *Position) CanCastle(c Castling) bool {
 	return c&pos.castling != NO_CASTLING
 }
 
-func (pos Position) SetPiece(p types.Piece, square int) {
+func (pos *Position) SetPiece(p types.Piece, square int) {
 	pos.PiecesBoard[square] = p
 	pos.PiecesBitboard[p.Color()][p.Type()] |= bitboard.BitBySquares(square)
 }
 
-func (pos Position) boardToBitBoard() {
+func (pos *Position) boardToBitBoard() {
 	for square, piece := range pos.PiecesBoard {
 		if piece == types.NO_PIECE {
 			continue
@@ -102,12 +102,11 @@ func (pos Position) boardToBitBoard() {
 	}
 }
 
-func (pos Position) validate() error {
+func (pos *Position) validate() error {
 	// Validate Pieces
 	for color, bb := range pos.PiecesBitboard {
 		for pieceType, b := range bb {
 			idxs := bitboard.SquareIndexSerialization(b)
-			fmt.Println(idxs)
 			for _, idx := range idxs {
 				p := pos.PiecesBoard[idx]
 				if p == types.NO_PIECE {
