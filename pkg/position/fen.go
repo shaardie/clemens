@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	fileToChar string = "ABCDEFGH"
+	fileToChar string = "abcdefgh"
 )
 
+// NewFromFen creates a new position from a FEN string, see https://www.chessprogramming.org/Forsyth-Edwards_Notation#En_passant_target_square
 func NewFromFen(fen string) (*Position, error) {
 	pos := &Position{}
 
@@ -23,7 +24,7 @@ func NewFromFen(fen string) (*Position, error) {
 	if len(tokens) != 6 {
 		return nil, fmt.Errorf("wrong number of tokens %v", len(tokens))
 	}
-	err := pos.fenSetpieces(tokens[0])
+	err := pos.fenSetPieces(tokens[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to set pieces from fen token, %w", err)
 	}
@@ -78,7 +79,7 @@ func (pos *Position) ToFen() string {
 				)
 			}
 		}
-		if rank >= types.RANK_1 {
+		if rank > types.RANK_1 {
 			sb.WriteRune('/')
 		}
 	}
@@ -118,8 +119,8 @@ func (pos *Position) ToFen() string {
 	return sb.String()
 }
 
-// fenSetpieces set piece positions from part of the fen string
-func (pos *Position) fenSetpieces(token string) error {
+// fenSetPieces set piece positions from part of the fen string
+func (pos *Position) fenSetPieces(token string) error {
 	reader := strings.NewReader(token)
 	square := types.SQUARE_A8
 	for {
@@ -221,12 +222,12 @@ func (pos *Position) fenSetEnPassante(token string) error {
 			if !unicode.IsDigit(r) {
 				return fmt.Errorf("failed to get rank")
 			}
-			rank = int(r - '0')
+			rank = int(r-'0') - 1
 		default:
 			return fmt.Errorf("token to long")
 		}
 	}
 
-	pos.enPassante = bitboard.SquareFromRankAndFile(file, rank)
+	pos.enPassante = bitboard.SquareFromRankAndFile(rank, file)
 	return nil
 }
