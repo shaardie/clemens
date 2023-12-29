@@ -41,9 +41,9 @@ func NewFromFen(fen string) (*Position, error) {
 	}
 
 	// Set castling
-	err = pos.fenSetEnPassante(tokens[3])
+	err = pos.fenSetEnPassant(tokens[3])
 	if err != nil {
-		return nil, fmt.Errorf("failed to set en passante from fen token, %w", err)
+		return nil, fmt.Errorf("failed to set en passant from fen token, %w", err)
 	}
 
 	pos.halfMoveClock, err = strconv.Atoi(tokens[4])
@@ -106,11 +106,11 @@ func (pos *Position) ToFen() string {
 		}
 	}
 
-	if pos.enPassante == types.SQUARE_NONE {
+	if pos.enPassant == types.SQUARE_NONE {
 		sb.WriteString(" - ")
 	} else {
-		sb.WriteByte(fileToChar[bitboard.FileOfSquare(pos.enPassante)])
-		sb.WriteString(strconv.Itoa(bitboard.RankOfSquare(pos.enPassante)))
+		sb.WriteByte(fileToChar[bitboard.FileOfSquare(pos.enPassant)])
+		sb.WriteString(strconv.Itoa(bitboard.RankOfSquare(pos.enPassant)))
 	}
 
 	sb.WriteString(strconv.Itoa(bitboard.RankOfSquare(pos.halfMoveClock)))
@@ -201,11 +201,11 @@ func (pos *Position) fenSetCastling(token string) error {
 	}
 }
 
-// fenSetEnPassante set en passante from part of the fen string
-func (pos *Position) fenSetEnPassante(token string) error {
-	pos.enPassante = types.SQUARE_NONE
+// fenSetEnPassant set en passant from part of the fen string
+func (pos *Position) fenSetEnPassant(token string) error {
+	pos.enPassant = types.SQUARE_NONE
 
-	// No en passante
+	// No en passant
 	if token == "-" {
 		return nil
 	}
@@ -228,6 +228,6 @@ func (pos *Position) fenSetEnPassante(token string) error {
 		}
 	}
 
-	pos.enPassante = bitboard.SquareFromRankAndFile(rank, file)
+	pos.enPassant = bitboard.SquareFromRankAndFile(rank, file)
 	return nil
 }

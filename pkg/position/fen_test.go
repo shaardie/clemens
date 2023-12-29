@@ -170,7 +170,7 @@ func TestPosition_fenSetCastling(t *testing.T) {
 	}
 }
 
-func TestPosition_fenSetEnPassante(t *testing.T) {
+func TestPosition_fenSetEnPassant(t *testing.T) {
 	tests := []struct {
 		name      string
 		token     string
@@ -178,18 +178,18 @@ func TestPosition_fenSetEnPassante(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name:  "no en passante",
+			name:  "no en passant",
 			token: "-",
 			wantedPos: &Position{
-				enPassante: types.SQUARE_NONE,
+				enPassant: types.SQUARE_NONE,
 			},
 			wantErr: false,
 		},
 		{
-			name:  "en passante d6",
+			name:  "en passant d6",
 			token: "d6",
 			wantedPos: &Position{
-				enPassante: types.SQUARE_D6,
+				enPassant: types.SQUARE_D6,
 			},
 			wantErr: false,
 		},
@@ -203,7 +203,7 @@ func TestPosition_fenSetEnPassante(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			pos := &Position{}
-			err := pos.fenSetEnPassante(tt.token)
+			err := pos.fenSetEnPassant(tt.token)
 			if tt.wantErr {
 				assert.Error(t, err)
 			}

@@ -19,9 +19,9 @@ type Position struct {
 	PiecesBitboard [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
 
 	SideToMove types.Color
-	// TODO, En Passante, Halfmove Clock
+	// TODO, En Passant, Halfmove Clock
 	castling          Castling
-	enPassante        int
+	enPassant         int
 	halfMoveClock     int
 	numberOfFullMoves int
 }
@@ -40,7 +40,7 @@ func New() *Position {
 		},
 		SideToMove:        types.WHITE,
 		castling:          WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
-		enPassante:        types.SQUARE_NONE,
+		enPassant:         types.SQUARE_NONE,
 		numberOfFullMoves: 1,
 	}
 	pos.boardToBitBoard()
