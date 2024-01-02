@@ -19,7 +19,10 @@ func (m Magic) Index(occupied bitboard.Bitboard) uint {
 	return uint(((occupied & m.Mask) * m.Magic) >> m.Shift)
 }
 
-func Init(attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) (table []bitboard.Bitboard, magics [types.SQUARE_NUMBER]Magic) {
+func Init(attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) (magics [types.SQUARE_NUMBER]Magic) {
+	var (
+		table []bitboard.Bitboard
+	)
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
 		edges := (bitboard.RankMask1 | bitboard.RankMask8) & ^bitboard.RankMaskOfSquare(square)
 
@@ -80,7 +83,7 @@ func Init(attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard
 		// Set magic
 		magics[square] = m
 	}
-	return table, magics
+	return magics
 }
 
 func sparseRand() bitboard.Bitboard {

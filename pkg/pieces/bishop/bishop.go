@@ -8,13 +8,10 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-var (
-	table  []bitboard.Bitboard
-	magics [types.SQUARE_NUMBER]magic.Magic
-)
+var magics [types.SQUARE_NUMBER]magic.Magic
 
 func init() {
-	table, magics = magic.Init(AttacksByBitboard)
+	magics = magic.Init(AttacksByBitboard)
 }
 
 // AttacksBySquare returns the attacks for a given square.
