@@ -14,7 +14,7 @@ var (
 )
 
 func init() {
-	table, magics = magic.Init(attacks)
+	table, magics = magic.Init(AttacksByBitboard)
 }
 
 // AttacksBySquare returns the attacks for a given square.
@@ -30,8 +30,8 @@ func AttacksBySquare(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	return m.Attacks[idx]
 }
 
-// attacks calculates the attacks of the bishop for the given square and occupation
-func attacks(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+// AttacksByBitboard calculates the AttacksByBitboard of the bishop for the given square and occupation
+func AttacksByBitboard(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	return utils.SlidingAttacks(
 		square,
 		[]func(bitboard.Bitboard) bitboard.Bitboard{
@@ -44,23 +44,12 @@ func attacks(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	)
 }
 
-func GenerateMoves(sources, occupied, destinations bitboard.Bitboard) []move.Move {
-	moves := []move.Move{}
-	for sources != bitboard.Empty {
-		source := bitboard.LeastSignificantOneBit(sources)
-
-		// Remove LSB
-		source &= source - 1
-
-		as := attacks(source, occupied) & destinations
-		for as != bitboard.Empty {
-			a := bitboard.LeastSignificantOneBit(as)
-			as &= as - 1
-			var m move.Move
-			m.SetSourceSquare(source)
-			m.SetDestinationSquare(a)
-			moves = append(moves, m)
-		}
-	}
-	return moves
+// GenerateMoves generates all moves for all squares to all destinations by a given occupation
+func GenerateMoves(squares, occupied, destinations bitboard.Bitboard) []move.Move {
+	return utils.GenerateMoves(
+		squares,
+		occupied,
+		destinations,
+		AttacksByBitboard,
+	)
 }

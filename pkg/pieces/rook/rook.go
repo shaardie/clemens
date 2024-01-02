@@ -3,6 +3,7 @@ package rook
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/magic"
+	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/pieces/utils"
 	"github.com/shaardie/clemens/pkg/types"
 )
@@ -13,7 +14,7 @@ var (
 )
 
 func init() {
-	table, magics = magic.Init(attacks)
+	table, magics = magic.Init(AttacksByBitboard)
 }
 
 // AttacksBySquare returns the attacks for a given square.
@@ -29,8 +30,8 @@ func AttacksBySquare(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	return m.Attacks[idx]
 }
 
-// attacks calculates the attacks of the rook for the given square and occupation
-func attacks(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+// AttacksByBitboard calculates the AttacksByBitboard of the rook for the given square and occupation
+func AttacksByBitboard(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	return utils.SlidingAttacks(
 		square,
 		[]func(bitboard.Bitboard) bitboard.Bitboard{
@@ -40,5 +41,15 @@ func attacks(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 			bitboard.WestOne,
 		},
 		occupied,
+	)
+}
+
+// GenerateMoves generates all moves for all squares to all destinations by a given occupation
+func GenerateMoves(squares, occupied, destinations bitboard.Bitboard) []move.Move {
+	return utils.GenerateMoves(
+		squares,
+		occupied,
+		destinations,
+		AttacksByBitboard,
 	)
 }
