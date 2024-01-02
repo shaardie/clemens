@@ -3,6 +3,7 @@ package bishop
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/magic"
+	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/pieces/utils"
 	"github.com/shaardie/clemens/pkg/types"
 )
@@ -41,5 +42,25 @@ func attacks(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 		},
 		occupied,
 	)
+}
 
+func GenerateMoves(sources, occupied, destinations bitboard.Bitboard) []move.Move {
+	moves := []move.Move{}
+	for sources != bitboard.Empty {
+		source := bitboard.LeastSignificantOneBit(sources)
+
+		// Remove LSB
+		source &= source - 1
+
+		as := attacks(source, occupied) & destinations
+		for as != bitboard.Empty {
+			a := bitboard.LeastSignificantOneBit(as)
+			as &= as - 1
+			var m move.Move
+			m.SetSourceSquare(source)
+			m.SetDestinationSquare(a)
+			moves = append(moves, m)
+		}
+	}
+	return moves
 }
