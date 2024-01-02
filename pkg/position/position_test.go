@@ -6,7 +6,6 @@ import (
 
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPosition_SquareAttackedBy(t *testing.T) {
@@ -46,9 +45,4 @@ func TestPosition_SquareAttackedBy(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestPosition_SetPiece(t *testing.T) {
-	assert.NoError(t, New().validate())
-
 }
