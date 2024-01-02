@@ -75,7 +75,7 @@ func (pos *Position) ToFen() string {
 
 			if file <= types.FILE_H {
 				sb.WriteRune(
-					pos.GetPieceFromSquare(bitboard.SquareFromRankAndFile(rank, file)).ToChar(),
+					pos.GetPiece(bitboard.SquareFromRankAndFile(rank, file)).ToChar(),
 				)
 			}
 		}

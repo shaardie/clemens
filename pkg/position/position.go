@@ -76,22 +76,7 @@ func (pos *Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bi
 
 // Empty return true, if there is no piece on the square
 func (pos *Position) Empty(square int) bool {
-	return pos.GetPieceFromSquare(square) == types.NO_PIECE
-}
-
-// GetPieceFromSquare returns the Piece from the square
-func (pos *Position) GetPieceFromSquare(square int) types.Piece {
-	return pos.piecesBoard[square]
-}
-
-// GetPieceFromSquare returns the Piece from the square
-func (pos *Position) CanCastle(c Castling) bool {
-	return c&pos.castling != NO_CASTLING
-}
-
-func (pos *Position) SetPiece(p types.Piece, square int) {
-	pos.piecesBoard[square] = p
-	pos.piecesBitboard[p.Color()][p.Type()] |= bitboard.BitBySquares(square)
+	return pos.GetPiece(square) == types.NO_PIECE
 }
 
 func (pos *Position) boardToBitBoard() {
