@@ -14,13 +14,14 @@ import (
 
 type Position struct {
 	// Array of Pieces on the Board
-	PiecesBoard [types.SQUARE_NUMBER]types.Piece
+	piecesBoard [types.SQUARE_NUMBER]types.Piece
 	// Array of bitboards for all pieces
-	PiecesBitboard [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
-
-	SideToMove types.Color
-	// TODO, En Passant, Halfmove Clock
-	castling          Castling
+	piecesBitboard [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
+	// Color of the side to move
+	sideToMove types.Color
+	// Castling possibilities
+	castling Castling
+	// En passant square
 	enPassant         int
 	halfMoveClock     int
 	numberOfFullMoves int
@@ -28,7 +29,7 @@ type Position struct {
 
 func New() *Position {
 	pos := &Position{
-		PiecesBoard: [types.SQUARE_NUMBER]types.Piece{
+		piecesBoard: [types.SQUARE_NUMBER]types.Piece{
 			types.WHITE_ROOK, types.WHITE_KNIGHT, types.WHITE_BISHOP, types.WHITE_QUEEN, types.WHITE_KING, types.WHITE_BISHOP, types.WHITE_KNIGHT, types.WHITE_ROOK,
 			types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN,
 			types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE,
@@ -38,7 +39,7 @@ func New() *Position {
 			types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN,
 			types.BLACK_ROOK, types.BLACK_KNIGHT, types.BLACK_BISHOP, types.BLACK_QUEEN, types.BLACK_KING, types.BLACK_BISHOP, types.BLACK_KNIGHT, types.BLACK_ROOK,
 		},
-		SideToMove:        types.WHITE,
+		sideToMove:        types.WHITE,
 		castling:          WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
 		enPassant:         types.SQUARE_NONE,
 		numberOfFullMoves: 1,
@@ -52,24 +53,24 @@ func New() *Position {
 // then intercept this attacks with the pieces capable of this attack pattern.
 func (pos *Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	// Knight attacks
-	knights := pos.PiecesBitboard[types.WHITE][types.KNIGHT] | pos.PiecesBitboard[types.BLACK][types.KNIGHT]
+	knights := pos.piecesBitboard[types.WHITE][types.KNIGHT] | pos.piecesBitboard[types.BLACK][types.KNIGHT]
 	attacks := knight.AttacksBySquare(square) & knights
 
 	// King attacks
-	kings := pos.PiecesBitboard[types.WHITE][types.KING] | pos.PiecesBitboard[types.BLACK][types.KING]
+	kings := pos.piecesBitboard[types.WHITE][types.KING] | pos.piecesBitboard[types.BLACK][types.KING]
 	attacks |= king.AttacksBySquare(square) & kings
 
 	// Diagonal attacks
-	diagonalSlider := pos.PiecesBitboard[types.WHITE][types.BISHOP] | pos.PiecesBitboard[types.BLACK][types.BISHOP] | pos.PiecesBitboard[types.WHITE][types.QUEEN] | pos.PiecesBitboard[types.BLACK][types.QUEEN]
+	diagonalSlider := pos.piecesBitboard[types.WHITE][types.BISHOP] | pos.piecesBitboard[types.BLACK][types.BISHOP] | pos.piecesBitboard[types.WHITE][types.QUEEN] | pos.piecesBitboard[types.BLACK][types.QUEEN]
 	attacks |= bishop.AttacksBySquare(square, occupied) & diagonalSlider
 
 	// Vertical attacks
-	verticalAndHorizonalSlider := pos.PiecesBitboard[types.WHITE][types.ROOK] | pos.PiecesBitboard[types.BLACK][types.ROOK] | pos.PiecesBitboard[types.WHITE][types.QUEEN] | pos.PiecesBitboard[types.BLACK][types.QUEEN]
+	verticalAndHorizonalSlider := pos.piecesBitboard[types.WHITE][types.ROOK] | pos.piecesBitboard[types.BLACK][types.ROOK] | pos.piecesBitboard[types.WHITE][types.QUEEN] | pos.piecesBitboard[types.BLACK][types.QUEEN]
 	attacks |= rook.AttacksBySquare(square, occupied) & verticalAndHorizonalSlider
 
 	// Pawn attacks, we need to switch color to emuluate that
-	attacks |= pawn.AttacksBySquare(types.WHITE, square) & pos.PiecesBitboard[types.BLACK][types.PAWN]
-	attacks |= pawn.AttacksBySquare(types.BLACK, square) & pos.PiecesBitboard[types.WHITE][types.PAWN]
+	attacks |= pawn.AttacksBySquare(types.WHITE, square) & pos.piecesBitboard[types.BLACK][types.PAWN]
+	attacks |= pawn.AttacksBySquare(types.BLACK, square) & pos.piecesBitboard[types.WHITE][types.PAWN]
 	return 0
 }
 
@@ -80,7 +81,7 @@ func (pos *Position) Empty(square int) bool {
 
 // GetPieceFromSquare returns the Piece from the square
 func (pos *Position) GetPieceFromSquare(square int) types.Piece {
-	return pos.PiecesBoard[square]
+	return pos.piecesBoard[square]
 }
 
 // GetPieceFromSquare returns the Piece from the square
@@ -89,26 +90,26 @@ func (pos *Position) CanCastle(c Castling) bool {
 }
 
 func (pos *Position) SetPiece(p types.Piece, square int) {
-	pos.PiecesBoard[square] = p
-	pos.PiecesBitboard[p.Color()][p.Type()] |= bitboard.BitBySquares(square)
+	pos.piecesBoard[square] = p
+	pos.piecesBitboard[p.Color()][p.Type()] |= bitboard.BitBySquares(square)
 }
 
 func (pos *Position) boardToBitBoard() {
-	for square, piece := range pos.PiecesBoard {
+	for square, piece := range pos.piecesBoard {
 		if piece == types.NO_PIECE {
 			continue
 		}
-		pos.PiecesBitboard[piece.Color()][piece.Type()] |= bitboard.BitBySquares(square)
+		pos.piecesBitboard[piece.Color()][piece.Type()] |= bitboard.BitBySquares(square)
 	}
 }
 
 func (pos *Position) validate() error {
 	// Validate Pieces
-	for color, bb := range pos.PiecesBitboard {
+	for color, bb := range pos.piecesBitboard {
 		for pieceType, b := range bb {
 			idxs := bitboard.SquareIndexSerialization(b)
 			for _, idx := range idxs {
-				p := pos.PiecesBoard[idx]
+				p := pos.piecesBoard[idx]
 				if p == types.NO_PIECE {
 					return fmt.Errorf("no piece on %v", idx)
 				}

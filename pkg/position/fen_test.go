@@ -20,10 +20,10 @@ func TestNewFromFen(t *testing.T) {
 func TestPosition_fenSetPieces(t *testing.T) {
 	startPos := New()
 	anotherPos := &Position{}
-	anotherPos.PiecesBoard[types.SQUARE_H1] = types.WHITE_ROOK
-	anotherPos.PiecesBoard[types.SQUARE_E2] = types.WHITE_KING
-	anotherPos.PiecesBoard[types.SQUARE_E7] = types.BLACK_KNIGHT
-	anotherPos.PiecesBoard[types.SQUARE_C8] = types.BLACK_KING
+	anotherPos.piecesBoard[types.SQUARE_H1] = types.WHITE_ROOK
+	anotherPos.piecesBoard[types.SQUARE_E2] = types.WHITE_KING
+	anotherPos.piecesBoard[types.SQUARE_E7] = types.BLACK_KNIGHT
+	anotherPos.piecesBoard[types.SQUARE_C8] = types.BLACK_KING
 
 	anotherPos.boardToBitBoard()
 	tests := []struct {
@@ -36,8 +36,8 @@ func TestPosition_fenSetPieces(t *testing.T) {
 			name:  "beginning",
 			token: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
 			wantedPos: &Position{
-				PiecesBoard:    startPos.PiecesBoard,
-				PiecesBitboard: startPos.PiecesBitboard,
+				piecesBoard:    startPos.piecesBoard,
+				piecesBitboard: startPos.piecesBitboard,
 			},
 			wantErr: false,
 		},
@@ -79,7 +79,7 @@ func TestPosition_fenSetSideToMove(t *testing.T) {
 			name:  "black",
 			token: "b",
 			wantedPos: &Position{
-				SideToMove: types.BLACK,
+				sideToMove: types.BLACK,
 			},
 			wantErr: false,
 		},
@@ -87,7 +87,7 @@ func TestPosition_fenSetSideToMove(t *testing.T) {
 			name:  "white",
 			token: "w",
 			wantedPos: &Position{
-				SideToMove: types.WHITE,
+				sideToMove: types.WHITE,
 			},
 			wantErr: false,
 		},

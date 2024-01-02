@@ -41,12 +41,12 @@ func init() {
 
 func (pos *Position) ZobristHash() uint64 {
 	var hash uint64
-	for square, piece := range pos.PiecesBoard {
+	for square, piece := range pos.piecesBoard {
 		if piece != types.NO_PIECE {
 			hash ^= z.piecesOnSquares[square][piece.Color()][piece.Type()]
 		}
 	}
-	if pos.SideToMove == types.BLACK {
+	if pos.sideToMove == types.BLACK {
 		hash ^= z.sideToMoveIsBlack
 	}
 

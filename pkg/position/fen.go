@@ -83,7 +83,7 @@ func (pos *Position) ToFen() string {
 			sb.WriteRune('/')
 		}
 	}
-	if pos.SideToMove == types.WHITE {
+	if pos.sideToMove == types.WHITE {
 		sb.WriteString(" w ")
 	} else {
 		sb.WriteString(" b ")
@@ -158,11 +158,11 @@ func (pos *Position) fenSetSideToMove(token string) error {
 	}
 
 	if token == "w" {
-		pos.SideToMove = types.WHITE
+		pos.sideToMove = types.WHITE
 		return nil
 	}
 	if token == "b" {
-		pos.SideToMove = types.BLACK
+		pos.sideToMove = types.BLACK
 		return nil
 	}
 
