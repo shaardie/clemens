@@ -1,5 +1,7 @@
 package move
 
+import "github.com/shaardie/clemens/pkg/types"
+
 type MoveType int
 
 const (
@@ -9,28 +11,41 @@ const (
 	CASTLING
 )
 
-type Move struct {
-	SourceSquare      int
-	DestinationSquare int
-	MoveType          MoveType
-}
+// Move represents a move from one position to another
+// 0-5 is the source square
+// 6-11 is the destination square
+// 12-13 is the Move Type
+// 14-15 is the Promotion Piece Type
+type Move uint64
 
 func (m *Move) GetSourceSquare() int {
-	return m.SourceSquare
-}
-func (m *Move) GetDestinationSquare() int {
-	return m.DestinationSquare
-}
-func (m *Move) GetMoveType() MoveType {
-	return m.MoveType
+	return int(*m & 0b111111)
 }
 
 func (m *Move) SetSourceSquare(square int) {
-	m.SourceSquare = square
+	*m |= Move(square)
 }
+
+func (m *Move) GetDestinationSquare() int {
+	return int(*m >> 6 & 0b111111)
+}
+
 func (m *Move) SetDestinationSquare(square int) {
-	m.DestinationSquare = square
+	*m |= Move(square << 6)
 }
+
+func (m *Move) GetMoveType() MoveType {
+	return MoveType(*m >> 12 & 0b11)
+}
+
 func (m *Move) SetMoveType(mt MoveType) {
-	m.MoveType = mt
+	*m |= Move(mt << 12)
+}
+
+func (m *Move) GetPromitionPieceType() types.PieceType {
+	return types.PieceType(*m>>14) + 1
+}
+
+func (m *Move) SetPromitionPieceType(pt types.PieceType) {
+	*m |= Move((pt - 1) << 14)
 }
