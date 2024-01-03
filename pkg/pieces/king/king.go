@@ -2,6 +2,8 @@ package king
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
+	"github.com/shaardie/clemens/pkg/move"
+	"github.com/shaardie/clemens/pkg/pieces/utils"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -31,4 +33,16 @@ func AttacksByBitboard(king bitboard.Bitboard) bitboard.Bitboard {
 	attacks |= bitboard.NorthOne(kings) | bitboard.SouthOne(kings)
 
 	return attacks
+}
+
+// GenerateMoves generates all moves for all squares to all destinations
+func GenerateMoves(squares, destinations bitboard.Bitboard) []move.Move {
+	return utils.GenerateMoves(
+		squares,
+		bitboard.Empty,
+		destinations,
+		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+			return AttacksBySquare(square)
+		},
+	)
 }
