@@ -51,7 +51,9 @@ func New() *Position {
 // SquareAttackedBy returns a bitboard with all pieces attacking the specified square.
 // The main idea behind the implementation is to use a piece on the specified square and let it attack all other pieces with all attack pattern,
 // then intercept this attacks with the pieces capable of this attack pattern.
-func (pos *Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+func (pos *Position) SquareAttackedBy(square int) bitboard.Bitboard {
+	occupied := pos.AllPieces()
+
 	// Knight attacks
 	knights := pos.piecesBitboard[types.WHITE][types.KNIGHT] | pos.piecesBitboard[types.BLACK][types.KNIGHT]
 	attacks := knight.AttacksBySquare(square) & knights
@@ -71,7 +73,7 @@ func (pos *Position) SquareAttackedBy(square int, occupied bitboard.Bitboard) bi
 	// Pawn attacks, we need to switch color to emuluate that
 	attacks |= pawn.AttacksBySquare(types.WHITE, square) & pos.piecesBitboard[types.BLACK][types.PAWN]
 	attacks |= pawn.AttacksBySquare(types.BLACK, square) & pos.piecesBitboard[types.WHITE][types.PAWN]
-	return 0
+	return attacks
 }
 
 // Empty return true, if there is no piece on the square
@@ -109,4 +111,16 @@ func (pos *Position) validate() error {
 	}
 
 	return nil
+}
+
+func (pos *Position) AllPieces() bitboard.Bitboard {
+	return pos.AllPiecesByColor(types.WHITE) | pos.AllPiecesByColor(types.BLACK)
+}
+
+func (pos *Position) AllPiecesByColor(c types.Color) bitboard.Bitboard {
+	bb := bitboard.Empty
+	for _, piece := range pos.piecesBitboard[c] {
+		bb |= piece
+	}
+	return bb
 }

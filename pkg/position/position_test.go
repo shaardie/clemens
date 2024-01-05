@@ -14,8 +14,7 @@ func TestPosition_SquareAttackedBy(t *testing.T) {
 		SideToMove types.Color
 	}
 	type args struct {
-		square   int
-		occupied bitboard.Bitboard
+		square int
 	}
 	tests := []struct {
 		name   string
@@ -40,7 +39,7 @@ func TestPosition_SquareAttackedBy(t *testing.T) {
 				piecesBitboard: tt.fields.PiecesBB,
 				sideToMove:     tt.fields.SideToMove,
 			}
-			if got := pos.SquareAttackedBy(tt.args.square, tt.args.occupied); !reflect.DeepEqual(got, tt.want) {
+			if got := pos.SquareAttackedBy(tt.args.square); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Position.SquareAttackedBy() = %v, want %v", got, tt.want)
 			}
 		})
