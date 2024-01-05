@@ -11,6 +11,7 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
+// GeneratePseudoLegalMoves generates all pseudo legal moves
 func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 	moves := []move.Move{}
 
@@ -19,7 +20,7 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 
 	// Sliding Pieces
 	moves = append(moves,
-		generateMoves(
+		generateMovesHelper(
 			pos.piecesBitboard[pos.sideToMove][types.ROOK],
 			occupied,
 			destinations,
@@ -27,7 +28,7 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 		)...,
 	)
 	moves = append(moves,
-		generateMoves(
+		generateMovesHelper(
 			pos.piecesBitboard[pos.sideToMove][types.BISHOP],
 			occupied,
 			destinations,
@@ -35,7 +36,7 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 		)...,
 	)
 	moves = append(moves,
-		generateMoves(
+		generateMovesHelper(
 			pos.piecesBitboard[pos.sideToMove][types.QUEEN],
 			occupied,
 			destinations,
@@ -45,7 +46,7 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 
 	// Pieces ignoring occupation
 	moves = append(moves,
-		generateMoves(
+		generateMovesHelper(
 			pos.piecesBitboard[pos.sideToMove][types.KNIGHT],
 			bitboard.Empty,
 			destinations,
@@ -55,7 +56,7 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 		)...,
 	)
 	moves = append(moves,
-		generateMoves(
+		generateMovesHelper(
 			pos.piecesBitboard[pos.sideToMove][types.KING],
 			bitboard.Empty,
 			destinations,
@@ -102,11 +103,33 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 		}
 	}
 
-	// TODO castling
+	// Castling
+	for _, c := range []Castling{WHITE_CASTLING_KING, WHITE_CASTLING_QUEEN, BLACK_CASTLING_KING, BLACK_CASTLING_QUEEN} {
+		if c.Color() != pos.sideToMove {
+			continue
+		}
+		if !pos.CanCastleNow(Castling(c)) {
+			continue
+		}
+		var m move.Move
+		m.SetMoveType(move.CASTLING)
+		sourceSquare := bitboard.SquareIndexSerialization(pos.piecesBitboard[pos.sideToMove][types.KING])[0]
+		var targetSquare int
+		switch c.Side() {
+		case CASTLING_KING:
+			targetSquare = sourceSquare + 2
+		case CASTLING_QUEEN:
+			targetSquare = sourceSquare - 3
+		}
+		m.SetSourceSquare(sourceSquare)
+		m.SetDestinationSquare(targetSquare)
+	}
+
 	return moves
 }
 
-func generateMoves(sources, occupied, destinations bitboard.Bitboard, attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) []move.Move {
+// generateMovesHelper generates a list of moves from a given list of paramters
+func generateMovesHelper(sources, occupied, destinations bitboard.Bitboard, attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) []move.Move {
 	moves := []move.Move{}
 
 	for _, sourceSquare := range bitboard.SquareIndexSerialization(sources) {
