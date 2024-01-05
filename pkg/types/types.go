@@ -118,6 +118,13 @@ const (
 	COLOR_NUMBER
 )
 
+func SwitchColor(c Color) Color {
+	if c == BLACK {
+		return WHITE
+	}
+	return BLACK
+}
+
 type Piece int
 
 const (
