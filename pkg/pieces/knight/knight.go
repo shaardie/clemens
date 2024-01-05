@@ -2,8 +2,6 @@ package knight
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
-	"github.com/shaardie/clemens/pkg/move"
-	"github.com/shaardie/clemens/pkg/pieces/utils"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -12,7 +10,7 @@ var attackTable [types.SQUARE_NUMBER]bitboard.Bitboard
 // init initializes the attack table for knights for all squares
 func init() {
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
-		attackTable[square] = AttacksByBitboard(
+		attackTable[square] = attacks(
 			bitboard.BitBySquares(square))
 	}
 }
@@ -23,8 +21,8 @@ func AttacksBySquare(square int) bitboard.Bitboard {
 	return attackTable[square]
 }
 
-// AttacksByBitboard calculates all attacks for knights on the given bitboard
-func AttacksByBitboard(knights bitboard.Bitboard) bitboard.Bitboard {
+// attacks calculates all attacks for knights on the given bitboard
+func attacks(knights bitboard.Bitboard) bitboard.Bitboard {
 	// Attacks 1 west or east and 2 north or south
 	east := bitboard.EastOne(knights)
 	west := bitboard.WestOne(knights)
@@ -36,16 +34,4 @@ func AttacksByBitboard(knights bitboard.Bitboard) bitboard.Bitboard {
 	attacks |= bitboard.NorthOne(west|east) | bitboard.SouthOne(west|east)
 
 	return attacks
-}
-
-// GenerateMoves generates all moves for all squares to all destinations
-func GenerateMoves(squares, destinations bitboard.Bitboard) []move.Move {
-	return utils.GenerateMoves(
-		squares,
-		bitboard.Empty,
-		destinations,
-		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
-			return AttacksBySquare(square)
-		},
-	)
 }

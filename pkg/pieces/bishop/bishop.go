@@ -3,7 +3,6 @@ package bishop
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/magic"
-	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/pieces/utils"
 	"github.com/shaardie/clemens/pkg/types"
 )
@@ -11,7 +10,7 @@ import (
 var magics [types.SQUARE_NUMBER]magic.Magic
 
 func init() {
-	magics = magic.Init(AttacksByBitboard)
+	magics = magic.Init(attacks)
 }
 
 // AttacksBySquare returns the attacks for a given square.
@@ -27,8 +26,8 @@ func AttacksBySquare(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	return m.Attacks[idx]
 }
 
-// AttacksByBitboard calculates the AttacksByBitboard of the bishop for the given square and occupation
-func AttacksByBitboard(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+// attacks calculates the attacks of the bishop for the given square and occupation
+func attacks(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 	return utils.SlidingAttacks(
 		square,
 		[]func(bitboard.Bitboard) bitboard.Bitboard{
@@ -38,15 +37,5 @@ func AttacksByBitboard(square int, occupied bitboard.Bitboard) bitboard.Bitboard
 			bitboard.SouthWestOne,
 		},
 		occupied,
-	)
-}
-
-// GenerateMoves generates all moves for all squares to all destinations by a given occupation
-func GenerateMoves(squares, occupied, destinations bitboard.Bitboard) []move.Move {
-	return utils.GenerateMoves(
-		squares,
-		occupied,
-		destinations,
-		AttacksByBitboard,
 	)
 }

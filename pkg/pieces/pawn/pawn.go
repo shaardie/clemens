@@ -5,23 +5,17 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-const (
-	WHITE_IDX = iota
-	BLACK_IDX
-	COLOR_NUMBER
-)
-
 var (
-	attackTable [COLOR_NUMBER][types.SQUARE_NUMBER]bitboard.Bitboard
+	attackTable [types.COLOR_NUMBER][types.SQUARE_NUMBER]bitboard.Bitboard
 )
 
 // init initializes the attack table for knights for all squares
 func init() {
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
-		attackTable[WHITE_IDX][square] = AttacksByBitboard(
+		attackTable[types.WHITE][square] = attacks(
 			types.WHITE, bitboard.BitBySquares(square),
 		)
-		attackTable[BLACK_IDX][square] = AttacksByBitboard(
+		attackTable[types.BLACK][square] = attacks(
 			types.BLACK, bitboard.BitBySquares(square),
 		)
 	}
@@ -33,8 +27,8 @@ func AttacksBySquare(c types.Color, square int) bitboard.Bitboard {
 	return attackTable[c][square]
 }
 
-// AttacksByBitboard calculates all attacks for the given bitboard
-func AttacksByBitboard(c types.Color, pawns bitboard.Bitboard) bitboard.Bitboard {
+// attacks calculates all attacks for the given bitboard
+func attacks(c types.Color, pawns bitboard.Bitboard) bitboard.Bitboard {
 	switch c {
 	case types.WHITE:
 		return bitboard.NorthEastOne(pawns) | bitboard.NorthWestOne(pawns)
@@ -44,27 +38,33 @@ func AttacksByBitboard(c types.Color, pawns bitboard.Bitboard) bitboard.Bitboard
 	panic("unknown color")
 }
 
-type BlackPawns bitboard.Bitboard
-type WhitePawns bitboard.Bitboard
-
-func (p WhitePawns) SinglePushTargets(emptySquares bitboard.Bitboard) bitboard.Bitboard {
-	return bitboard.NorthOne(bitboard.Bitboard(p)) & emptySquares
+func PushesBySquare(c types.Color, square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+	pawn := bitboard.BitBySquares(square)
+	return singlePushTargets(c, pawn, occupied) | doublePushTargets(c, pawn, occupied)
 }
 
-func (p WhitePawns) DoublePushTargets(emptySquares bitboard.Bitboard) bitboard.Bitboard {
-	// Mandatory condition that single push is possible
-	singlePushTargets := p.SinglePushTargets(emptySquares)
-	// White Double Push only possible on empty fields on rank 4
-	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.RankMask4
+func singlePushTargets(c types.Color, pawns, occupied bitboard.Bitboard) bitboard.Bitboard {
+	switch c {
+	case types.WHITE:
+		return bitboard.NorthOne(pawns) & ^occupied
+	case types.BLACK:
+		return bitboard.SouthOne(pawns) & ^occupied
+	}
+	panic("unknown color")
 }
 
-func (p BlackPawns) SinglePushTargets(emptySquares bitboard.Bitboard) bitboard.Bitboard {
-	return bitboard.SouthOne(bitboard.Bitboard(p)) & emptySquares
-}
-
-func (p BlackPawns) DoublePushTargets(emptySquares bitboard.Bitboard) bitboard.Bitboard {
-	// Mandatory condition that single push is possible
-	singlePushTargets := p.SinglePushTargets(emptySquares)
-	// Black Double Push only possible on empty fields on rank 5
-	return bitboard.SouthOne(singlePushTargets) & emptySquares & bitboard.RankMask5
+func doublePushTargets(c types.Color, pawns, occupied bitboard.Bitboard) bitboard.Bitboard {
+	switch c {
+	case types.WHITE:
+		// Mandatory condition that single push is possible
+		singlePushTargets := singlePushTargets(c, pawns, occupied)
+		// White Double Push only possible on empty fields on rank 4
+		return bitboard.SouthOne(singlePushTargets) & ^occupied & bitboard.RankMask4
+	case types.BLACK:
+		// Mandatory condition that single push is possible
+		singlePushTargets := singlePushTargets(c, pawns, occupied)
+		// Black Double Push only possible on empty fields on rank 5
+		return bitboard.SouthOne(singlePushTargets) & ^occupied & bitboard.RankMask5
+	}
+	panic("unknown color")
 }
