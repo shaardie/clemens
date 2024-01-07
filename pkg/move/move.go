@@ -22,30 +22,34 @@ func (m *Move) GetSourceSquare() int {
 	return int(*m & 0b111111)
 }
 
-func (m *Move) SetSourceSquare(square int) {
+func (m *Move) SetSourceSquare(square int) *Move {
 	*m |= Move(square)
+	return m
 }
 
 func (m *Move) GetDestinationSquare() int {
 	return int(*m >> 6 & 0b111111)
 }
 
-func (m *Move) SetDestinationSquare(square int) {
+func (m *Move) SetDestinationSquare(square int) *Move {
 	*m |= Move(square << 6)
+	return m
 }
 
 func (m *Move) GetMoveType() MoveType {
 	return MoveType(*m >> 12 & 0b11)
 }
 
-func (m *Move) SetMoveType(mt MoveType) {
+func (m *Move) SetMoveType(mt MoveType) *Move {
 	*m |= Move(mt << 12)
+	return m
 }
 
 func (m *Move) GetPromitionPieceType() types.PieceType {
 	return types.PieceType(*m>>14) + 1
 }
 
-func (m *Move) SetPromitionPieceType(pt types.PieceType) {
+func (m *Move) SetPromitionPieceType(pt types.PieceType) *Move {
 	*m |= Move((pt - 1) << 14)
+	return m
 }

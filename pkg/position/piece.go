@@ -29,7 +29,8 @@ func (pos *Position) DeletePiece(square int) types.Piece {
 	return p
 }
 
-func (pos *Position) MovePiece(fromSquare, toSquare int) {
+func (pos *Position) MovePiece(fromSquare, toSquare int) types.Piece {
 	p := pos.DeletePiece(fromSquare)
 	pos.SetPiece(p, toSquare)
+	return p
 }

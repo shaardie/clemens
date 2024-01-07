@@ -105,13 +105,15 @@ func (pos *Position) ToFen() string {
 			sb.WriteRune('q')
 		}
 	}
+	sb.WriteRune(' ')
 
 	if pos.enPassant == types.SQUARE_NONE {
-		sb.WriteString(" - ")
+		sb.WriteRune('-')
 	} else {
 		sb.WriteByte(fileToChar[bitboard.FileOfSquare(pos.enPassant)])
 		sb.WriteString(strconv.Itoa(bitboard.RankOfSquare(pos.enPassant)))
 	}
+	sb.WriteRune(' ')
 
 	sb.WriteString(strconv.Itoa(bitboard.RankOfSquare(pos.halfMoveClock)))
 	sb.WriteRune(' ')

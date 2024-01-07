@@ -128,6 +128,74 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 	return moves
 }
 
+func (pos *Position) MakeMove(m move.Move) *Position {
+	newPos := *pos
+	newPos.sideToMove = types.SwitchColor(pos.sideToMove)
+	if pos.sideToMove == types.BLACK {
+		newPos.numberOfFullMoves = pos.numberOfFullMoves + 1
+	}
+	newPos.lastPosition = pos
+
+	sourceSquare := m.GetSourceSquare()
+	targetSquare := m.GetDestinationSquare()
+	piece := newPos.MovePiece(sourceSquare, targetSquare)
+	switch piece.Type() {
+	// Set en passant
+	case types.PAWN:
+		if abs(sourceSquare-targetSquare) == 2*types.FILE_NUMBER {
+			newPos.enPassant = targetSquare
+		}
+	case types.KING:
+		// Update castling rights
+		switch piece.Color() {
+		case types.WHITE:
+			newPos.castling = pos.castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
+		case types.BLACK:
+			newPos.castling = pos.castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
+		default:
+			panic("unknown color")
+		}
+	case types.ROOK:
+		// Update castling rights
+		switch piece.Color() {
+		case types.WHITE:
+			switch sourceSquare {
+			case types.SQUARE_A1:
+				newPos.castling = pos.castling &^ WHITE_CASTLING_QUEEN
+			case types.SQUARE_H1:
+				newPos.castling = pos.castling &^ WHITE_CASTLING_KING
+			}
+		case types.BLACK:
+			switch sourceSquare {
+			case types.SQUARE_A8:
+				newPos.castling = pos.castling &^ BLACK_CASTLING_QUEEN
+			case types.SQUARE_H8:
+				newPos.castling = pos.castling &^ BLACK_CASTLING_KING
+			}
+		default:
+			panic("unknown color")
+		}
+	}
+
+	switch m.GetMoveType() {
+	case move.CASTLING:
+		switch targetSquare {
+		case types.SQUARE_C1:
+			newPos.MovePiece(types.SQUARE_A1, types.SQUARE_D1)
+		case types.SQUARE_G1:
+			newPos.MovePiece(types.SQUARE_H1, types.SQUARE_F1)
+		case types.SQUARE_C8:
+			newPos.MovePiece(types.SQUARE_A8, types.SQUARE_D8)
+		case types.SQUARE_G8:
+			newPos.MovePiece(types.SQUARE_H8, types.SQUARE_F8)
+		default:
+			panic("wrong source square for castling")
+		}
+	}
+
+	return &newPos
+}
+
 // generateMovesHelper generates a list of moves from a given list of paramters
 func generateMovesHelper(sources, occupied, destinations bitboard.Bitboard, attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) []move.Move {
 	moves := []move.Move{}
@@ -141,4 +209,11 @@ func generateMovesHelper(sources, occupied, destinations bitboard.Bitboard, atta
 		}
 	}
 	return moves
+}
+
+func abs(i int) int {
+	if i < 0 {
+		return -i
+	}
+	return i
 }

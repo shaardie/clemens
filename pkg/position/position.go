@@ -25,6 +25,7 @@ type Position struct {
 	enPassant         int
 	halfMoveClock     int
 	numberOfFullMoves int
+	lastPosition      *Position
 }
 
 func New() *Position {

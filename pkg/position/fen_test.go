@@ -217,7 +217,7 @@ func TestPosition_fenSetEnPassant(t *testing.T) {
 func TestPosition_ToFen(t *testing.T) {
 	assert.Equal(
 		t,
-		New().ToFen(),
 		"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+		New().ToFen(),
 	)
 }
