@@ -134,6 +134,7 @@ func (pos *Position) MakeMove(m move.Move) *Position {
 	if pos.sideToMove == types.BLACK {
 		newPos.numberOfFullMoves = pos.numberOfFullMoves + 1
 	}
+	newPos.enPassant = types.SQUARE_NONE
 	newPos.lastPosition = pos
 
 	sourceSquare := m.GetSourceSquare()
@@ -191,6 +192,19 @@ func (pos *Position) MakeMove(m move.Move) *Position {
 		default:
 			panic("wrong source square for castling")
 		}
+	case move.EN_PASSANT:
+		// Remove pawn behind moved pawn
+		var pawnToRemoveSquare = 0
+		switch pos.sideToMove {
+		case types.WHITE:
+			pawnToRemoveSquare = targetSquare - types.FILE_NUMBER
+		case types.BLACK:
+			pawnToRemoveSquare = targetSquare + types.FILE_NUMBER
+		}
+		newPos.DeletePiece(pawnToRemoveSquare)
+	case move.PROMOTION:
+		// Promote piece
+		newPos.SetPiece(types.NewPiece(pos.sideToMove, m.GetPromitionPieceType()), targetSquare)
 	}
 
 	return &newPos

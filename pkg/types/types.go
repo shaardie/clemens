@@ -164,7 +164,11 @@ func (p Piece) ToChar() rune {
 	panic("rune not found")
 }
 
-func PieceFromChar(r rune) (Piece, error) {
+func NewPiece(c Color, pt PieceType) Piece {
+	return Piece((int(pt) + 1) + int(c)*8)
+}
+
+func NewPieceFromChar(r rune) (Piece, error) {
 	idx := strings.IndexRune(pieceToChar, r)
 	if idx == -1 {
 		return 0, fmt.Errorf("%v is no valid piece", r)

@@ -69,6 +69,30 @@ func TestPosition_MakeMove(t *testing.T) {
 			m:         *new(move.Move).SetSourceSquare(types.SQUARE_A8).SetDestinationSquare(types.SQUARE_B8),
 			afterFen:  "1r2k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQk - 0 2",
 		},
+		{
+			name:      "white doing en passant",
+			beforeFen: "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1",
+			m:         *new(move.Move).SetSourceSquare(types.SQUARE_E5).SetDestinationSquare(types.SQUARE_D6).SetMoveType(move.EN_PASSANT),
+			afterFen:  "rnbqkbnr/ppp1pppp/3P4/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+		},
+		{
+			name:      "black doing en passant",
+			beforeFen: "rnbqkbnr/pppp1ppp/8/8/3Pp3/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1",
+			m:         *new(move.Move).SetSourceSquare(types.SQUARE_E4).SetDestinationSquare(types.SQUARE_D3).SetMoveType(move.EN_PASSANT),
+			afterFen:  "rnbqkbnr/pppp1ppp/8/8/8/3p4/PPP1PPPP/RNBQKBNR w KQkq - 0 2",
+		},
+		{
+			name:      "promote white pawn to queen",
+			beforeFen: "8/3k3P/8/8/8/8/8/3K4 w - - 0 1",
+			m:         *new(move.Move).SetSourceSquare(types.SQUARE_H7).SetDestinationSquare(types.SQUARE_H8).SetMoveType(move.PROMOTION).SetPromitionPieceType(types.QUEEN),
+			afterFen:  "7Q/3k4/8/8/8/8/8/3K4 b - - 0 1",
+		},
+		{
+			name:      "promote black pawn to rook",
+			beforeFen: "8/3k4/8/8/8/8/6p1/3K4 b - - 0 1",
+			m:         *new(move.Move).SetSourceSquare(types.SQUARE_G2).SetDestinationSquare(types.SQUARE_G1).SetMoveType(move.PROMOTION).SetPromitionPieceType(types.ROOK),
+			afterFen:  "8/3k4/8/8/8/8/8/3K2r1 w - - 0 2",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

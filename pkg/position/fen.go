@@ -144,7 +144,7 @@ func (pos *Position) fenSetPieces(token string) error {
 		}
 
 		// Set piece
-		p, err := types.PieceFromChar(r)
+		p, err := types.NewPieceFromChar(r)
 		if err != nil {
 			return fmt.Errorf("failed to get piece from rune, %w", err)
 		}
