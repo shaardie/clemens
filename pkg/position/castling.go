@@ -72,7 +72,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 	}
 
 	// No check
-	if pos.IsCheck() {
+	if pos.IsCheck(pos.sideToMove) {
 		return false
 	}
 

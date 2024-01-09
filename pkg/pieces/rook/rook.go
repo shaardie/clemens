@@ -1,16 +1,21 @@
 package rook
 
 import (
+	"math/rand"
+
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/magic"
 	"github.com/shaardie/clemens/pkg/pieces/utils"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-var magics [types.SQUARE_NUMBER]magic.Magic
+var (
+	magics [types.SQUARE_NUMBER]magic.Magic
+	rnd    rand.Source64 = rand.New(rand.NewSource(281954))
+)
 
 func init() {
-	magics = magic.Init(attacks)
+	magics = magic.Init(attacks, rnd.Uint64)
 }
 
 // AttacksBySquare returns the attacks for a given square.

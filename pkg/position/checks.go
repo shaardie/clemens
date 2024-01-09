@@ -5,9 +5,9 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-func (pos *Position) IsCheck() bool {
-	square := bitboard.SquareIndexSerialization(pos.piecesBitboard[pos.sideToMove][types.KING])[0]
+func (pos *Position) IsCheck(c types.Color) bool {
+	square := bitboard.SquareIndexSerialization(pos.piecesBitboard[c][types.KING])[0]
 	attacks := pos.SquareAttackedBy(square)
-	filtered := attacks & pos.AllPiecesByColor(types.SwitchColor(pos.sideToMove))
+	filtered := attacks & pos.AllPiecesByColor(types.SwitchColor(c))
 	return filtered != 0
 }

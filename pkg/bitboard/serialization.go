@@ -1,5 +1,18 @@
 package bitboard
 
+func AllSubnetsOf(b Bitboard) []Bitboard {
+	setOfSubsets := []Bitboard{}
+	subset := Empty
+	for {
+		setOfSubsets = append(setOfSubsets, subset)
+		subset = (subset - b) & b
+		if subset == Empty {
+			break
+		}
+	}
+	return setOfSubsets
+}
+
 func IsolatingSubsets(b Bitboard) []Bitboard {
 	bs := []Bitboard{}
 	for b != Empty {
