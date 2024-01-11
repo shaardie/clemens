@@ -59,7 +59,7 @@ func doublePushTargets(c types.Color, pawns, occupied bitboard.Bitboard) bitboar
 		// Mandatory condition that single push is possible
 		singlePushTargets := singlePushTargets(c, pawns, occupied)
 		// White Double Push only possible on empty fields on rank 4
-		return bitboard.SouthOne(singlePushTargets) & ^occupied & bitboard.RankMask4
+		return bitboard.NorthOne(singlePushTargets) & ^occupied & bitboard.RankMask4
 	case types.BLACK:
 		// Mandatory condition that single push is possible
 		singlePushTargets := singlePushTargets(c, pawns, occupied)
