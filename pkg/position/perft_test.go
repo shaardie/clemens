@@ -25,5 +25,5 @@ func perft(t *testing.T, pos *Position, depth int) int {
 
 func TestPerft(t *testing.T) {
 	assert.Equal(t, 1, perft(t, New(), 0))
-	assert.Equal(t, 2, perft(t, New(), 1))
+	assert.Equal(t, 20, perft(t, New(), 1))
 }
