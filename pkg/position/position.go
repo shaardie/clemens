@@ -125,3 +125,7 @@ func (pos *Position) AllPiecesByColor(c types.Color) bitboard.Bitboard {
 	}
 	return bb
 }
+
+func (pos *Position) IsLegal() bool {
+	return !pos.IsInCheck(types.SwitchColor(pos.sideToMove))
+}

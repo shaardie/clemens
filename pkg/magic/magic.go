@@ -24,9 +24,9 @@ func Init(attacksFunc func(square int, occupied bitboard.Bitboard) bitboard.Bitb
 		// First we calculate the mask and shift
 		// The edges are not relevant for the occupancy,
 		// because the squares can be accessed independent from the occupency.
-		squareRankMask := bitboard.RankMask1 << bitboard.Bitboard(8*bitboard.RankOfSquare(square))
+		squareRankMask := bitboard.RankMask1 << bitboard.Bitboard(8*types.RankOfSquare(square))
 		rankedges := (bitboard.RankMask1 | bitboard.RankMask8) & ^squareRankMask
-		squareFileMask := bitboard.FileMaskA << bitboard.Bitboard(bitboard.FileOfSquare(square))
+		squareFileMask := bitboard.FileMaskA << bitboard.Bitboard(types.FileOfSquare(square))
 		fileedges := (bitboard.FileMaskA | bitboard.FileMaskH) &^ squareFileMask
 		edges := rankedges | fileedges
 		m.Mask = attacksFunc(square, 0) & ^edges

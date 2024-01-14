@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -73,6 +74,50 @@ const (
 	SQUARE_NUMBER
 	SQUARE_NONE = 64
 )
+
+const (
+	fileToChar string = "abcdefgh"
+)
+
+func RankOfSquare(square int) int {
+	return square >> 3
+}
+
+func FileOfSquare(square int) int {
+	return square & 7
+}
+
+func SquareFromRankAndFile(rank int, file int) int {
+	return (rank << 3) + file
+}
+
+func SquareToString(square int) string {
+	return fmt.Sprintf(
+		"%s%d",
+		string(fileToChar[FileOfSquare(square)]),
+		RankOfSquare(square)+1)
+}
+
+func SquareFromString(square string) (int, error) {
+	var file, rank int
+	for i, r := range square {
+		switch i {
+		case 0:
+			file = strings.IndexRune(fileToChar, r)
+			if file == -1 {
+				return 0, fmt.Errorf("failed to get file")
+			}
+		case 1:
+			if !unicode.IsDigit(r) {
+				return 0, fmt.Errorf("failed to get rank")
+			}
+			rank = int(r-'0') - 1
+		default:
+			return 0, fmt.Errorf("token to long")
+		}
+	}
+	return SquareFromRankAndFile(rank, file), nil
+}
 
 const (
 	RANK_1 int = iota

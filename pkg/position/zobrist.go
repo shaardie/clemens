@@ -3,7 +3,6 @@ package position
 import (
 	"math/rand"
 
-	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -57,7 +56,7 @@ func (pos *Position) ZobristHash() uint64 {
 	}
 
 	if pos.enPassant != types.SQUARE_NONE {
-		hash ^= z.enPassant[bitboard.FileOfSquare(pos.enPassant)]
+		hash ^= z.enPassant[types.FileOfSquare(pos.enPassant)]
 	}
 	return hash
 }

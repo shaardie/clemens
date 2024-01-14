@@ -32,7 +32,7 @@ func TestPosition_IsCheck(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pos, err := NewFromFen(tt.fen)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.want, pos.IsCheck(tt.color))
+			assert.Equal(t, tt.want, pos.IsInCheck(tt.color))
 		})
 	}
 }

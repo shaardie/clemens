@@ -1,6 +1,10 @@
 package move
 
-import "github.com/shaardie/clemens/pkg/types"
+import (
+	"fmt"
+
+	"github.com/shaardie/clemens/pkg/types"
+)
 
 type MoveType int
 
@@ -17,6 +21,14 @@ const (
 // 12-13 is the Move Type
 // 14-15 is the Promotion Piece Type
 type Move uint64
+
+func (m Move) String() string {
+	return fmt.Sprintf(
+		"%s%s",
+		types.SquareToString(m.GetSourceSquare()),
+		types.SquareToString(m.GetDestinationSquare()),
+	)
+}
 
 func (m *Move) GetSourceSquare() int {
 	return int(*m & 0b111111)

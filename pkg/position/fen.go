@@ -8,12 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/types"
-)
-
-const (
-	fileToChar string = "abcdefgh"
 )
 
 // NewFromFen creates a new position from a FEN string, see https://www.chessprogramming.org/Forsyth-Edwards_Notation#En_passant_target_square
@@ -65,7 +60,7 @@ func (pos *Position) ToFen() string {
 	for rank := types.RANK_8; rank >= types.RANK_1; rank = rank - 1 {
 		for file := types.FILE_A; file <= types.FILE_H; file++ {
 			emptyCount := 0
-			for file <= types.FILE_H && pos.Empty(bitboard.SquareFromRankAndFile(rank, file)) {
+			for file <= types.FILE_H && pos.Empty(types.SquareFromRankAndFile(rank, file)) {
 				emptyCount++
 				file++
 			}
@@ -75,7 +70,7 @@ func (pos *Position) ToFen() string {
 
 			if file <= types.FILE_H {
 				sb.WriteRune(
-					pos.GetPiece(bitboard.SquareFromRankAndFile(rank, file)).ToChar(),
+					pos.GetPiece(types.SquareFromRankAndFile(rank, file)).ToChar(),
 				)
 			}
 		}
@@ -110,12 +105,11 @@ func (pos *Position) ToFen() string {
 	if pos.enPassant == types.SQUARE_NONE {
 		sb.WriteRune('-')
 	} else {
-		sb.WriteByte(fileToChar[bitboard.FileOfSquare(pos.enPassant)])
-		sb.WriteString(strconv.Itoa(bitboard.RankOfSquare(pos.enPassant)))
+		sb.WriteString(types.SquareToString(pos.enPassant))
 	}
 	sb.WriteRune(' ')
 
-	sb.WriteString(strconv.Itoa(bitboard.RankOfSquare(pos.halfMoveClock)))
+	sb.WriteString(strconv.Itoa(types.RankOfSquare(pos.halfMoveClock)))
 	sb.WriteRune(' ')
 	sb.WriteString(strconv.Itoa(pos.numberOfFullMoves))
 	return sb.String()
@@ -212,24 +206,11 @@ func (pos *Position) fenSetEnPassant(token string) error {
 		return nil
 	}
 
-	var file, rank int
-	for i, r := range token {
-		switch i {
-		case 0:
-			file = strings.IndexRune(fileToChar, r)
-			if file == -1 {
-				return fmt.Errorf("failed to get file")
-			}
-		case 1:
-			if !unicode.IsDigit(r) {
-				return fmt.Errorf("failed to get rank")
-			}
-			rank = int(r-'0') - 1
-		default:
-			return fmt.Errorf("token to long")
-		}
+	square, err := types.SquareFromString(token)
+	if err != nil {
+		return fmt.Errorf("failed to parse token as square, %w", err)
 	}
 
-	pos.enPassant = bitboard.SquareFromRankAndFile(rank, file)
+	pos.enPassant = square
 	return nil
 }

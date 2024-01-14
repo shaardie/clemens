@@ -72,7 +72,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 	}
 
 	// No check
-	if pos.IsCheck(pos.sideToMove) {
+	if pos.IsInCheck(pos.sideToMove) {
 		return false
 	}
 
@@ -105,7 +105,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 	}
 
 	for _, file := range files {
-		square := bitboard.SquareFromRankAndFile(rank, file)
+		square := types.SquareFromRankAndFile(rank, file)
 		// Check if squares between are empty
 		if file != types.FILE_H && !pos.Empty(square) {
 			return false

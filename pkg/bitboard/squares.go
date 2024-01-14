@@ -1,20 +1,6 @@
 package bitboard
 
-func RankOfSquare(square int) int {
-	return square >> 3
-}
-
-func RankMaskOfSquare(square int) Bitboard {
-	return RankMask1 << (8 * RankOfSquare(square))
-}
-
-func FileOfSquare(square int) int {
-	return square & 7
-}
-
-func SquareFromRankAndFile(rank int, file int) int {
-	return (rank << 3) + file
-}
+import "github.com/shaardie/clemens/pkg/types"
 
 func BitBySquares(squares ...int) Bitboard {
 	b := Empty
@@ -24,6 +10,10 @@ func BitBySquares(squares ...int) Bitboard {
 	return b
 }
 
+func RankMaskOfSquare(square int) Bitboard {
+	return RankMask1 << (8 * types.RankOfSquare(square))
+}
+
 func BitboardFromRankAndFile(rank int, file int) Bitboard {
-	return BitBySquares(SquareFromRankAndFile(rank, file))
+	return BitBySquares(types.SquareFromRankAndFile(rank, file))
 }

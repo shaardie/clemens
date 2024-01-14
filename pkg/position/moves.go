@@ -7,6 +7,7 @@ import (
 	"github.com/shaardie/clemens/pkg/pieces/king"
 	"github.com/shaardie/clemens/pkg/pieces/knight"
 	"github.com/shaardie/clemens/pkg/pieces/pawn"
+	"github.com/shaardie/clemens/pkg/pieces/queen"
 	"github.com/shaardie/clemens/pkg/pieces/rook"
 	"github.com/shaardie/clemens/pkg/types"
 )
@@ -40,7 +41,7 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 			pos.piecesBitboard[pos.sideToMove][types.QUEEN],
 			occupied,
 			destinations,
-			bishop.AttacksBySquare,
+			queen.AttacksBySquare,
 		)...,
 	)
 
@@ -73,7 +74,6 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
 			m.SetDestinationSquare(targetSquare)
-			moves = append(moves, m)
 			// Pawn Moves with optional Promotion
 			moves = append(moves, pawnMoveWithPromotion(pos.sideToMove, sourceSquare, targetSquare)...)
 		}
@@ -86,24 +86,24 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 			moves = append(moves, pawnMoveWithPromotion(pos.sideToMove, sourceSquare, targetSquare)...)
 		}
 		// En Passant
-		if pos.enPassant != types.SQUARE_NONE {
-			// PseudoPiece on square behind the en passant pawn
-			var pseudoPieceSquare int
-			switch pos.sideToMove {
-			case types.WHITE:
-				pseudoPieceSquare = pos.enPassant + types.FILE_NUMBER
-			case types.BLACK:
-				pseudoPieceSquare = pos.enPassant - types.FILE_NUMBER
-			}
+		// if pos.enPassant != types.SQUARE_NONE {
+		// 	// PseudoPiece on square behind the en passant pawn
+		// 	var pseudoPieceSquare int
+		// 	switch pos.sideToMove {
+		// 	case types.WHITE:
+		// 		pseudoPieceSquare = pos.enPassant + types.FILE_NUMBER
+		// 	case types.BLACK:
+		// 		pseudoPieceSquare = pos.enPassant - types.FILE_NUMBER
+		// 	}
 
-			for _, targetSquare := range bitboard.SquareIndexSerialization(pawn.AttacksBySquare(pos.sideToMove, pseudoPieceSquare)) {
-				var m move.Move
-				m.SetSourceSquare(sourceSquare)
-				m.SetDestinationSquare(targetSquare)
-				m.SetMoveType(move.EN_PASSANT)
-				moves = append(moves, m)
-			}
-		}
+		// 	for _, targetSquare := range bitboard.SquareIndexSerialization(pawn.AttacksBySquare(pos.sideToMove, pseudoPieceSquare)) {
+		// 		var m move.Move
+		// 		m.SetSourceSquare(sourceSquare)
+		// 		m.SetDestinationSquare(targetSquare)
+		// 		m.SetMoveType(move.EN_PASSANT)
+		// 		moves = append(moves, m)
+		// 	}
+		// }
 	}
 
 	// Castling
@@ -142,12 +142,25 @@ func (pos *Position) MakeMove(m move.Move) *Position {
 
 	sourceSquare := m.GetSourceSquare()
 	targetSquare := m.GetDestinationSquare()
+
+	targetPiece := newPos.GetPiece(targetSquare)
+	if targetPiece != types.NO_PIECE {
+		newPos.DeletePiece(targetSquare)
+	}
 	piece := newPos.MovePiece(sourceSquare, targetSquare)
 	switch piece.Type() {
 	// Set en passant
 	case types.PAWN:
 		if abs(sourceSquare-targetSquare) == 2*types.FILE_NUMBER {
 			newPos.enPassant = targetSquare
+			switch pos.sideToMove {
+			case types.BLACK:
+				newPos.enPassant += types.FILE_NUMBER
+			case types.WHITE:
+				newPos.enPassant -= types.FILE_NUMBER
+			default:
+				panic("unknown color")
+			}
 		}
 	case types.KING:
 		// Update castling rights
@@ -234,11 +247,11 @@ func pawnMoveWithPromotion(sideToMove types.Color, sourceSquare, targetSquare in
 	m.SetSourceSquare(sourceSquare)
 	m.SetDestinationSquare(targetSquare)
 	// No promotion
-	if sideToMove == types.WHITE && bitboard.RankOfSquare(targetSquare) != types.RANK_8 {
+	if sideToMove == types.WHITE && types.RankOfSquare(targetSquare) != types.RANK_8 {
 		moves = append(moves, m)
 		return moves
 	}
-	if sideToMove == types.BLACK && bitboard.RankOfSquare(targetSquare) != types.RANK_1 {
+	if sideToMove == types.BLACK && types.RankOfSquare(targetSquare) != types.RANK_1 {
 		moves = append(moves, m)
 
 		return moves
