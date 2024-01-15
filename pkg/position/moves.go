@@ -86,24 +86,16 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 			moves = append(moves, pawnMoveWithPromotion(pos.sideToMove, sourceSquare, targetSquare)...)
 		}
 		// En Passant
-		// if pos.enPassant != types.SQUARE_NONE {
-		// 	// PseudoPiece on square behind the en passant pawn
-		// 	var pseudoPieceSquare int
-		// 	switch pos.sideToMove {
-		// 	case types.WHITE:
-		// 		pseudoPieceSquare = pos.enPassant + types.FILE_NUMBER
-		// 	case types.BLACK:
-		// 		pseudoPieceSquare = pos.enPassant - types.FILE_NUMBER
-		// 	}
-
-		// 	for _, targetSquare := range bitboard.SquareIndexSerialization(pawn.AttacksBySquare(pos.sideToMove, pseudoPieceSquare)) {
-		// 		var m move.Move
-		// 		m.SetSourceSquare(sourceSquare)
-		// 		m.SetDestinationSquare(targetSquare)
-		// 		m.SetMoveType(move.EN_PASSANT)
-		// 		moves = append(moves, m)
-		// 	}
-		// }
+		if pos.enPassant != types.SQUARE_NONE {
+			attackingPawns := pawn.AttacksBySquare(pos.sideToMove, sourceSquare) & bitboard.BitBySquares(pos.enPassant)
+			for _, targetSquare := range bitboard.SquareIndexSerialization(attackingPawns) {
+				var m move.Move
+				m.SetSourceSquare(sourceSquare)
+				m.SetDestinationSquare(targetSquare)
+				m.SetMoveType(move.EN_PASSANT)
+				moves = append(moves, m)
+			}
+		}
 	}
 
 	// Castling
@@ -111,7 +103,7 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 		if c.Color() != pos.sideToMove {
 			continue
 		}
-		if !pos.CanCastleNow(Castling(c)) {
+		if !pos.CanCastleNow(c) {
 			continue
 		}
 		var m move.Move
@@ -122,10 +114,11 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 		case CASTLING_KING:
 			targetSquare = sourceSquare + 2
 		case CASTLING_QUEEN:
-			targetSquare = sourceSquare - 3
+			targetSquare = sourceSquare - 2
 		}
 		m.SetSourceSquare(sourceSquare)
 		m.SetDestinationSquare(targetSquare)
+		moves = append(moves, m)
 	}
 
 	return moves
