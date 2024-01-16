@@ -37,6 +37,12 @@ func TestPosition_CanCastleNow(t *testing.T) {
 			c:    BLACK_CASTLING_KING,
 			want: true,
 		},
+		{
+			name: "white king can not castle if knight is present",
+			fen:  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RN2KBNR w KQkq - 0 1",
+			c:    WHITE_CASTLING_QUEEN,
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

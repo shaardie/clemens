@@ -76,42 +76,29 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 		return false
 	}
 
-	var rank int
-	switch c.Color() {
-	case types.WHITE:
-		rank = types.RANK_1
-	case types.BLACK:
-		rank = types.RANK_8
-	default:
-		panic("unkown color")
+	attackedFiles := 2
+	freeFiles := 2
+	side := c.Side()
+	if side == CASTLING_QUEEN {
+		freeFiles = 3
 	}
 
-	var files []int
-	switch c.Side() {
-	case CASTLING_QUEEN:
-		files = []int{
-			types.FILE_C,
-			types.FILE_D,
+	square := bitboard.SquareIndexSerialization(pos.piecesBitboard[pos.sideToMove][types.KING])[0]
+	for attackedFiles > 0 || freeFiles > 0 {
+		if side == CASTLING_QUEEN {
+			square--
+		} else {
+			square++
 		}
-	case CASTLING_KING:
-		files = []int{
-			types.FILE_F,
-			types.FILE_G,
+		if freeFiles > 0 && !pos.Empty(square) {
+			return false
 		}
-	default:
-		panic("unkown color")
-	}
+		freeFiles--
 
-	for _, file := range files {
-		square := types.SquareFromRankAndFile(rank, file)
-		// Check if squares between are empty
-		if file != types.FILE_H && !pos.Empty(square) {
+		if attackedFiles > 0 && pos.SquareAttackedBy(square)&pos.AllPiecesByColor(types.SwitchColor(pos.sideToMove)) != bitboard.Empty {
 			return false
 		}
-		// Check if squares between are attacked
-		if pos.SquareAttackedBy(square)&pos.AllPiecesByColor(types.SwitchColor(pos.sideToMove)) != bitboard.Empty {
-			return false
-		}
+		attackedFiles--
 	}
 
 	return true

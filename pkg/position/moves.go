@@ -140,6 +140,24 @@ func (pos *Position) MakeMove(m move.Move) *Position {
 	if targetPiece != types.NO_PIECE {
 		newPos.DeletePiece(targetSquare)
 	}
+
+	for _, s := range []int{sourceSquare, targetSquare} {
+		switch s {
+		case types.SQUARE_A1:
+			newPos.castling = pos.castling &^ WHITE_CASTLING_QUEEN
+		case types.SQUARE_H1:
+			newPos.castling = pos.castling &^ WHITE_CASTLING_KING
+		case types.SQUARE_A8:
+			newPos.castling = pos.castling &^ BLACK_CASTLING_QUEEN
+		case types.SQUARE_H8:
+			newPos.castling = pos.castling &^ BLACK_CASTLING_KING
+		case types.SQUARE_E1:
+			newPos.castling = pos.castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
+		case types.SQUARE_E8:
+			newPos.castling = pos.castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
+		}
+	}
+
 	piece := newPos.MovePiece(sourceSquare, targetSquare)
 	switch piece.Type() {
 	// Set en passant
@@ -154,36 +172,6 @@ func (pos *Position) MakeMove(m move.Move) *Position {
 			default:
 				panic("unknown color")
 			}
-		}
-	case types.KING:
-		// Update castling rights
-		switch piece.Color() {
-		case types.WHITE:
-			newPos.castling = pos.castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
-		case types.BLACK:
-			newPos.castling = pos.castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
-		default:
-			panic("unknown color")
-		}
-	case types.ROOK:
-		// Update castling rights
-		switch piece.Color() {
-		case types.WHITE:
-			switch sourceSquare {
-			case types.SQUARE_A1:
-				newPos.castling = pos.castling &^ WHITE_CASTLING_QUEEN
-			case types.SQUARE_H1:
-				newPos.castling = pos.castling &^ WHITE_CASTLING_KING
-			}
-		case types.BLACK:
-			switch sourceSquare {
-			case types.SQUARE_A8:
-				newPos.castling = pos.castling &^ BLACK_CASTLING_QUEEN
-			case types.SQUARE_H8:
-				newPos.castling = pos.castling &^ BLACK_CASTLING_KING
-			}
-		default:
-			panic("unknown color")
 		}
 	}
 
