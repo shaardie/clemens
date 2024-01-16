@@ -90,7 +90,6 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 	switch c.Side() {
 	case CASTLING_QUEEN:
 		files = []int{
-			types.FILE_B,
 			types.FILE_C,
 			types.FILE_D,
 		}
@@ -98,7 +97,6 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 		files = []int{
 			types.FILE_F,
 			types.FILE_G,
-			types.FILE_H,
 		}
 	default:
 		panic("unkown color")

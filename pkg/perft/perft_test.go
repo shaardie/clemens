@@ -52,13 +52,13 @@ func TestPerft(t *testing.T) {
 			depth:    1,
 			expected: 48,
 		},
+		{
+			name:     "kiwipete",
+			fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+			depth:    2,
+			expected: 2039,
+		},
 		// TODO make them work
-		// {
-		// 	name:     "kiwipete",
-		// 	fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
-		// 	depth:    2,
-		// 	expected: 2039,
-		// },
 		// {
 		// 	name:     "kiwipete",
 		// 	fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
