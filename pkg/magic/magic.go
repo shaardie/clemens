@@ -18,6 +18,10 @@ func (m Magic) Index(occupied bitboard.Bitboard) uint {
 }
 
 func Init(attacksFunc func(square int, occupied bitboard.Bitboard) bitboard.Bitboard, rand func() uint64) (magics [types.SQUARE_NUMBER]Magic) {
+	// array of all attacks, splittet in slices per square.
+	// this is faster than having separate arrays.
+	table := []bitboard.Bitboard{}
+
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
 		m := Magic{}
 
@@ -40,7 +44,12 @@ func Init(attacksFunc func(square int, occupied bitboard.Bitboard) bitboard.Bitb
 			attacks[i] = attacksFunc(square, occupancy)
 		}
 
-		m.Attacks = make([]bitboard.Bitboard, size)
+		// Slice from global table
+		oldTableSize := len(table)
+		table = append(table, make([]bitboard.Bitboard, size)...)
+		newTableSize := len(table)
+		m.Attacks = table[oldTableSize:newTableSize]
+
 		complete := false
 		// TODO speed up this function
 		for !complete {
