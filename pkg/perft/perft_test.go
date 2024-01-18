@@ -12,8 +12,6 @@ func benchmark(b *testing.B, pos *position.Position, depth int) int {
 	return Perft(pos, depth)
 }
 
-func BenchmarkPerftInitialPosition(b *testing.B) { benchmark(b, position.New(), 5) }
-
 func BenchmarkPerftKiwipete(b *testing.B) {
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
 	assert.NoError(b, err)
@@ -88,18 +86,78 @@ func TestPerft(t *testing.T) {
 			depth:    4,
 			expected: 4085603,
 		},
-		{
-			name:     "kiwipete",
-			fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
-			depth:    5,
-			expected: 193690690,
-		},
+		// {
+		// 	name:     "kiwipete",
+		// 	fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+		// 	depth:    5,
+		// 	expected: 193690690,
+		// },
 		// {
 		// 	name:     "kiwipete",
 		// 	fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
 		// 	depth:    6,
 		// 	expected: 8031647685,
 		// },
+		{
+			name:     "position3",
+			fen:      "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
+			depth:    1,
+			expected: 14,
+		},
+		{
+			name:     "position3",
+			fen:      "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
+			depth:    2,
+			expected: 191,
+		},
+		{
+			name:     "position3",
+			fen:      "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
+			depth:    3,
+			expected: 2812,
+		},
+		{
+			name:     "position3",
+			fen:      "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
+			depth:    4,
+			expected: 43238,
+		},
+		{
+			name:     "position3",
+			fen:      "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
+			depth:    5,
+			expected: 674624,
+		},
+		{
+			name:     "position4",
+			fen:      "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+			depth:    1,
+			expected: 6,
+		},
+		{
+			name:     "position4",
+			fen:      "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+			depth:    2,
+			expected: 264,
+		},
+		{
+			name:     "position4",
+			fen:      "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+			depth:    3,
+			expected: 9467,
+		},
+		{
+			name:     "position4",
+			fen:      "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+			depth:    4,
+			expected: 422333,
+		},
+		{
+			name:     "position4",
+			fen:      "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+			depth:    5,
+			expected: 15833292,
+		},
 	}
 	for _, tt := range tests {
 		name := fmt.Sprintf("%v-%v", tt.name, tt.depth)
