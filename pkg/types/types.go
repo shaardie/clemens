@@ -155,6 +155,20 @@ const (
 	PIECE_TYPE_NUMBER
 )
 
+func (p PieceType) String() string {
+	switch p {
+	case KNIGHT:
+		return "n"
+	case BISHOP:
+		return "b"
+	case ROOK:
+		return "r"
+	case QUEEN:
+		return "q"
+	}
+	return ""
+}
+
 type Color int
 
 const (

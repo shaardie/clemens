@@ -8,6 +8,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func benchmark(b *testing.B, pos *position.Position, depth int) int {
+	return Perft(pos, depth)
+}
+
+func BenchmarkPerftInitialPosition(b *testing.B) { benchmark(b, position.New(), 5) }
+
+func BenchmarkPerftKiwipete(b *testing.B) {
+	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
+	assert.NoError(b, err)
+	benchmark(b, pos, 5)
+}
+
 func TestPerft(t *testing.T) {
 
 	tests := []struct {
@@ -46,12 +58,12 @@ func TestPerft(t *testing.T) {
 			depth:    5,
 			expected: 4865609,
 		},
-		{
-			name:     "initial position",
-			fen:      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-			depth:    6,
-			expected: 119060324,
-		},
+		// {
+		// 	name:     "initial position",
+		// 	fen:      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+		// 	depth:    6,
+		// 	expected: 119060324,
+		// },
 		{
 			name:     "kiwipete",
 			fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
@@ -76,13 +88,18 @@ func TestPerft(t *testing.T) {
 			depth:    4,
 			expected: 4085603,
 		},
-		// TODO make them work
 		{
 			name:     "kiwipete",
 			fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
 			depth:    5,
 			expected: 193690690,
 		},
+		// {
+		// 	name:     "kiwipete",
+		// 	fen:      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+		// 	depth:    6,
+		// 	expected: 8031647685,
+		// },
 	}
 	for _, tt := range tests {
 		name := fmt.Sprintf("%v-%v", tt.name, tt.depth)

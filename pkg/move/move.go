@@ -23,11 +23,16 @@ const (
 type Move uint64
 
 func (m Move) String() string {
-	return fmt.Sprintf(
+	r := fmt.Sprintf(
 		"%s%s",
 		types.SquareToString(m.GetSourceSquare()),
 		types.SquareToString(m.GetDestinationSquare()),
 	)
+
+	if m.GetMoveType() == PROMOTION {
+		r = fmt.Sprintf("%s%v", r, m.GetPromitionPieceType())
+	}
+	return r
 }
 
 func (m *Move) GetSourceSquare() int {
@@ -62,6 +67,7 @@ func (m *Move) GetPromitionPieceType() types.PieceType {
 }
 
 func (m *Move) SetPromitionPieceType(pt types.PieceType) *Move {
+	*m |= Move(0 << 14)
 	*m |= Move((pt - 1) << 14)
 	return m
 }

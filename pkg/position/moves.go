@@ -201,6 +201,7 @@ func (pos *Position) MakeMove(m move.Move) *Position {
 		newPos.DeletePiece(pawnToRemoveSquare)
 	case move.PROMOTION:
 		// Promote piece
+		newPos.DeletePiece(targetSquare)
 		newPos.SetPiece(types.NewPiece(pos.sideToMove, m.GetPromitionPieceType()), targetSquare)
 	}
 
@@ -240,10 +241,11 @@ func pawnMoveWithPromotion(sideToMove types.Color, sourceSquare, targetSquare in
 
 	// Promotion
 	for _, pt := range []types.PieceType{types.KNIGHT, types.BISHOP, types.ROOK, types.QUEEN} {
-
-		m.SetMoveType(move.PROMOTION)
-		m.SetPromitionPieceType(pt)
-		moves = append(moves, m)
+		// Copy the move, since promotion can only be set once.
+		pm := m
+		pm.SetMoveType(move.PROMOTION)
+		pm.SetPromitionPieceType(pt)
+		moves = append(moves, pm)
 	}
 
 	return moves

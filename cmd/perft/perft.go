@@ -55,7 +55,7 @@ func main() {
 func dividedString(perfts []perft.Result) string {
 	r := make([]string, len(perfts))
 	for i, p := range perfts {
-		r[i] = fmt.Sprintf("%v %d", &p.Move, p.Leafs)
+		r[i] = fmt.Sprintf("%v: %d", &p.Move, p.Leafs)
 	}
 	sort.Strings(r)
 	return strings.Join(r, "\n")

@@ -22,7 +22,7 @@ func IsolatingSubsets(b Bitboard) []Bitboard {
 	return bs
 }
 func SquareIndexSerialization(b Bitboard) []int {
-	idxs := []int{}
+	idxs := make([]int, 0, b.PopulationCount())
 	for b != Empty {
 		idxs = append(idxs, LeastSignificantOneBit(b))
 		b &= b - 1
