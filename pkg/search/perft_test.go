@@ -1,4 +1,4 @@
-package perft
+package search
 
 import (
 	"fmt"

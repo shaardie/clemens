@@ -13,7 +13,7 @@ const (
 	pawnScalar   = 1
 )
 
-func (pos *Position) Evaluation() float64 {
+func (pos *Position) Evaluation() int {
 	materialScore :=
 		kingScalar*(pos.piecesBitboard[types.WHITE][types.KING].PopulationCount()-pos.piecesBitboard[types.BLACK][types.KING].PopulationCount()) +
 			queenScalar*(pos.piecesBitboard[types.WHITE][types.QUEEN].PopulationCount()-pos.piecesBitboard[types.BLACK][types.QUEEN].PopulationCount()) +
@@ -26,5 +26,5 @@ func (pos *Position) Evaluation() float64 {
 		materialScore *= -1
 	}
 
-	return float64(materialScore)
+	return materialScore
 }

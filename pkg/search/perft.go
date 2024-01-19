@@ -1,4 +1,4 @@
-package perft
+package search
 
 import (
 	"github.com/shaardie/clemens/pkg/move"
@@ -30,10 +30,10 @@ func Perft(pos *position.Position, depth int) int {
 }
 
 func Divided(pos *position.Position, depth int) []Result {
-	moves := pos.GeneratePseudoLegalMoves()
 	if depth == 0 {
-		return nil
+		panic("depth should be bigger than 0")
 	}
+	moves := pos.GeneratePseudoLegalMoves()
 	results := make([]Result, 0, len(moves))
 	for _, m := range moves {
 		prevPos := *pos

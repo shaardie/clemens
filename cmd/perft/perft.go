@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shaardie/clemens/pkg/perft"
 	"github.com/shaardie/clemens/pkg/position"
+	"github.com/shaardie/clemens/pkg/search"
 )
 
 var (
@@ -35,7 +35,7 @@ func main() {
 	}
 
 	before := time.Now()
-	results := perft.Divided(pos, depth)
+	results := search.Divided(pos, depth)
 	if fen {
 		fmt.Println(fenString(results))
 	}
@@ -52,7 +52,7 @@ func main() {
 	fmt.Printf("Position: %v\nDepth: %d\nLeafs: %d\nDuration: %v\n", startPos, depth, leafs, after)
 }
 
-func dividedString(perfts []perft.Result) string {
+func dividedString(perfts []search.Result) string {
 	r := make([]string, len(perfts))
 	for i, p := range perfts {
 		r[i] = fmt.Sprintf("%v: %d", &p.Move, p.Leafs)
@@ -61,7 +61,7 @@ func dividedString(perfts []perft.Result) string {
 	return strings.Join(r, "\n")
 }
 
-func fenString(perfts []perft.Result) string {
+func fenString(perfts []search.Result) string {
 	r := make([]string, len(perfts))
 	for i, p := range perfts {
 		r[i] = fmt.Sprintf("%v %s", &p.Move, p.Position.ToFen())
