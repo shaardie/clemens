@@ -7,7 +7,7 @@ import (
 
 type Result struct {
 	Move     move.Move
-	Position *position.Position
+	Position position.Position
 	Leafs    int
 }
 
@@ -17,11 +17,14 @@ func Perft(pos *position.Position, depth int) int {
 	}
 	var nodes int
 	moves := pos.GeneratePseudoLegalMoves()
+	var prevPos position.Position
 	for _, m := range moves {
-		newPos := pos.MakeMove(m)
-		if newPos.IsLegal() {
-			nodes += Perft(newPos, depth-1)
+		prevPos = *pos
+		pos.MakeMove(m)
+		if pos.IsLegal() {
+			nodes += Perft(pos, depth-1)
 		}
+		*pos = prevPos
 	}
 	return nodes
 }
@@ -33,16 +36,18 @@ func Divided(pos *position.Position, depth int) []Result {
 	}
 	results := make([]Result, 0, len(moves))
 	for _, m := range moves {
-		newPos := pos.MakeMove(m)
-		if newPos.IsLegal() {
+		prevPos := *pos
+		pos.MakeMove(m)
+		if pos.IsLegal() {
 			results = append(results,
 				Result{
 					Move:     m,
-					Position: newPos,
-					Leafs:    Perft(newPos, depth-1),
+					Position: *pos,
+					Leafs:    Perft(pos, depth-1),
 				},
 			)
 		}
+		pos = &prevPos
 	}
 	return results
 }

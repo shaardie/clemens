@@ -98,8 +98,8 @@ func TestPosition_MakeMove(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pos, err := NewFromFen(tt.beforeFen)
 			assert.NoError(t, err)
-
-			assert.Equal(t, tt.afterFen, pos.MakeMove(tt.m).ToFen())
+			pos.MakeMove(tt.m)
+			assert.Equal(t, tt.afterFen, pos.ToFen())
 		})
 	}
 }

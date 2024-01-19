@@ -124,51 +124,50 @@ func (pos *Position) GeneratePseudoLegalMoves() []move.Move {
 	return moves
 }
 
-func (pos *Position) MakeMove(m move.Move) *Position {
-	newPos := *pos
-	newPos.sideToMove = types.SwitchColor(pos.sideToMove)
-	if pos.sideToMove == types.BLACK {
-		newPos.numberOfFullMoves = pos.numberOfFullMoves + 1
+func (pos *Position) MakeMove(m move.Move) {
+	previousSideToMove := pos.sideToMove
+	pos.sideToMove = types.SwitchColor(pos.sideToMove)
+	if previousSideToMove == types.BLACK {
+		pos.numberOfFullMoves = pos.numberOfFullMoves + 1
 	}
-	newPos.enPassant = types.SQUARE_NONE
-	newPos.lastPosition = pos
+	pos.enPassant = types.SQUARE_NONE
 
 	sourceSquare := m.GetSourceSquare()
 	targetSquare := m.GetDestinationSquare()
 
-	targetPiece := newPos.GetPiece(targetSquare)
+	targetPiece := pos.GetPiece(targetSquare)
 	if targetPiece != types.NO_PIECE {
-		newPos.DeletePiece(targetSquare)
+		pos.DeletePiece(targetSquare)
 	}
 
 	for _, s := range []int{sourceSquare, targetSquare} {
 		switch s {
 		case types.SQUARE_A1:
-			newPos.castling = pos.castling &^ WHITE_CASTLING_QUEEN
+			pos.castling = pos.castling &^ WHITE_CASTLING_QUEEN
 		case types.SQUARE_H1:
-			newPos.castling = pos.castling &^ WHITE_CASTLING_KING
+			pos.castling = pos.castling &^ WHITE_CASTLING_KING
 		case types.SQUARE_A8:
-			newPos.castling = pos.castling &^ BLACK_CASTLING_QUEEN
+			pos.castling = pos.castling &^ BLACK_CASTLING_QUEEN
 		case types.SQUARE_H8:
-			newPos.castling = pos.castling &^ BLACK_CASTLING_KING
+			pos.castling = pos.castling &^ BLACK_CASTLING_KING
 		case types.SQUARE_E1:
-			newPos.castling = pos.castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
+			pos.castling = pos.castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
 		case types.SQUARE_E8:
-			newPos.castling = pos.castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
+			pos.castling = pos.castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
 		}
 	}
 
-	piece := newPos.MovePiece(sourceSquare, targetSquare)
+	piece := pos.MovePiece(sourceSquare, targetSquare)
 	switch piece.Type() {
 	// Set en passant
 	case types.PAWN:
 		if abs(sourceSquare-targetSquare) == 2*types.FILE_NUMBER {
-			newPos.enPassant = targetSquare
-			switch pos.sideToMove {
+			pos.enPassant = targetSquare
+			switch previousSideToMove {
 			case types.BLACK:
-				newPos.enPassant += types.FILE_NUMBER
+				pos.enPassant += types.FILE_NUMBER
 			case types.WHITE:
-				newPos.enPassant -= types.FILE_NUMBER
+				pos.enPassant -= types.FILE_NUMBER
 			default:
 				panic("unknown color")
 			}
@@ -179,33 +178,31 @@ func (pos *Position) MakeMove(m move.Move) *Position {
 	case move.CASTLING:
 		switch targetSquare {
 		case types.SQUARE_C1:
-			newPos.MovePiece(types.SQUARE_A1, types.SQUARE_D1)
+			pos.MovePiece(types.SQUARE_A1, types.SQUARE_D1)
 		case types.SQUARE_G1:
-			newPos.MovePiece(types.SQUARE_H1, types.SQUARE_F1)
+			pos.MovePiece(types.SQUARE_H1, types.SQUARE_F1)
 		case types.SQUARE_C8:
-			newPos.MovePiece(types.SQUARE_A8, types.SQUARE_D8)
+			pos.MovePiece(types.SQUARE_A8, types.SQUARE_D8)
 		case types.SQUARE_G8:
-			newPos.MovePiece(types.SQUARE_H8, types.SQUARE_F8)
+			pos.MovePiece(types.SQUARE_H8, types.SQUARE_F8)
 		default:
 			panic("wrong source square for castling")
 		}
 	case move.EN_PASSANT:
 		// Remove pawn behind moved pawn
 		var pawnToRemoveSquare = 0
-		switch pos.sideToMove {
+		switch previousSideToMove {
 		case types.WHITE:
 			pawnToRemoveSquare = targetSquare - types.FILE_NUMBER
 		case types.BLACK:
 			pawnToRemoveSquare = targetSquare + types.FILE_NUMBER
 		}
-		newPos.DeletePiece(pawnToRemoveSquare)
+		pos.DeletePiece(pawnToRemoveSquare)
 	case move.PROMOTION:
 		// Promote piece
-		newPos.DeletePiece(targetSquare)
-		newPos.SetPiece(types.NewPiece(pos.sideToMove, m.GetPromitionPieceType()), targetSquare)
+		pos.DeletePiece(targetSquare)
+		pos.SetPiece(types.NewPiece(previousSideToMove, m.GetPromitionPieceType()), targetSquare)
 	}
-
-	return &newPos
 }
 
 // generateMovesHelper generates a list of moves from a given list of paramters
