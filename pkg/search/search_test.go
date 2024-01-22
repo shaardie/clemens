@@ -8,6 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func BenchmarkPerftKiwipete(b *testing.B) {
+	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
+	assert.NoError(b, err)
+	Search(pos, 5)
+}
+
 func TestSearch(t *testing.T) {
 	tests := []struct {
 		name     string
