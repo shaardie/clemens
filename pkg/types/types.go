@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"unicode"
@@ -167,6 +168,23 @@ func (p PieceType) String() string {
 		return "q"
 	}
 	return ""
+}
+
+func PieceTypeFromString(s string) (PieceType, error) {
+	switch s {
+	case "p":
+		return PAWN, nil
+	case "n":
+		return KNIGHT, nil
+	case "b":
+		return BISHOP, nil
+	case "r":
+		return ROOK, nil
+	case "q":
+		return QUEEN, nil
+	default:
+		return 0, errors.New("unknown piece type")
+	}
 }
 
 type Color int

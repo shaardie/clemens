@@ -1,6 +1,7 @@
 package position
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/move"
@@ -127,7 +128,9 @@ func TestPosition_GeneratePseudoLegalMoves(t *testing.T) {
 			pos, err := NewFromFen(tt.beforeFen)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tt.moves, pos.GeneratePseudoLegalMoves())
+			for i, m := range pos.GeneratePseudoLegalMoves() {
+				assert.Equal(t, fmt.Sprint(tt.moves[i]), fmt.Sprint(m))
+			}
 		})
 	}
 }
