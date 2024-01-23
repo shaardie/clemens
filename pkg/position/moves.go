@@ -1,6 +1,8 @@
 package position
 
 import (
+	"errors"
+
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/pieces/bishop"
@@ -216,6 +218,44 @@ func generateMovesHelper(moves []move.Move, sources, occupied, destinations bitb
 		}
 	}
 	return idx
+}
+
+func (pos *Position) MakeMoveFromString(s string) error {
+	var m move.Move
+	if len(s) < 4 {
+		return errors.New("input to small")
+	}
+
+	sourceSquare, err := types.SquareFromString(s[0:2])
+	if err != nil {
+		return err
+	}
+	m.SetSourceSquare(sourceSquare)
+
+	destinationSquare, err := types.SquareFromString(s[2:4])
+	if err != nil {
+		return err
+	}
+	m.SetDestinationSquare(destinationSquare)
+
+	pt := pos.GetPiece(sourceSquare).Type()
+	if pt == types.KING && abs(sourceSquare-destinationSquare) == 2 {
+		m.SetMoveType(move.CASTLING)
+	} else if pt == types.PAWN {
+		if types.FileOfSquare(sourceSquare) != types.FileOfSquare(destinationSquare) && pos.GetPiece(destinationSquare) == types.NO_PIECE {
+			m.SetMoveType(move.EN_PASSANT)
+		} else if len(s) == 5 {
+			m.SetMoveType(move.PROMOTION)
+			pt, err := types.PieceTypeFromString(string(s[4]))
+			if err != nil {
+				return err
+			}
+			m.SetPromitionPieceType(pt)
+		}
+	}
+
+	pos.MakeMove(m)
+	return nil
 }
 
 func pawnMoveWithPromotion(moves []move.Move, sideToMove types.Color, sourceSquare, targetSquare int) int {
