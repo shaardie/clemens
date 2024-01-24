@@ -15,7 +15,7 @@ var pos *position.Position
 
 // This is not good
 func run(currPos position.Position) {
-	m := search.Search(&currPos, 6)
+	m := search.Search(&currPos, 5)
 	fmt.Printf("bestmove %v\n", m)
 }
 
