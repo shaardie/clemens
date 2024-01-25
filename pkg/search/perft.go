@@ -5,7 +5,7 @@ import (
 	"github.com/shaardie/clemens/pkg/position"
 )
 
-type Result struct {
+type PerftResults struct {
 	Move     move.Move
 	Position position.Position
 	Leafs    int
@@ -29,18 +29,18 @@ func Perft(pos *position.Position, depth int) int {
 	return nodes
 }
 
-func Divided(pos *position.Position, depth int) []Result {
+func Divided(pos *position.Position, depth int) []PerftResults {
 	if depth == 0 {
 		panic("depth should be bigger than 0")
 	}
 	moves := pos.GeneratePseudoLegalMoves()
-	results := make([]Result, 0, len(moves))
+	results := make([]PerftResults, 0, len(moves))
 	for _, m := range moves {
 		prevPos := *pos
 		pos.MakeMove(m)
 		if pos.IsLegal() {
 			results = append(results,
-				Result{
+				PerftResults{
 					Move:     m,
 					Position: *pos,
 					Leafs:    Perft(pos, depth-1),

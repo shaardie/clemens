@@ -52,7 +52,7 @@ func main() {
 	fmt.Printf("Position: %v\nDepth: %d\nLeafs: %d\nDuration: %v\n", startPos, depth, leafs, after)
 }
 
-func dividedString(perfts []search.Result) string {
+func dividedString(perfts []search.PerftResults) string {
 	r := make([]string, len(perfts))
 	for i, p := range perfts {
 		r[i] = fmt.Sprintf("%v: %d", &p.Move, p.Leafs)
@@ -61,7 +61,7 @@ func dividedString(perfts []search.Result) string {
 	return strings.Join(r, "\n")
 }
 
-func fenString(perfts []search.Result) string {
+func fenString(perfts []search.PerftResults) string {
 	r := make([]string, len(perfts))
 	for i, p := range perfts {
 		r[i] = fmt.Sprintf("%v %s", &p.Move, p.Position.ToFen())

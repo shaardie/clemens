@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_handlePositionInput(t *testing.T) {
+func Test_game_newPosition(t *testing.T) {
 	tests := []struct {
 		name   string
 		tokens []string
@@ -41,9 +41,8 @@ func Test_handlePositionInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pos := handlePositionInput(tt.tokens)
-			s := pos.ToFen()
-			assert.Equal(t, s, tt.want)
+			s.newPosition(tt.tokens)
+			assert.Equal(t, tt.want, s.position.ToFen())
 		})
 	}
 }

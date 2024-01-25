@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/shaardie/clemens/pkg/metadata"
-	"github.com/shaardie/clemens/pkg/position"
 )
 
 func handleInput(input string) {
@@ -15,27 +14,24 @@ func handleInput(input string) {
 	if len(tokens) == 0 {
 		return
 	}
-	switch tokens[0] {
+	baseCmd := tokens[0]
+	tokens = tokens[1:]
+	switch baseCmd {
 	case "uci":
 		fmt.Printf("id name %v %v\nid author %v\nuciok\n", metadata.Name, metadata.Version, metadata.Author)
 		return
 	case "quit":
 		os.Exit(0)
 	case "isready":
-		fmt.Println("readyok")
+		go s.isReady()
 		return
 	case "ucinewgame":
-		pos = position.New()
+		go s.newGame()
 		return
 	case "position":
-		newPos := handlePositionInput(tokens[1:])
-		if newPos != nil {
-			pos = newPos
-		}
+		go s.newPosition(tokens)
 	case "go":
-		if pos != nil {
-			run(*pos)
-		}
+		go s.findBestMove(tokens)
 	}
 }
 
