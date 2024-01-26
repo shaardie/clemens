@@ -12,7 +12,7 @@ import (
 type game struct {
 	isReadyM *sync.Mutex
 	position *position.Position
-	maxDepth int
+	maxDepth uint8
 
 	result  search.SearchResult
 	resultM *sync.Mutex
@@ -82,11 +82,11 @@ func (s *game) findBestMove(tokens []string) {
 	if s.position == nil {
 		return
 	}
-
-	for depth := 1; depth <= s.maxDepth; depth++ {
+	var depth uint8
+	for depth = 1; depth <= s.maxDepth; depth++ {
 		currPos := *s.position
 		r := search.Search(&currPos, depth)
-		fmt.Printf("info depth %d score cp %v nodes %v \n", depth, r.Score, r.Nodes)
+		fmt.Printf("info depth %d score cp %v\n", depth, r.Score)
 		s.setResult(r)
 	}
 

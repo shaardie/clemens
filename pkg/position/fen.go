@@ -41,15 +41,19 @@ func NewFromFen(fen string) (*Position, error) {
 		return nil, fmt.Errorf("failed to set en passant from fen token, %w", err)
 	}
 
-	pos.halfMoveClock, err = strconv.Atoi(tokens[4])
+	halfMoveClock, err := strconv.Atoi(tokens[4])
 	if err != nil {
 		return nil, fmt.Errorf("failed to set half move clock from fen token, %w", err)
 	}
+	pos.HalfMoveClock = uint8(halfMoveClock)
 
 	pos.numberOfFullMoves, err = strconv.Atoi(tokens[5])
 	if err != nil {
 		return nil, fmt.Errorf("failed to set number of full moves fen token, %w", err)
 	}
+
+	// Create initial zobrist hash
+	pos.initZobristHash()
 
 	return pos, nil
 }
@@ -109,7 +113,7 @@ func (pos *Position) ToFen() string {
 	}
 	sb.WriteRune(' ')
 
-	sb.WriteString(strconv.Itoa(types.RankOfSquare(pos.halfMoveClock)))
+	sb.WriteString(strconv.Itoa(int(pos.HalfMoveClock)))
 	sb.WriteRune(' ')
 	sb.WriteString(strconv.Itoa(pos.numberOfFullMoves))
 	return sb.String()

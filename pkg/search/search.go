@@ -5,63 +5,110 @@ import (
 
 	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/position"
+	"github.com/shaardie/clemens/pkg/search/transpositiontable"
 )
 
 type SearchResult struct {
 	Score int
 	Move  move.Move
-	Nodes int
 }
 
-func search(pos *position.Position, alpha, beta, depth int) (int, int) {
+func search(pos *position.Position, alpha, beta int, depth uint8, pvNode bool) int {
+	// Evaluate the leaf node
 	if depth == 0 {
-		return pos.Evaluation(), 1
+		return pos.Evaluation()
 	}
 
-	var nodes int
+	// Check if we can use the transition table
+	te, found := transpositiontable.TTable.Get(pos.ZobristHash, depth)
+	if found {
+		switch te.NodeType {
+		case transpositiontable.AlphaNode:
+			// return the bigger value of alpha and score
+			if te.Score < alpha {
+				return alpha
+			}
+			return te.Score
+		case transpositiontable.BetaNode:
+			// return the smaller value of beta and score
+			if te.Score > beta {
+				return beta
+			}
+			return te.Score
+		case transpositiontable.PVNode:
+			// return exact value
+			return te.Score
+		}
+	}
+
+	oldAlpha := alpha
+
+	// Generate all moves
 	moves := pos.GeneratePseudoLegalMoves()
 	var prevPos position.Position
+
+	var bestMove move.Move
+
 	for _, m := range moves {
 		prevPos = *pos
 		pos.MakeMove(m)
 		if pos.IsLegal() {
-			score, additionalNodes := search(pos, -beta, -alpha, depth-1)
-			score = score * -1
-			nodes += additionalNodes
-			if score >= beta {
-				return beta, nodes
+			score := -search(pos, -beta, -alpha, depth-1, pvNode)
+			if pvNode {
+				pvNode = false
 			}
+
+			if score >= beta {
+				transpositiontable.TTable.PotentiallySave(prevPos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
+				return beta
+			}
+
 			if score > alpha {
 				alpha = score
+				bestMove = m
 			}
 		}
 		*pos = prevPos
 	}
-	return alpha, nodes
+
+	nt := transpositiontable.PVNode
+	if oldAlpha == alpha {
+		nt = transpositiontable.AlphaNode
+	}
+	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
+	return alpha
 }
 
-func Search(pos *position.Position, depth int) SearchResult {
+func Search(pos *position.Position, depth uint8) SearchResult {
 	if depth == 0 {
 		panic("depth should be bigger than 0")
 	}
-	r := SearchResult{
-		Score: -math.MaxInt,
-	}
-	moves := pos.GeneratePseudoLegalMoves()
-
-	for _, m := range moves {
-		prevPos := *pos
-		pos.MakeMove(m)
-		if pos.IsLegal() {
-			score, nodes := search(pos, -math.MaxInt, math.MaxInt, depth-1)
-			score = -1 * score
-			r.Nodes += nodes
-			if score >= r.Score {
-				r.Score = score
-				r.Move = m
+	var currentDepth uint8 = 1
+	var score int
+	pvNode := true
+	r := SearchResult{}
+	for {
+		r.Score = -math.MaxInt
+		moves := pos.GeneratePseudoLegalMoves()
+		for _, m := range moves {
+			prevPos := *pos
+			pos.MakeMove(m)
+			if pos.IsLegal() {
+				score = -search(pos, -math.MaxInt, math.MaxInt, currentDepth-1, pvNode)
+				if score >= r.Score {
+					r.Score = score
+					r.Move = m
+				}
+			}
+			pos = &prevPos
+			if pvNode {
+				pvNode = false
 			}
 		}
-		pos = &prevPos
+		if currentDepth == depth {
+			break
+		}
+		currentDepth++
 	}
 	return r
 }

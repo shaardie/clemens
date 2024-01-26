@@ -1,6 +1,7 @@
 package position
 
 import (
+	"math/bits"
 	"math/rand"
 
 	"github.com/shaardie/clemens/pkg/types"
@@ -38,25 +39,42 @@ func init() {
 	}
 }
 
-func (pos *Position) ZobristHash() uint64 {
-	var hash uint64
+func (pos *Position) initZobristHash() {
+	pos.ZobristHash = 0
+
 	for square, piece := range pos.piecesBoard {
 		if piece != types.NO_PIECE {
-			hash ^= z.piecesOnSquares[square][piece.Color()][piece.Type()]
+			pos.zobristUpdatePiece(square, piece.Color(), piece.Type())
 		}
 	}
+
 	if pos.sideToMove == types.BLACK {
-		hash ^= z.sideToMoveIsBlack
+		pos.zobristUpdateColor()
 	}
 
-	for i, castling := range []Castling{WHITE_CASTLING_KING, WHITE_CASTLING_QUEEN, BLACK_CASTLING_KING, BLACK_CASTLING_QUEEN} {
+	for _, castling := range []Castling{WHITE_CASTLING_KING, WHITE_CASTLING_QUEEN, BLACK_CASTLING_KING, BLACK_CASTLING_QUEEN} {
 		if pos.castling|castling != 0 {
-			hash ^= z.castling[i]
+			pos.zobristUpdateCastling(castling)
 		}
 	}
 
 	if pos.enPassant != types.SQUARE_NONE {
-		hash ^= z.enPassant[types.FileOfSquare(pos.enPassant)]
+		pos.ZobristHash ^= z.enPassant[types.FileOfSquare(pos.enPassant)]
 	}
-	return hash
+}
+
+func (pos *Position) zobristUpdateColor() {
+	pos.ZobristHash ^= z.sideToMoveIsBlack
+}
+
+func (pos *Position) zobristUpdateCastling(c Castling) {
+	pos.ZobristHash ^= z.castling[bits.TrailingZeros(uint(c))]
+}
+
+func (pos *Position) zobristUpdatePiece(square int, color types.Color, pieceType types.PieceType) {
+	pos.ZobristHash ^= z.piecesOnSquares[square][color][pieceType]
+}
+
+func (pos *Position) zobristUpdateEnPassant(square int) {
+	pos.ZobristHash ^= z.enPassant[types.FileOfSquare(square)]
 }

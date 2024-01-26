@@ -23,8 +23,10 @@ type Position struct {
 	castling Castling
 	// En passant square
 	enPassant         int
-	halfMoveClock     int
+	HalfMoveClock     uint8
 	numberOfFullMoves int
+
+	ZobristHash uint64
 }
 
 func New() *Position {
@@ -45,6 +47,10 @@ func New() *Position {
 		numberOfFullMoves: 1,
 	}
 	pos.boardToBitBoard()
+
+	// Create initial zobrist hash
+	pos.initZobristHash()
+
 	return pos
 }
 

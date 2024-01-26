@@ -130,7 +130,14 @@ func (pos *Position) MakeMove(m move.Move) {
 	if previousSideToMove == types.BLACK {
 		pos.numberOfFullMoves = pos.numberOfFullMoves + 1
 	}
-	pos.enPassant = types.SQUARE_NONE
+	pos.zobristUpdateColor()
+	resetHalfmoveClock := false
+
+	if pos.enPassant != types.SQUARE_NONE {
+		pos.zobristUpdateEnPassant(pos.enPassant)
+		pos.enPassant = types.SQUARE_NONE
+
+	}
 
 	sourceSquare := m.GetSourceSquare()
 	targetSquare := m.GetDestinationSquare()
@@ -138,22 +145,31 @@ func (pos *Position) MakeMove(m move.Move) {
 	targetPiece := pos.GetPiece(targetSquare)
 	if targetPiece != types.NO_PIECE {
 		pos.DeletePiece(targetSquare)
+		resetHalfmoveClock = true
 	}
 
 	for _, s := range []int{sourceSquare, targetSquare} {
 		switch s {
 		case types.SQUARE_A1:
 			pos.castling = pos.castling &^ WHITE_CASTLING_QUEEN
+			pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
 		case types.SQUARE_H1:
 			pos.castling = pos.castling &^ WHITE_CASTLING_KING
+			pos.zobristUpdateCastling(WHITE_CASTLING_KING)
 		case types.SQUARE_A8:
 			pos.castling = pos.castling &^ BLACK_CASTLING_QUEEN
+			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
 		case types.SQUARE_H8:
 			pos.castling = pos.castling &^ BLACK_CASTLING_KING
+			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
 		case types.SQUARE_E1:
 			pos.castling = pos.castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
+			pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
+			pos.zobristUpdateCastling(WHITE_CASTLING_KING)
 		case types.SQUARE_E8:
 			pos.castling = pos.castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
+			pos.zobristUpdateCastling(BLACK_CASTLING_QUEEN)
+			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
 		}
 	}
 
@@ -161,8 +177,10 @@ func (pos *Position) MakeMove(m move.Move) {
 	switch piece.Type() {
 	// Set en passant
 	case types.PAWN:
+		resetHalfmoveClock = true
 		if abs(sourceSquare-targetSquare) == 2*types.FILE_NUMBER {
 			pos.enPassant = targetSquare
+			pos.zobristUpdateEnPassant(pos.enPassant)
 			switch previousSideToMove {
 			case types.BLACK:
 				pos.enPassant += types.FILE_NUMBER
@@ -171,6 +189,7 @@ func (pos *Position) MakeMove(m move.Move) {
 			default:
 				panic("unknown color")
 			}
+
 		}
 	}
 
@@ -203,6 +222,13 @@ func (pos *Position) MakeMove(m move.Move) {
 		pos.DeletePiece(targetSquare)
 		pos.SetPiece(types.NewPiece(previousSideToMove, m.GetPromitionPieceType()), targetSquare)
 	}
+
+	if resetHalfmoveClock {
+		pos.HalfMoveClock = 0
+	} else {
+		pos.HalfMoveClock++
+	}
+
 }
 
 // generateMovesHelper generates a list of moves from a given list of paramters

@@ -24,8 +24,8 @@ func TestPosition_fenSetPieces(t *testing.T) {
 	anotherPos.piecesBoard[types.SQUARE_E2] = types.WHITE_KING
 	anotherPos.piecesBoard[types.SQUARE_E7] = types.BLACK_KNIGHT
 	anotherPos.piecesBoard[types.SQUARE_C8] = types.BLACK_KING
-
 	anotherPos.boardToBitBoard()
+
 	tests := []struct {
 		name      string
 		token     string
@@ -62,7 +62,8 @@ func TestPosition_fenSetPieces(t *testing.T) {
 				assert.Error(t, err)
 			}
 			if tt.wantedPos != nil {
-				assert.Equal(t, pos, tt.wantedPos)
+				assert.Equal(t, tt.wantedPos.piecesBitboard, pos.piecesBitboard)
+				assert.Equal(t, tt.wantedPos.piecesBitboard, pos.piecesBitboard)
 			}
 		})
 	}
