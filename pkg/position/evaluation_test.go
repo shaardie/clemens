@@ -3,6 +3,7 @@ package position
 import (
 	"testing"
 
+	"github.com/shaardie/clemens/pkg/move"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +28,8 @@ func TestPosition_Evaluation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pos, err := NewFromFen(tt.fen)
 			assert.NoError(t, err)
-			eval := pos.Evaluation()
+			moves := move.NewMoveList()
+			eval := pos.Evaluation(moves)
 			if tt.evalutationOverZero {
 				assert.Positive(t, eval)
 			} else {

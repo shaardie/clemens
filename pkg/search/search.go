@@ -13,10 +13,21 @@ type SearchResult struct {
 	Move  move.Move
 }
 
-func search(pos *position.Position, alpha, beta int, depth uint8, pvNode bool) int {
+type Search struct {
+	evalMoveList *move.MoveList
+}
+
+func NewSearch() *Search {
+	return &Search{
+		evalMoveList: move.NewMoveList(),
+	}
+}
+
+func (s *Search) search(pos *position.Position, alpha, beta int, depth uint8, pvNode bool) int {
 	// Evaluate the leaf node
 	if depth == 0 {
-		return pos.Evaluation()
+		s.evalMoveList.Reset()
+		return pos.Evaluation(s.evalMoveList)
 	}
 
 	// Check if we can use the transition table
@@ -43,17 +54,18 @@ func search(pos *position.Position, alpha, beta int, depth uint8, pvNode bool) i
 
 	oldAlpha := alpha
 
-	// Generate all moves
-	moves := pos.GeneratePseudoLegalMoves()
 	var prevPos position.Position
-
 	var bestMove move.Move
 
-	for _, m := range moves {
+	// Generate all moves
+	moves := move.NewMoveList()
+	pos.GeneratePseudoLegalMoves(moves)
+	for i := uint8(0); i < moves.Length(); i++ {
+		m := moves.Get(i)
 		prevPos = *pos
 		pos.MakeMove(m)
 		if pos.IsLegal() {
-			score := -search(pos, -beta, -alpha, depth-1, pvNode)
+			score := -s.search(pos, -beta, -alpha, depth-1, pvNode)
 			if pvNode {
 				pvNode = false
 			}
@@ -79,7 +91,7 @@ func search(pos *position.Position, alpha, beta int, depth uint8, pvNode bool) i
 	return alpha
 }
 
-func Search(pos *position.Position, depth uint8) SearchResult {
+func (s *Search) Search(pos *position.Position, depth uint8) SearchResult {
 	if depth == 0 {
 		panic("depth should be bigger than 0")
 	}
@@ -89,12 +101,15 @@ func Search(pos *position.Position, depth uint8) SearchResult {
 	r := SearchResult{}
 	for {
 		r.Score = -math.MaxInt
-		moves := pos.GeneratePseudoLegalMoves()
-		for _, m := range moves {
+		// Generate all moves
+		moves := move.NewMoveList()
+		pos.GeneratePseudoLegalMoves(moves)
+		for i := uint8(0); i < moves.Length(); i++ {
+			m := moves.Get(i)
 			prevPos := *pos
 			pos.MakeMove(m)
 			if pos.IsLegal() {
-				score = -search(pos, -math.MaxInt, math.MaxInt, currentDepth-1, pvNode)
+				score = -s.search(pos, -math.MaxInt, math.MaxInt, currentDepth-1, pvNode)
 				if score >= r.Score {
 					r.Score = score
 					r.Move = m

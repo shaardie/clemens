@@ -127,9 +127,10 @@ func TestPosition_GeneratePseudoLegalMoves(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pos, err := NewFromFen(tt.beforeFen)
 			assert.NoError(t, err)
-
-			for i, m := range pos.GeneratePseudoLegalMoves() {
-				assert.Equal(t, fmt.Sprint(tt.moves[i]), fmt.Sprint(m))
+			moves := move.NewMoveList()
+			pos.GeneratePseudoLegalMoves(moves)
+			for i := uint8(0); i < moves.Length(); i++ {
+				assert.Equal(t, fmt.Sprint(tt.moves[i]), fmt.Sprint(moves.Get(i)))
 			}
 		})
 	}

@@ -1,6 +1,7 @@
 package position
 
 import (
+	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -14,7 +15,8 @@ const (
 	mobilityScalar = 1
 )
 
-func (pos *Position) Evaluation() int {
+func (pos *Position) Evaluation(moves *move.MoveList) int {
+	pos.GeneratePseudoLegalMoves(moves)
 	score :=
 		kingScalar*(pos.piecesBitboard[types.WHITE][types.KING].PopulationCount()-pos.piecesBitboard[types.BLACK][types.KING].PopulationCount()) +
 			queenScalar*(pos.piecesBitboard[types.WHITE][types.QUEEN].PopulationCount()-pos.piecesBitboard[types.BLACK][types.QUEEN].PopulationCount()) +
@@ -22,7 +24,7 @@ func (pos *Position) Evaluation() int {
 			bishopScalar*(pos.piecesBitboard[types.WHITE][types.BISHOP].PopulationCount()-pos.piecesBitboard[types.BLACK][types.BISHOP].PopulationCount()) +
 			knightScalar*(pos.piecesBitboard[types.WHITE][types.KNIGHT].PopulationCount()-pos.piecesBitboard[types.BLACK][types.KNIGHT].PopulationCount()) +
 			pawnScalar*(pos.piecesBitboard[types.WHITE][types.PAWN].PopulationCount()-pos.piecesBitboard[types.BLACK][types.PAWN].PopulationCount()) +
-			mobilityScalar*len(pos.GeneratePseudoLegalMoves())
+			mobilityScalar*int(moves.Length())
 
 	if pos.sideToMove == types.BLACK {
 		score *= -1

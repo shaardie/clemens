@@ -85,7 +85,7 @@ func (s *game) findBestMove(tokens []string) {
 	var depth uint8
 	for depth = 1; depth <= s.maxDepth; depth++ {
 		currPos := *s.position
-		r := search.Search(&currPos, depth)
+		r := search.NewSearch().Search(&currPos, depth)
 		fmt.Printf("info depth %d score cp %v\n", depth, r.Score)
 		s.setResult(r)
 	}
