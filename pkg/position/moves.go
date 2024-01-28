@@ -64,27 +64,37 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	)
 
 	// Pawns
-	for _, sourceSquare := range bitboard.SquareIndexSerialization(pos.piecesBitboard[pos.sideToMove][types.PAWN]) {
+	pawnSquares := pos.piecesBitboard[pos.sideToMove][types.PAWN]
+	for pawnSquares != bitboard.Empty {
+		sourceSquare := bitboard.SquareIndexSerializationNextSquare(&pawnSquares)
+
 		// Pushes
-		for _, targetSquare := range bitboard.SquareIndexSerialization(pawn.PushesBySquare(pos.sideToMove, sourceSquare, occupied)) {
+		targets := pawn.PushesBySquare(pos.sideToMove, sourceSquare, occupied)
+		for targets != bitboard.Empty {
+			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
 			m.SetTargetSquare(targetSquare)
 			// Pawn Moves with optional Promotion
 			pawnMoveWithPromotion(moves, pos.sideToMove, sourceSquare, targetSquare)
 		}
+
 		// Attacks
-		for _, targetSquare := range bitboard.SquareIndexSerialization(pawn.AttacksBySquare(pos.sideToMove, sourceSquare) & pos.AllPiecesByColor(types.SwitchColor(pos.sideToMove))) {
+		targets = pawn.AttacksBySquare(pos.sideToMove, sourceSquare) & pos.AllPiecesByColor(types.SwitchColor(pos.sideToMove))
+		for targets != bitboard.Empty {
+			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
 			m.SetTargetSquare(targetSquare)
 			// Pawn Moves with optional Promotion
 			pawnMoveWithPromotion(moves, pos.sideToMove, sourceSquare, targetSquare)
 		}
+
 		// En Passant
 		if pos.enPassant != types.SQUARE_NONE {
 			attackingPawns := pawn.AttacksBySquare(pos.sideToMove, sourceSquare) & bitboard.BitBySquares(pos.enPassant)
-			for _, targetSquare := range bitboard.SquareIndexSerialization(attackingPawns) {
+			for attackingPawns != bitboard.Empty {
+				targetSquare := bitboard.SquareIndexSerializationNextSquare(&attackingPawns)
 				var m move.Move
 				m.SetSourceSquare(sourceSquare)
 				m.SetTargetSquare(targetSquare)
@@ -104,7 +114,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		}
 		var m move.Move
 		m.SetMoveType(move.CASTLING)
-		sourceSquare := bitboard.SquareIndexSerialization(pos.piecesBitboard[pos.sideToMove][types.KING])[0]
+		sourceSquare := bitboard.LeastSignificantOneBit(pos.piecesBitboard[pos.sideToMove][types.KING])
 		var targetSquare int
 		switch c.Side() {
 		case CASTLING_KING:

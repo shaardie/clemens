@@ -83,7 +83,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 		freeFiles = 3
 	}
 
-	square := bitboard.SquareIndexSerialization(pos.piecesBitboard[pos.sideToMove][types.KING])[0]
+	square := bitboard.LeastSignificantOneBit(pos.piecesBitboard[pos.sideToMove][types.KING])
 	for attackedFiles > 0 || freeFiles > 0 {
 		if side == CASTLING_QUEEN {
 			square--

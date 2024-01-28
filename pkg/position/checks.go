@@ -6,7 +6,7 @@ import (
 )
 
 func (pos *Position) IsInCheck(c types.Color) bool {
-	square := bitboard.SquareIndexSerialization(pos.piecesBitboard[c][types.KING])[0]
+	square := bitboard.LeastSignificantOneBit(pos.piecesBitboard[c][types.KING])
 	attacks := pos.SquareAttackedBy(square)
 	filtered := attacks & pos.AllPiecesByColor(types.SwitchColor(c))
 	return filtered != 0
