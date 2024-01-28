@@ -26,7 +26,7 @@ func (m Move) String() string {
 	r := fmt.Sprintf(
 		"%s%s",
 		types.SquareToString(m.GetSourceSquare()),
-		types.SquareToString(m.GetDestinationSquare()),
+		types.SquareToString(m.GetTargetSquare()),
 	)
 
 	if m.GetMoveType() == PROMOTION {
@@ -44,11 +44,11 @@ func (m *Move) SetSourceSquare(square int) *Move {
 	return m
 }
 
-func (m *Move) GetDestinationSquare() int {
+func (m *Move) GetTargetSquare() int {
 	return int(*m >> 6 & 0b111111)
 }
 
-func (m *Move) SetDestinationSquare(square int) *Move {
+func (m *Move) SetTargetSquare(square int) *Move {
 	*m |= Move(square << 6)
 	return m
 }

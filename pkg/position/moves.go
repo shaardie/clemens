@@ -69,7 +69,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		for _, targetSquare := range bitboard.SquareIndexSerialization(pawn.PushesBySquare(pos.sideToMove, sourceSquare, occupied)) {
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
-			m.SetDestinationSquare(targetSquare)
+			m.SetTargetSquare(targetSquare)
 			// Pawn Moves with optional Promotion
 			pawnMoveWithPromotion(moves, pos.sideToMove, sourceSquare, targetSquare)
 		}
@@ -77,7 +77,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		for _, targetSquare := range bitboard.SquareIndexSerialization(pawn.AttacksBySquare(pos.sideToMove, sourceSquare) & pos.AllPiecesByColor(types.SwitchColor(pos.sideToMove))) {
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
-			m.SetDestinationSquare(targetSquare)
+			m.SetTargetSquare(targetSquare)
 			// Pawn Moves with optional Promotion
 			pawnMoveWithPromotion(moves, pos.sideToMove, sourceSquare, targetSquare)
 		}
@@ -87,7 +87,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 			for _, targetSquare := range bitboard.SquareIndexSerialization(attackingPawns) {
 				var m move.Move
 				m.SetSourceSquare(sourceSquare)
-				m.SetDestinationSquare(targetSquare)
+				m.SetTargetSquare(targetSquare)
 				m.SetMoveType(move.EN_PASSANT)
 				moves.Append(m)
 			}
@@ -113,7 +113,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 			targetSquare = sourceSquare - 2
 		}
 		m.SetSourceSquare(sourceSquare)
-		m.SetDestinationSquare(targetSquare)
+		m.SetTargetSquare(targetSquare)
 		moves.Append(m)
 	}
 }
@@ -134,7 +134,7 @@ func (pos *Position) MakeMove(m move.Move) {
 	}
 
 	sourceSquare := m.GetSourceSquare()
-	targetSquare := m.GetDestinationSquare()
+	targetSquare := m.GetTargetSquare()
 
 	targetPiece := pos.GetPiece(targetSquare)
 	if targetPiece != types.NO_PIECE {
@@ -227,13 +227,18 @@ func (pos *Position) MakeMove(m move.Move) {
 
 // generateMovesHelper generates a list of moves from a given list of paramters
 func generateMovesHelper(moves *move.MoveList, sources, occupied, destinations bitboard.Bitboard, attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) {
-	for _, sourceSquare := range bitboard.SquareIndexSerialization(sources) {
-		for _, targetSquare := range bitboard.SquareIndexSerialization(attacks(sourceSquare, occupied) & destinations) {
+	var sourceSquare, targetSquare int
+	for sources != bitboard.Empty {
+		sourceSquare = bitboard.SquareIndexSerializationNextSquare(&sources)
+		targets := attacks(sourceSquare, occupied) & destinations
+		for targets != bitboard.Empty {
+			targetSquare = bitboard.SquareIndexSerializationNextSquare(&targets)
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
-			m.SetDestinationSquare(targetSquare)
+			m.SetTargetSquare(targetSquare)
 			moves.Append(m)
 		}
+
 	}
 }
 
@@ -253,7 +258,7 @@ func (pos *Position) MakeMoveFromString(s string) error {
 	if err != nil {
 		return err
 	}
-	m.SetDestinationSquare(destinationSquare)
+	m.SetTargetSquare(destinationSquare)
 
 	pt := pos.GetPiece(sourceSquare).Type()
 	if pt == types.KING && abs(sourceSquare-destinationSquare) == 2 {
@@ -278,7 +283,7 @@ func (pos *Position) MakeMoveFromString(s string) error {
 func pawnMoveWithPromotion(moves *move.MoveList, sideToMove types.Color, sourceSquare, targetSquare int) {
 	var m move.Move
 	m.SetSourceSquare(sourceSquare)
-	m.SetDestinationSquare(targetSquare)
+	m.SetTargetSquare(targetSquare)
 	// No promotion
 	if sideToMove == types.WHITE && types.RankOfSquare(targetSquare) != types.RANK_8 {
 		moves.Append(m)

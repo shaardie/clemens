@@ -14,7 +14,7 @@ func TestPosition_ZobristHash(t *testing.T) {
 
 	var m move.Move
 	m.SetSourceSquare(types.SQUARE_E2)
-	m.SetDestinationSquare(types.SQUARE_E4)
+	m.SetTargetSquare(types.SQUARE_E4)
 	pos.MakeMove(m)
 	afterMoveHash := pos.ZobristHash
 	pos.initZobristHash()
