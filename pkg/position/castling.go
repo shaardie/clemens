@@ -67,12 +67,12 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 	}
 
 	// Color matches
-	if c.Color() != pos.sideToMove {
+	if c.Color() != pos.SideToMove {
 		return false
 	}
 
 	// No check
-	if pos.IsInCheck(pos.sideToMove) {
+	if pos.IsInCheck(pos.SideToMove) {
 		return false
 	}
 
@@ -83,7 +83,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 		freeFiles = 3
 	}
 
-	square := bitboard.LeastSignificantOneBit(pos.piecesBitboard[pos.sideToMove][types.KING])
+	square := bitboard.LeastSignificantOneBit(pos.piecesBitboard[pos.SideToMove][types.KING])
 	for attackedFiles > 0 || freeFiles > 0 {
 		if side == CASTLING_QUEEN {
 			square--
@@ -95,7 +95,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 		}
 		freeFiles--
 
-		if attackedFiles > 0 && pos.SquareAttackedBy(square)&pos.AllPiecesByColor(types.SwitchColor(pos.sideToMove)) != bitboard.Empty {
+		if attackedFiles > 0 && pos.SquareAttackedBy(square)&pos.AllPiecesByColor(types.SwitchColor(pos.SideToMove)) != bitboard.Empty {
 			return false
 		}
 		attackedFiles--

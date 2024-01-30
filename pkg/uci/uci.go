@@ -4,16 +4,13 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/shaardie/clemens/pkg/position"
+	"github.com/shaardie/clemens/pkg/uci/game"
 )
 
-var pos *position.Position
-
-func init() {
-	s.init()
-}
+var g game.Game
 
 func Run() error {
+	g = game.New()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		handleInput(scanner.Text())

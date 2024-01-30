@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/shaardie/clemens/pkg/metadata"
+	"github.com/shaardie/clemens/pkg/uci/game"
 )
 
 func handleInput(input string) {
@@ -23,15 +24,17 @@ func handleInput(input string) {
 	case "quit":
 		os.Exit(0)
 	case "isready":
-		go s.isReady()
+		go g.IsReady()
 		return
 	case "ucinewgame":
-		go s.newGame()
+		g = game.New()
 		return
 	case "position":
-		go s.newPosition(tokens)
+		go g.NewPosition(tokens)
 	case "go":
-		go s.findBestMove(tokens)
+		go g.StartSearch(tokens)
+	case "stop":
+		go g.StopSearch()
 	}
 }
 

@@ -48,7 +48,7 @@ func (pos *Position) initZobristHash() {
 		}
 	}
 
-	if pos.sideToMove == types.BLACK {
+	if pos.SideToMove == types.BLACK {
 		pos.zobristUpdateColor()
 	}
 

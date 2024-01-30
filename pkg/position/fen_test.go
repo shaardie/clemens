@@ -80,7 +80,7 @@ func TestPosition_fenSetSideToMove(t *testing.T) {
 			name:  "black",
 			token: "b",
 			wantedPos: &Position{
-				sideToMove: types.BLACK,
+				SideToMove: types.BLACK,
 			},
 			wantErr: false,
 		},
@@ -88,7 +88,7 @@ func TestPosition_fenSetSideToMove(t *testing.T) {
 			name:  "white",
 			token: "w",
 			wantedPos: &Position{
-				sideToMove: types.WHITE,
+				SideToMove: types.WHITE,
 			},
 			wantErr: false,
 		},

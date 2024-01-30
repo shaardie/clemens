@@ -18,7 +18,7 @@ type Position struct {
 	// Array of bitboards for all pieces
 	piecesBitboard [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
 	// Color of the side to move
-	sideToMove types.Color
+	SideToMove types.Color
 	// Castling possibilities
 	castling Castling
 	// En passant square
@@ -41,7 +41,7 @@ func New() *Position {
 			types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN,
 			types.BLACK_ROOK, types.BLACK_KNIGHT, types.BLACK_BISHOP, types.BLACK_QUEEN, types.BLACK_KING, types.BLACK_BISHOP, types.BLACK_KNIGHT, types.BLACK_ROOK,
 		},
-		sideToMove:        types.WHITE,
+		SideToMove:        types.WHITE,
 		castling:          WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
 		enPassant:         types.SQUARE_NONE,
 		numberOfFullMoves: 1,
@@ -132,5 +132,5 @@ func (pos *Position) AllPiecesByColor(c types.Color) bitboard.Bitboard {
 }
 
 func (pos *Position) IsLegal() bool {
-	return !pos.IsInCheck(types.SwitchColor(pos.sideToMove))
+	return !pos.IsInCheck(types.SwitchColor(pos.SideToMove))
 }

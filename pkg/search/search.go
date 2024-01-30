@@ -1,33 +1,122 @@
 package search
 
 import (
+	"context"
 	"math"
+	"sync"
+	"time"
 
 	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/position"
 	"github.com/shaardie/clemens/pkg/search/transpositiontable"
 )
 
-type SearchResult struct {
-	Score int
-	Move  move.Move
-}
-
 type Search struct {
-	evalMoveList *move.MoveList
+	pos      position.Position
+	score    int
+	bestMove move.Move
+	nodes    uint64
+	pvNodes  []move.Move
+	m        *sync.Mutex
 }
 
-func NewSearch() *Search {
+type Info struct {
+	Depth uint8
+	Time  int64
+	Nodes uint64
+	PV    []move.Move
+	Score int
+}
+
+func (s *Search) BestMove() move.Move {
+	s.m.Lock()
+	defer s.m.Unlock()
+	return s.bestMove
+}
+
+func NewSearch(pos position.Position) *Search {
 	return &Search{
-		evalMoveList: move.NewMoveList(),
+		pos: pos,
+		m:   &sync.Mutex{},
 	}
 }
 
-func (s *Search) search(pos *position.Position, alpha, beta int, depth uint8, pvNode bool) int {
+func (s *Search) Search(ctx context.Context, maxDepth uint8, info chan Info) {
+	var currentDepth uint8 = 0
+	var isPVNode bool
+	start := time.Now()
+	var pos position.Position
+	pos = s.pos
+	s.score = -math.MaxInt
+
+	for {
+
+		// Stop on abort
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		if maxDepth > 0 && currentDepth == maxDepth {
+			return
+		}
+		currentDepth++
+		isPVNode = true
+		s.pvNodes = make([]move.Move, 0, currentDepth)
+
+		// Generate all moves
+		moves := move.NewMoveList()
+		pos.GeneratePseudoLegalMoves(moves)
+		for i := uint8(0); i < moves.Length(); i++ {
+			m := moves.Get(i)
+			prevPos := pos
+			pos.MakeMove(m)
+			if pos.IsLegal() {
+				if isPVNode {
+					s.pvNodes = append(s.pvNodes, m)
+				}
+
+				s.nodes++
+				score := -s.search(ctx, &pos, -math.MaxInt, math.MaxInt, currentDepth-1, isPVNode)
+				if score > s.score {
+					s.score = score
+					s.bestMove = m
+				}
+				if isPVNode {
+					isPVNode = false
+				}
+
+			}
+			pos = prevPos
+		}
+
+		if info != nil {
+			select {
+			case info <- Info{
+				Depth: currentDepth,
+				Time:  time.Since(start).Milliseconds(),
+				Nodes: s.nodes,
+				Score: s.score,
+			}:
+			default:
+				panic("info channel broken")
+			}
+		}
+	}
+}
+func (s *Search) search(ctx context.Context, pos *position.Position, alpha, beta int, depth uint8, pvNode bool) int {
+	// Stop on abort
+	select {
+	case <-ctx.Done():
+		// not quite sure is alpha is a good value here
+		return alpha
+	default:
+	}
+
 	// Evaluate the leaf node
 	if depth == 0 {
-		s.evalMoveList.Reset()
-		return pos.Evaluation(s.evalMoveList)
+		return pos.Evaluation()
 	}
 
 	// Check if we can use the transition table
@@ -65,7 +154,8 @@ func (s *Search) search(pos *position.Position, alpha, beta int, depth uint8, pv
 		prevPos = *pos
 		pos.MakeMove(m)
 		if pos.IsLegal() {
-			score := -s.search(pos, -beta, -alpha, depth-1, pvNode)
+			s.nodes++
+			score := -s.search(ctx, pos, -beta, -alpha, depth-1, pvNode)
 			if pvNode {
 				pvNode = false
 			}
@@ -89,41 +179,4 @@ func (s *Search) search(pos *position.Position, alpha, beta int, depth uint8, pv
 	}
 	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
 	return alpha
-}
-
-func (s *Search) Search(pos *position.Position, depth uint8) SearchResult {
-	if depth == 0 {
-		panic("depth should be bigger than 0")
-	}
-	var currentDepth uint8 = 1
-	var score int
-	pvNode := true
-	r := SearchResult{}
-	for {
-		r.Score = -math.MaxInt
-		// Generate all moves
-		moves := move.NewMoveList()
-		pos.GeneratePseudoLegalMoves(moves)
-		for i := uint8(0); i < moves.Length(); i++ {
-			m := moves.Get(i)
-			prevPos := *pos
-			pos.MakeMove(m)
-			if pos.IsLegal() {
-				score = -s.search(pos, -math.MaxInt, math.MaxInt, currentDepth-1, pvNode)
-				if score >= r.Score {
-					r.Score = score
-					r.Move = m
-				}
-			}
-			pos = &prevPos
-			if pvNode {
-				pvNode = false
-			}
-		}
-		if currentDepth == depth {
-			break
-		}
-		currentDepth++
-	}
-	return r
 }

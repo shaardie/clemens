@@ -37,7 +37,7 @@ func TestPosition_SquareAttackedBy(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pos := Position{
 				piecesBitboard: tt.fields.PiecesBB,
-				sideToMove:     tt.fields.SideToMove,
+				SideToMove:     tt.fields.SideToMove,
 			}
 			if got := pos.SquareAttackedBy(tt.args.square); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Position.SquareAttackedBy() = %v, want %v", got, tt.want)
