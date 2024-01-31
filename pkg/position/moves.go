@@ -234,6 +234,8 @@ func (pos *Position) MakeMove(m move.Move) {
 		pos.HalfMoveClock++
 	}
 
+	// Generate Helper Bitboards
+	pos.generateHelperBitboards()
 }
 
 // generateMovesHelper generates a list of moves from a given list of paramters

@@ -26,7 +26,9 @@ type Position struct {
 	HalfMoveClock     uint8
 	numberOfFullMoves int
 
-	ZobristHash uint64
+	ZobristHash      uint64
+	allPieces        bitboard.Bitboard
+	allPiecesByColor [types.COLOR_NUMBER]bitboard.Bitboard
 }
 
 func New() *Position {
@@ -47,6 +49,7 @@ func New() *Position {
 		numberOfFullMoves: 1,
 	}
 	pos.boardToBitBoard()
+	pos.generateHelperBitboards()
 
 	// Create initial zobrist hash
 	pos.initZobristHash()
@@ -96,6 +99,18 @@ func (pos *Position) boardToBitBoard() {
 	}
 }
 
+func (pos *Position) generateHelperBitboards() {
+	pos.allPieces = bitboard.Empty
+	for _, c := range []types.Color{types.WHITE, types.BLACK} {
+		bb := bitboard.Empty
+		for _, piece := range pos.piecesBitboard[c] {
+			bb |= piece
+		}
+		pos.allPiecesByColor[c] = bb
+		pos.allPieces |= bb
+	}
+}
+
 func (pos *Position) validate() error {
 	// Validate Pieces
 	for color, bb := range pos.piecesBitboard {
@@ -120,15 +135,11 @@ func (pos *Position) validate() error {
 }
 
 func (pos *Position) AllPieces() bitboard.Bitboard {
-	return pos.AllPiecesByColor(types.WHITE) | pos.AllPiecesByColor(types.BLACK)
+	return pos.allPieces
 }
 
 func (pos *Position) AllPiecesByColor(c types.Color) bitboard.Bitboard {
-	bb := bitboard.Empty
-	for _, piece := range pos.piecesBitboard[c] {
-		bb |= piece
-	}
-	return bb
+	return pos.allPiecesByColor[c]
 }
 
 func (pos *Position) IsLegal() bool {

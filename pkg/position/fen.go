@@ -55,6 +55,9 @@ func NewFromFen(fen string) (*Position, error) {
 	// Create initial zobrist hash
 	pos.initZobristHash()
 
+	// Generate Helper Bitboards
+	pos.generateHelperBitboards()
+
 	return pos, nil
 }
 
