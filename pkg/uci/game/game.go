@@ -313,12 +313,9 @@ func (g *gameImpl) showInfo() {
 		// 	return
 		// }
 		infoString := fmt.Sprintf("info depth %v score cp %v nodes %v time %v", info.Depth, info.Score, info.Nodes, info.Time)
-		if len(info.PV) != 0 {
-			pvStrings := make([]string, len(info.PV))
-			for i := range info.PV {
-				pvStrings[i] = fmt.Sprint(info.PV[i])
-			}
-			infoString = fmt.Sprintf("%v pv %v", infoString, strings.Join(pvStrings, " "))
+		pvString := info.PV.String()
+		if pvString != "" {
+			infoString = fmt.Sprintf("%v pv %v", infoString, pvString)
 		}
 		fmt.Println(infoString)
 	}

@@ -22,6 +22,10 @@ const (
 // 14-15 is the Promotion Piece Type
 type Move uint64
 
+const (
+	NullMove Move = 0
+)
+
 func (m Move) String() string {
 	r := fmt.Sprintf(
 		"%s%s",

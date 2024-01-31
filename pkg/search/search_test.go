@@ -13,7 +13,7 @@ func BenchmarkSearchKiwipete(b *testing.B) {
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
 	assert.NoError(b, err)
 
-	NewSearch(*pos).Search(context.TODO(), 5, nil)
+	NewSearch(*pos).Search(context.TODO(), 6, nil)
 }
 
 func TestSearch(t *testing.T) {
@@ -30,12 +30,12 @@ func TestSearch(t *testing.T) {
 			depth:       5,
 			notExpected: "a1a1",
 		},
-		// {
-		// 	name:        "position4",
-		// 	fen:         "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
-		// 	depth:       5,
-		// 	notExpected: "a1a1",
-		// },
+		{
+			name:        "position4",
+			fen:         "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+			depth:       5,
+			notExpected: "a1a1",
+		},
 	}
 	for _, tt := range tests {
 		name := fmt.Sprintf("%v-%v", tt.name, tt.depth)

@@ -14,7 +14,7 @@ perft: test
 	GOOS=windows go build $(LD_FLAGS) -o perft.exe ./cmd/perft
 
 benchmark:
-	go test ./pkg/search -bench=. -cpuprofile profile.out
+	go test ./pkg/search -run=^$$ -bench ^BenchmarkSearchKiwipete$$ -cpuprofile profile.out
 
 test:
 	go test ./... -cover
