@@ -14,6 +14,83 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
+func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
+	occupied := pos.AllPieces()
+	destinations := pos.AllPiecesByColor(types.SwitchColor(pos.SideToMove))
+	// Sliding Pieces
+	generateMovesHelper(
+		moves,
+		pos.piecesBitboard[pos.SideToMove][types.ROOK],
+		occupied,
+		destinations,
+		rook.AttacksBySquare,
+	)
+	generateMovesHelper(
+		moves,
+		pos.piecesBitboard[pos.SideToMove][types.BISHOP],
+		occupied,
+		destinations,
+		bishop.AttacksBySquare,
+	)
+	generateMovesHelper(
+		moves,
+		pos.piecesBitboard[pos.SideToMove][types.QUEEN],
+		occupied,
+		destinations,
+		queen.AttacksBySquare,
+	)
+
+	// Pieces ignoring occupation
+	generateMovesHelper(
+		moves,
+		pos.piecesBitboard[pos.SideToMove][types.KNIGHT],
+		bitboard.Empty,
+		destinations,
+		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+			return knight.AttacksBySquare(square)
+		},
+	)
+	generateMovesHelper(
+		moves,
+		pos.piecesBitboard[pos.SideToMove][types.KING],
+		bitboard.Empty,
+		destinations,
+		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+			return king.AttacksBySquare(square)
+		},
+	)
+
+	// Pawns
+	pawnSquares := pos.piecesBitboard[pos.SideToMove][types.PAWN]
+	for pawnSquares != bitboard.Empty {
+		sourceSquare := bitboard.SquareIndexSerializationNextSquare(&pawnSquares)
+
+		// Attacks
+		targets := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & pos.AllPiecesByColor(types.SwitchColor(pos.SideToMove))
+		for targets != bitboard.Empty {
+			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
+			var m move.Move
+			m.SetSourceSquare(sourceSquare)
+			m.SetTargetSquare(targetSquare)
+			// Pawn Moves with optional Promotion
+			pawnMoveWithPromotion(moves, pos.SideToMove, sourceSquare, targetSquare)
+		}
+
+		// En Passant
+		if pos.enPassant != types.SQUARE_NONE {
+			attackingPawns := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & bitboard.BitBySquares(pos.enPassant)
+			for attackingPawns != bitboard.Empty {
+				targetSquare := bitboard.SquareIndexSerializationNextSquare(&attackingPawns)
+				var m move.Move
+				m.SetSourceSquare(sourceSquare)
+				m.SetTargetSquare(targetSquare)
+				m.SetMoveType(move.EN_PASSANT)
+				moves.Append(m)
+			}
+		}
+	}
+}
+
 // GeneratePseudoLegalMoves generates all pseudo legal moves
 func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	occupied := pos.AllPieces()
@@ -251,7 +328,6 @@ func generateMovesHelper(moves *move.MoveList, sources, occupied, destinations b
 			m.SetTargetSquare(targetSquare)
 			moves.Append(m)
 		}
-
 	}
 }
 

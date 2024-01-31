@@ -83,6 +83,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	// Evaluate the leaf node
 	if depth == 0 {
 		return pos.Evaluation()
+		// return s.quiescence(ctx, pos, alpha, beta)
 	}
 
 	// Check if we can use the transition table but not on root
@@ -149,5 +150,40 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		nt = transpositiontable.AlphaNode
 	}
 	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
+	return alpha
+}
+
+func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, beta int) int {
+	s.nodes++
+
+	stand_pat := pos.Evaluation()
+	if stand_pat >= beta {
+		return beta
+	}
+	if alpha < stand_pat {
+		alpha = stand_pat
+	}
+
+	var prevPos position.Position
+
+	// Generate all captures
+	moves := move.NewMoveList()
+	pos.GeneratePseudoLegalCaptures(moves)
+	for i := uint8(0); i < moves.Length(); i++ {
+		m := moves.Get(i)
+		prevPos = *pos
+		pos.MakeMove(m)
+		if pos.IsLegal() {
+			score := -s.quiescence(ctx, pos, -beta, -alpha)
+			if score >= beta {
+				return beta
+			}
+
+			if score > alpha {
+				alpha = score
+			}
+		}
+		*pos = prevPos
+	}
 	return alpha
 }

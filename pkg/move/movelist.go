@@ -1,5 +1,10 @@
 package move
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
 	moveListSize = 255
 )
@@ -35,4 +40,11 @@ func (ml *MoveList) Set(idx uint8, m Move) {
 	if ml.size <= idx {
 		ml.size = idx + 1
 	}
+}
+func (ml *MoveList) String() string {
+	ss := make([]string, ml.Length())
+	for i := range ss {
+		ss[i] = fmt.Sprint(ml.moves[i])
+	}
+	return strings.Join(ss, " ")
 }

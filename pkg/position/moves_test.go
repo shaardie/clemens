@@ -109,18 +109,11 @@ func TestPosition_GeneratePseudoLegalMoves(t *testing.T) {
 	tests := []struct {
 		name      string
 		beforeFen string
-		moves     []move.Move
+		moves     string
 	}{{
 		name:      "Promotion",
 		beforeFen: "r3k2r/p1ppqpb1/bn2pnp1/1N1PN3/1p2P3/5Q2/PPPB1PpP/R3KB1R b KQkq - 0 1",
-		moves: []move.Move{
-			0xe78, 0xeb8, 0xef8, 0x3ff, 0x5ff, 0x7ff, 0x9ff, 0xbff, 0xdff, 0xf7f,
-			0xfbf, 0x868, 0xc68, 0xea8, 0xbf6, 0xf76, 0x8b4, 0xaf4, 0xef4, 0xf74,
-			0x629, 0x6a9, 0x8e9, 0xea9, 0x72d, 0x7ad, 0x8ed, 0x9ed, 0xded, 0xfad,
-			0xefc, 0xf7c, 0x118e, 0x518e, 0x918e, 0xd18e, 0x114e, 0x514e, 0x914e,
-			0xd14e, 0x11ce, 0x51ce, 0x91ce, 0xd1ce, 0x459, 0x8ec, 0x9ae, 0x8b2,
-			0xab2, 0xaf3, 0x3fbc, 0x3ebc,
-		},
+		moves:     "a8b8 a8c8 a8d8 h8h2 h8h3 h8h4 h8h5 h8h6 h8h7 h8f8 h8g8 a6b5 a6b7 a6c8 g7h6 g7f8 e7c5 e7d6 e7d8 e7f8 b6a4 b6c4 b6d5 b6c8 f6e4 f6g4 f6d5 f6h5 f6h7 f6g8 e8d8 e8f8 g2g1n g2g1b g2g1r g2g1q g2f1n g2f1b g2f1r g2f1q g2h1n g2h1b g2h1r g2h1q b4b3 e6d5 g6g5 c7c5 c7c6 d7d6 e8g8 e8c8",
 	},
 	}
 	for _, tt := range tests {
@@ -129,9 +122,29 @@ func TestPosition_GeneratePseudoLegalMoves(t *testing.T) {
 			assert.NoError(t, err)
 			moves := move.NewMoveList()
 			pos.GeneratePseudoLegalMoves(moves)
-			for i := uint8(0); i < moves.Length(); i++ {
-				assert.Equal(t, fmt.Sprint(tt.moves[i]), fmt.Sprint(moves.Get(i)))
-			}
+			assert.Equal(t, tt.moves, fmt.Sprint(moves))
+		})
+	}
+}
+
+func TestPosition_GeneratePseudoLegalCaptures(t *testing.T) {
+	tests := []struct {
+		name      string
+		beforeFen string
+		moves     string
+	}{{
+		name:      "Promotion",
+		beforeFen: "r3k2r/p1ppqpb1/bn2pnp1/1N1PN3/1p2P3/5Q2/PPPB1PpP/R3KB1R b KQkq - 0 1",
+		moves:     "h8h2 a6b5 b6d5 f6e4 f6d5 g2f1n g2f1b g2f1r g2f1q g2h1n g2h1b g2h1r g2h1q e6d5",
+	},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pos, err := NewFromFen(tt.beforeFen)
+			assert.NoError(t, err)
+			moves := move.NewMoveList()
+			pos.GeneratePseudoLegalCaptures(moves)
+			assert.Equal(t, tt.moves, fmt.Sprint(moves))
 		})
 	}
 }
