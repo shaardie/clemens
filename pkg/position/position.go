@@ -1,8 +1,6 @@
 package position
 
 import (
-	"fmt"
-
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/pieces/bishop"
 	"github.com/shaardie/clemens/pkg/pieces/king"
@@ -109,29 +107,6 @@ func (pos *Position) generateHelperBitboards() {
 		pos.allPiecesByColor[c] = bb
 		pos.allPieces |= bb
 	}
-}
-
-func (pos *Position) validate() error {
-	// Validate Pieces
-	for color, bb := range pos.piecesBitboard {
-		for pieceType, b := range bb {
-			idxs := bitboard.SquareIndexSerialization(b)
-			for _, idx := range idxs {
-				p := pos.piecesBoard[idx]
-				if p == types.NO_PIECE {
-					return fmt.Errorf("no piece on %v", idx)
-				}
-				if p.Color() != types.Color(color) {
-					return fmt.Errorf("piece on %v has different color, board=%v, bitboard=%v", idx, p.Color(), color)
-				}
-				if p.Type() != types.PieceType(pieceType) {
-					return fmt.Errorf("piece on %v has different type, board=%v, bitboard=%v", idx, p.Type(), pieceType)
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func (pos *Position) AllPieces() bitboard.Bitboard {
