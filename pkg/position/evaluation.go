@@ -1,27 +1,274 @@
 package position
 
 import (
+	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
 const (
-	kingScalar   = 200
-	queenScalar  = 9
-	rookScalar   = 5
-	bishopScalar = 3
-	knightScalar = 3
-	pawnScalar   = 1
+	midgame int = iota
+	endgame
+	game_number
 )
 
-func (pos *Position) Evaluation() int {
-	score :=
-		kingScalar*(pos.piecesBitboard[types.WHITE][types.KING].PopulationCount()-pos.piecesBitboard[types.BLACK][types.KING].PopulationCount()) +
-			queenScalar*(pos.piecesBitboard[types.WHITE][types.QUEEN].PopulationCount()-pos.piecesBitboard[types.BLACK][types.QUEEN].PopulationCount()) +
-			rookScalar*(pos.piecesBitboard[types.WHITE][types.ROOK].PopulationCount()-pos.piecesBitboard[types.BLACK][types.ROOK].PopulationCount()) +
-			bishopScalar*(pos.piecesBitboard[types.WHITE][types.BISHOP].PopulationCount()-pos.piecesBitboard[types.BLACK][types.BISHOP].PopulationCount()) +
-			knightScalar*(pos.piecesBitboard[types.WHITE][types.KNIGHT].PopulationCount()-pos.piecesBitboard[types.BLACK][types.KNIGHT].PopulationCount()) +
-			pawnScalar*(pos.piecesBitboard[types.WHITE][types.PAWN].PopulationCount()-pos.piecesBitboard[types.BLACK][types.PAWN].PopulationCount())
+// These tables are from https://github.com/nescitus/cpw-engine/blob/master/eval_init.cpp
+var (
+	pieceTables = [types.PIECE_TYPE_NUMBER][game_number][types.SQUARE_NUMBER]int{
+		/******************************************************************************
+		 *                           PAWN PCSQ                                         *
+		 *                                                                             *
+		 *  Unlike TSCP, CPW generally doesn't want to advance its pawns. Its piece/   *
+		 *  square table for pawns takes into account the following factors:           *
+		 *                                                                             *
+		 *  - file-dependent component, encouraging program to capture                 *
+		 *    towards the center                                                       *
+		 *  - small bonus for staying on the 2nd rank                                  *
+		 *  - small bonus for standing on a3/h3                                        *
+		 *  - penalty for d/e pawns on their initial squares                           *
+		 *  - bonus for occupying the center                                           *
+		 ******************************************************************************/
+		{
+			{
+				0, 0, 0, 0, 0, 0, 0, 0,
+				-6, -4, 1, 1, 1, 1, -4, -6,
+				-6, -4, 1, 2, 2, 1, -4, -6,
+				-6, -4, 2, 8, 8, 2, -4, -6,
+				-6, -4, 5, 10, 10, 5, -4, -6,
+				-4, -4, 1, 5, 5, 1, -4, -4,
+				-6, -4, 1, -24, -24, 1, -4, -6,
+				0, 0, 0, 0, 0, 0, 0, 0,
+			},
+			{
+				0, 0, 0, 0, 0, 0, 0, 0,
+				-6, -4, 1, 1, 1, 1, -4, -6,
+				-6, -4, 1, 2, 2, 1, -4, -6,
+				-6, -4, 2, 8, 8, 2, -4, -6,
+				-6, -4, 5, 10, 10, 5, -4, -6,
+				-4, -4, 1, 5, 5, 1, -4, -4,
+				-6, -4, 1, -24, -24, 1, -4, -6,
+				0, 0, 0, 0, 0, 0, 0, 0,
+			},
+		},
+		/******************************************************************************
+		 *    KNIGHT PCSQ                                                              *
+		 *                                                                             *
+		 *   - centralization bonus                                                    *
+		 *   - rim and back rank penalty, including penalty for not being developed    *
+		 ******************************************************************************/
+		{
+			{
+				-8, -8, -8, -8, -8, -8, -8, -8,
+				-8, 0, 0, 0, 0, 0, 0, -8,
+				-8, 0, 4, 6, 6, 4, 0, -8,
+				-8, 0, 6, 8, 8, 6, 0, -8,
+				-8, 0, 6, 8, 8, 6, 0, -8,
+				-8, 0, 4, 6, 6, 4, 0, -8,
+				-8, 0, 1, 2, 2, 1, 0, -8,
+				-16, -12, -8, -8, -8, -8, -12, -16,
+			},
+			{
+				-8, -8, -8, -8, -8, -8, -8, -8,
+				-8, 0, 0, 0, 0, 0, 0, -8,
+				-8, 0, 4, 6, 6, 4, 0, -8,
+				-8, 0, 6, 8, 8, 6, 0, -8,
+				-8, 0, 6, 8, 8, 6, 0, -8,
+				-8, 0, 4, 6, 6, 4, 0, -8,
+				-8, 0, 1, 2, 2, 1, 0, -8,
+				-16, -12, -8, -8, -8, -8, -12, -16,
+			},
+		},
+		/******************************************************************************
+		 *                BISHOP PCSQ                                                  *
+		 *                                                                             *
+		 *   - centralization bonus, smaller than for knight                           *
+		 *   - penalty for not being developed                                         *
+		 *   - good squares on the own half of the board                               *
+		 ******************************************************************************/
+		{
+			{
+				-4, -4, -4, -4, -4, -4, -4, -4,
+				-4, 0, 0, 0, 0, 0, 0, -4,
+				-4, 0, 2, 4, 4, 2, 0, -4,
+				-4, 0, 4, 6, 6, 4, 0, -4,
+				-4, 0, 4, 6, 6, 4, 0, -4,
+				-4, 1, 2, 4, 4, 2, 1, -4,
+				-4, 2, 1, 1, 1, 1, 2, -4,
+				-4, -4, -12, -4, -4, -12, -4, -4,
+			},
+			{
+				-4, -4, -4, -4, -4, -4, -4, -4,
+				-4, 0, 0, 0, 0, 0, 0, -4,
+				-4, 0, 2, 4, 4, 2, 0, -4,
+				-4, 0, 4, 6, 6, 4, 0, -4,
+				-4, 0, 4, 6, 6, 4, 0, -4,
+				-4, 1, 2, 4, 4, 2, 1, -4,
+				-4, 2, 1, 1, 1, 1, 2, -4,
+				-4, -4, -12, -4, -4, -12, -4, -4,
+			},
+		},
+		/******************************************************************************
+		*                        ROOK PCSQ                                            *
+		*                                                                             *
+		*    - bonus for 7th and 8th ranks                                            *
+		*    - penalty for a/h columns                                                *
+		*    - small centralization bonus                                             *
+		******************************************************************************/
+		{
+			{
+				5, 5, 5, 5, 5, 5, 5, 5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				0, 0, 0, 2, 2, 0, 0, 0,
+			},
+			{
+				5, 5, 5, 5, 5, 5, 5, 5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				-5, 0, 0, 0, 0, 0, 0, -5,
+				0, 0, 0, 2, 2, 0, 0, 0,
+			},
+		},
+		/******************************************************************************
+		*                     QUEEN PCSQ                                              *
+		*                                                                             *
+		* - small bonus for centralization in the endgame                             *
+		* - penalty for staying on the 1st rank, between rooks in the midgame         *
+		******************************************************************************/
+		{
+			{
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 1, 1, 1, 1, 0, 0,
+				0, 0, 1, 2, 2, 1, 0, 0,
+				0, 0, 2, 3, 3, 2, 0, 0,
+				0, 0, 2, 3, 3, 2, 0, 0,
+				0, 0, 1, 2, 2, 1, 0, 0,
+				0, 0, 1, 1, 1, 1, 0, 0,
+				-5, -5, -5, -5, -5, -5, -5, -5,
+			},
+			{
+				0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 1, 1, 1, 1, 0, 0,
+				0, 0, 1, 2, 2, 1, 0, 0,
+				0, 0, 2, 3, 3, 2, 0, 0,
+				0, 0, 2, 3, 3, 2, 0, 0,
+				0, 0, 1, 2, 2, 1, 0, 0,
+				0, 0, 1, 1, 1, 1, 0, 0,
+				-5, -5, -5, -5, -5, -5, -5, -5,
+			},
+		},
+		/******************************************************************************
+			*                     King PCSQ                                               *
+		 	*                                                                             *
+		 	******************************************************************************/
+		{
+			{
+				-40, -30, -50, -70, -70, -50, -30, -40,
+				-30, -20, -40, -60, -60, -40, -20, -30,
+				-20, -10, -30, -50, -50, -30, -10, -20,
+				-10, 0, -20, -40, -40, -20, 0, -10,
+				0, 10, -10, -30, -30, -10, 10, 0,
+				10, 20, 0, -20, -20, 0, 20, 10,
+				30, 40, 20, 0, 0, 20, 40, 30,
+				40, 50, 30, 10, 10, 30, 50, 40,
+			},
+			{
+				-72, -48, -36, -24, -24, -36, -48, -72,
+				-48, -24, -12, 0, 0, -12, -24, -48,
+				-36, -12, 0, 12, 12, 0, -12, -36,
+				-24, 0, 12, 24, 24, 12, 0, -24,
+				-24, 0, 12, 24, 24, 12, 0, -24,
+				-36, -12, 0, 12, 12, 0, -12, -36,
+				-48, -24, -12, 0, 0, -12, -24, -48,
+				-72, -48, -36, -24, -24, -36, -48, -72,
+			},
+		},
+	}
+)
 
+type evalDataStruct struct {
+	pieceValue               [types.PIECE_TYPE_NUMBER]int
+	midgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
+	endgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
+}
+
+var evalData evalDataStruct
+
+func init() {
+	// Basic Values
+	evalData.pieceValue[types.KING] = 2000
+	evalData.pieceValue[types.QUEEN] = 800
+	evalData.pieceValue[types.ROOK] = 500
+	evalData.pieceValue[types.BISHOP] = 300
+	evalData.pieceValue[types.KNIGHT] = 300
+	evalData.pieceValue[types.PAWN] = 100
+
+	// Set Piece Square Tables
+	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
+		for _, color := range []types.Color{types.WHITE, types.BLACK} {
+			var colorAwareSquare int
+			if types.BLACK == color {
+				// Flipping square, see https://www.chessprogramming.org/Color_Flipping#Flipping_an_8x8_Board
+				colorAwareSquare = square ^ 56
+			}
+			for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
+				evalData.midgamePieceSquareTables[color][pieceType][square] = pieceTables[pieceType][midgame][colorAwareSquare]
+				evalData.endgamePieceSquareTables[color][pieceType][square] = pieceTables[pieceType][endgame][colorAwareSquare]
+			}
+		}
+
+	}
+
+}
+
+func (pos *Position) Evaluation() int {
+	bb := bitboard.Empty
+	var scores [game_number]int
+
+	// Calculate the game phase based on the number of specific PieceTypes,
+	// maxed by 24 to a a better linear interpolation later.
+	var gamePhase int
+	for color := types.WHITE; color < types.COLOR_NUMBER; color++ {
+		gamePhase += pos.piecesBitboard[color][types.BISHOP].PopulationCount()
+		gamePhase += pos.piecesBitboard[color][types.KNIGHT].PopulationCount()
+		gamePhase += 2 * pos.piecesBitboard[color][types.ROOK].PopulationCount()
+		gamePhase += 4 * pos.piecesBitboard[color][types.QUEEN].PopulationCount()
+	}
+	if gamePhase > 24 {
+		gamePhase = 24
+	}
+
+	// piece tables
+	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
+		bb = pos.piecesBitboard[types.WHITE][pieceType]
+		for bb != bitboard.Empty {
+			square := bitboard.SquareIndexSerializationNextSquare(&bb)
+			scores[midgame] += evalData.midgamePieceSquareTables[types.WHITE][pieceType][square]
+			scores[endgame] += evalData.endgamePieceSquareTables[types.WHITE][pieceType][square]
+		}
+		bb = pos.piecesBitboard[types.BLACK][pieceType]
+		for bb != bitboard.Empty {
+			square := bitboard.SquareIndexSerializationNextSquare(&bb)
+			scores[midgame] += evalData.midgamePieceSquareTables[types.BLACK][pieceType][square]
+			scores[endgame] += evalData.endgamePieceSquareTables[types.BLACK][pieceType][square]
+		}
+	}
+
+	// Merge midgame and endgame value
+	score := (scores[midgame]*gamePhase + scores[endgame]*(24-gamePhase)) / 24
+
+	// Basic Material Score
+	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
+		score += evalData.pieceValue[pieceType] * (pos.piecesBitboard[types.WHITE][pieceType].PopulationCount() - pos.piecesBitboard[types.BLACK][pieceType].PopulationCount())
+	}
+
+	// Make the result side aware
 	if pos.SideToMove == types.BLACK {
 		score *= -1
 	}
