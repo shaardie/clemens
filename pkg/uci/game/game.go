@@ -112,7 +112,7 @@ func (g *gameImpl) NewPosition(tokens []string) {
 	for _, token := range tokens {
 		err := g.position.MakeMoveFromString(token)
 		if err != nil {
-			fmt.Printf("info string error while making move %v, %v ", token, err)
+			fmt.Printf("info string error while making move %v, %v \n", token, err)
 			return
 		}
 	}

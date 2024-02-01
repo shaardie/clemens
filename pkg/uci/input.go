@@ -24,17 +24,17 @@ func handleInput(input string) {
 	case "quit":
 		os.Exit(0)
 	case "isready":
-		go g.IsReady()
+		g.IsReady()
 		return
 	case "ucinewgame":
 		g = game.New()
 		return
 	case "position":
-		go g.NewPosition(tokens)
+		g.NewPosition(tokens)
 	case "go":
 		go g.StartSearch(tokens)
 	case "stop":
-		go g.StopSearch()
+		g.StopSearch()
 	}
 }
 
