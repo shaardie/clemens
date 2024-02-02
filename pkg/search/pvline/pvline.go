@@ -37,7 +37,7 @@ func (pvline *PVLine) Copy() *PVLine {
 	return &r
 }
 
-func (pvline *PVLine) String() string {
+func (pvline PVLine) String() string {
 	pvStrings := make([]string, len(pvline.moves))
 	for i := range pvline.moves {
 		pvStrings[i] = fmt.Sprint(pvline.moves[i])

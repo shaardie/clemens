@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/position"
@@ -12,8 +13,19 @@ import (
 func BenchmarkSearchKiwipete(b *testing.B) {
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
 	assert.NoError(b, err)
-
-	NewSearch(*pos).Search(context.TODO(), 6, nil)
+	s := NewSearch(*pos)
+	info := make(chan Info, 16)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		for i := range info {
+			b.Log(i)
+		}
+		wg.Done()
+	}()
+	s.Search(context.TODO(), 6, info)
+	close(info)
+	wg.Wait()
 }
 
 func TestSearch(t *testing.T) {

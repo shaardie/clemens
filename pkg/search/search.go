@@ -2,7 +2,7 @@ package search
 
 import (
 	"context"
-	"math"
+	"fmt"
 	"sync"
 	"time"
 
@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	inf = 1e5
+	inf          = 100000
+	widen_window = 50
 )
 
 type Search struct {
@@ -30,6 +31,10 @@ type Info struct {
 	Nodes uint64
 	PV    pvline.PVLine
 	Score int
+}
+
+func (i Info) String() string {
+	return fmt.Sprintf("depth=%v, time=%v, nodes=%v, pvline=%v, score=%v", i.Depth, i.Time, i.Nodes, i.PV, i.Score)
 }
 
 func (s *Search) BestMove() move.Move {
@@ -50,9 +55,30 @@ func (s *Search) Search(ctx context.Context, maxDepth uint8, info chan Info) {
 }
 
 func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8, info chan Info) {
-	for depth := uint8(1); depth <= maxDepth; depth++ {
-		i := s.SearchRoot(ctx, depth, -inf, inf)
+	alpha := -inf
+	beta := inf
+	var depth uint8 = 1
+	for depth <= maxDepth {
+		i := s.SearchRoot(ctx, depth, alpha, beta)
 
+		// Reduce the search space by using an aspiration window
+		// See https://www.chessprogramming.org/Aspiration_Windows
+		// If the score is not in the last windows,
+		// re-run the search with the wider window, do not use the result and do not increase the depth.
+		if i.Score <= alpha || i.Score >= beta {
+			alpha = -inf
+			beta = inf
+			continue
+		}
+
+		s.m.Lock()
+		s.PV = *i.PV.Copy()
+		s.m.Unlock()
+		alpha = i.Score - widen_window
+		beta = i.Score + widen_window
+		depth++
+
+		// value to info channel and check if we are done
 		select {
 		case info <- i:
 		case <-ctx.Done():
@@ -66,7 +92,7 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int) I
 	start := time.Now()
 	pos := s.pos
 	pvl := pvline.PVLine{}
-	score := s.negamax(ctx, &pos, -math.MaxInt, math.MaxInt, depth, true, &pvl, true)
+	score := s.negamax(ctx, &pos, alpha, beta, depth, true, &pvl, true)
 	s.PV = pvl
 	return Info{
 		Depth: depth,
@@ -92,24 +118,18 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		if found {
 			switch te.NodeType {
 			case transpositiontable.AlphaNode:
-				// return the bigger value of alpha and score
-				if te.Score < alpha {
-					return alpha
-				}
-				return te.Score
+				// return the smaller value of alpha and score
+				return max(te.Score, alpha)
 			case transpositiontable.BetaNode:
 				// return the smaller value of beta and score
-				if te.Score > beta {
-					return beta
-				}
-				return te.Score
+				return min(te.Score, beta)
 			case transpositiontable.PVNode:
 				// return exact value
 				return te.Score
 			}
 		}
+		isRoot = false
 	}
-	isRoot = false
 
 	oldAlpha := alpha
 	potentialPVLine := pvline.PVLine{}
@@ -186,4 +206,17 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 		*pos = prevPos
 	}
 	return alpha
+}
+
+func min(a, b int) int {
+	if a > b {
+		return b
+	}
+	return a
+}
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
