@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/shaardie/clemens/pkg/search"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,15 +58,15 @@ func Test_parseGo(t *testing.T) {
 	tests := []struct {
 		name   string
 		tokens []string
-		want   goParameter
+		want   search.SearchParameter
 	}{
 		{
 			name:   "broken-1",
 			tokens: strings.Split("wtime 60000 btime 60000 movestogo 35", " "),
-			want: goParameter{
-				wtime:     60000,
-				btime:     60000,
-				movesToGo: 35,
+			want: search.SearchParameter{
+				WTime:     60000,
+				BTime:     60000,
+				MovesToGo: 35,
 			},
 		},
 	}

@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/position"
@@ -14,18 +13,14 @@ func BenchmarkSearchKiwipete(b *testing.B) {
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
 	assert.NoError(b, err)
 	s := NewSearch(*pos)
-	info := make(chan Info, 16)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		for i := range info {
-			b.Log(i)
-		}
-		wg.Done()
-	}()
-	s.Search(context.TODO(), 6, info)
-	close(info)
-	wg.Wait()
+	s.Search(context.TODO(), SearchParameter{Depth: 6, Infinite: true})
+}
+
+func TestSearchTimeout(t *testing.T) {
+	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
+	assert.NoError(t, err)
+	s := NewSearch(*pos)
+	s.Search(context.TODO(), SearchParameter{Depth: 10, MoveTime: 1000})
 }
 
 func TestSearch(t *testing.T) {
@@ -55,7 +50,7 @@ func TestSearch(t *testing.T) {
 			pos, err := position.NewFromFen(tt.fen)
 			assert.NoError(t, err)
 			s := NewSearch(*pos)
-			s.Search(context.TODO(), tt.depth, nil)
+			s.Search(context.TODO(), SearchParameter{Depth: tt.depth, Infinite: true})
 			if tt.notExpected != "" {
 				assert.NotEqual(t, tt.notExpected, fmt.Sprintf("%v", s.m))
 			}

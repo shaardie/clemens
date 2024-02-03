@@ -6,11 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/shaardie/clemens/pkg/position"
 	"github.com/shaardie/clemens/pkg/search"
-	"github.com/shaardie/clemens/pkg/types"
 	"github.com/shaardie/clemens/pkg/uci/state"
 )
 
@@ -20,17 +18,6 @@ type Game interface {
 	StartSearch(tokens []string)
 	StopSearch()
 	private()
-}
-
-type goParameter struct {
-	wtime     int
-	btime     int
-	winc      int
-	binc      int
-	movesToGo int
-	depth     int
-	movetime  int
-	infinite  bool
 }
 
 const (
@@ -118,7 +105,7 @@ func (g *gameImpl) NewPosition(tokens []string) {
 	}
 }
 
-func parseGo(tokens []string) (gp goParameter) {
+func parseGo(tokens []string) (sp search.SearchParameter) {
 	var err error
 
 	for len(tokens) > 0 {
@@ -127,13 +114,13 @@ func parseGo(tokens []string) (gp goParameter) {
 		switch t {
 		case "searchmoves":
 			fmt.Println("info string searchmoves not implemented")
-			return gp
+			return sp
 		case "wtime":
 			if len(tokens) == 0 {
 				fmt.Println("info string white time missing")
 				return
 			}
-			gp.wtime, err = strconv.Atoi(tokens[0])
+			sp.WTime, err = strconv.Atoi(tokens[0])
 			if err != nil {
 				fmt.Printf("info string white time broken, %v\n", err)
 				return
@@ -144,7 +131,7 @@ func parseGo(tokens []string) (gp goParameter) {
 				fmt.Println("info string black time missing")
 				return
 			}
-			gp.btime, err = strconv.Atoi(tokens[0])
+			sp.BTime, err = strconv.Atoi(tokens[0])
 			if err != nil {
 				fmt.Printf("info string black time broken, %v\n", err)
 				return
@@ -155,7 +142,7 @@ func parseGo(tokens []string) (gp goParameter) {
 				fmt.Println("info string white increment time missing")
 				return
 			}
-			gp.winc, err = strconv.Atoi(tokens[0])
+			sp.WInc, err = strconv.Atoi(tokens[0])
 			if err != nil {
 				fmt.Printf("info string white increment time broken, %v\n", err)
 				return
@@ -166,7 +153,7 @@ func parseGo(tokens []string) (gp goParameter) {
 				fmt.Println("info string black increment time missing")
 				return
 			}
-			gp.binc, err = strconv.Atoi(tokens[0])
+			sp.BInc, err = strconv.Atoi(tokens[0])
 			if err != nil {
 				fmt.Printf("info string black increment time broken, %v\n", err)
 				return
@@ -177,7 +164,7 @@ func parseGo(tokens []string) (gp goParameter) {
 				fmt.Println("info string moves to go missing")
 				return
 			}
-			gp.movesToGo, err = strconv.Atoi(tokens[0])
+			sp.MovesToGo, err = strconv.Atoi(tokens[0])
 			if err != nil {
 				fmt.Printf("info string moves to go broken, %v\n", err)
 				return
@@ -188,11 +175,12 @@ func parseGo(tokens []string) (gp goParameter) {
 				fmt.Println("info string depth missing")
 				return
 			}
-			gp.depth, err = strconv.Atoi(tokens[0])
+			d, err := strconv.Atoi(tokens[0])
 			if err != nil {
 				fmt.Printf("info string depth broken, %v\n", err)
 				return
 			}
+			sp.Depth = uint8(d)
 			tokens = tokens[1:]
 		case "nodes":
 			if len(tokens) == 0 {
@@ -218,44 +206,15 @@ func parseGo(tokens []string) (gp goParameter) {
 			}
 			tokens = tokens[1:]
 			fmt.Println("info string mate not implemented")
+		case "infinite":
+			sp.Infinite = true
+			tokens = tokens[1:]
 		default:
 			fmt.Printf("info string unknown go command %v\n", t)
 			return
 		}
 	}
 	return
-}
-
-func (g *gameImpl) createSearchContext(gp goParameter) (context.Context, context.CancelFunc) {
-	// No need for any timeout
-	if gp.infinite {
-		return context.WithCancel(context.Background())
-	}
-
-	var t, inc int
-	if g.position.SideToMove == types.BLACK {
-		t = gp.btime
-		inc = gp.binc
-	} else {
-		t = gp.wtime
-		inc = gp.winc
-	}
-
-	var movetime int
-	if gp.movetime > 0 {
-		movetime = gp.movetime
-
-	} else if t > 0 && gp.movesToGo > 0 {
-		// calculate reasonable time, there is possibly a better way
-		movetime = (t + inc*gp.movesToGo) / gp.movesToGo
-		// do not calculate too long
-		if movetime > g.maxTimeInMs {
-			movetime = g.maxTimeInMs
-		}
-	} else {
-		movetime = g.maxTimeInMs
-	}
-	return context.WithTimeout(context.Background(), time.Duration(movetime)*time.Millisecond)
 }
 
 func (g *gameImpl) StartSearch(tokens []string) {
@@ -270,22 +229,12 @@ func (g *gameImpl) StartSearch(tokens []string) {
 	// Create Search with the correct properties
 	gp := parseGo(tokens)
 	g.search = search.NewSearch(*g.position)
-	ctx, cancel := g.createSearchContext(gp)
-	var depth uint8
-	if gp.depth > 0 {
-		depth = uint8(gp.depth)
-	} else {
-		depth = g.maxDepth
-	}
-
+	ctx, cancel := context.WithCancel(context.Background())
 	g.searchCancel = cancel
 	go func() {
 		defer cancel()
-		g.search.Search(ctx, depth, g.info)
-		<-ctx.Done()
-		if g.state.Get() == state.RUNNING {
-			g.printBestMove()
-		}
+		g.search.Search(ctx, gp)
+		fmt.Printf("bestmove %v\n", g.search.BestMove())
 		g.state.Set(state.IDLE)
 	}()
 	g.state.Set(state.RUNNING)
@@ -298,8 +247,6 @@ func (g *gameImpl) StopSearch() {
 		return
 	}
 	g.searchCancel()
-	g.printBestMove()
-	g.state.Set(state.IDLE)
 }
 
 func (g *gameImpl) printBestMove() {

@@ -10,19 +10,32 @@ import (
 	"github.com/shaardie/clemens/pkg/position"
 	"github.com/shaardie/clemens/pkg/search/pvline"
 	"github.com/shaardie/clemens/pkg/search/transpositiontable"
+	"github.com/shaardie/clemens/pkg/types"
 )
 
 const (
-	inf          = 100000
-	widen_window = 50
+	inf                = 100000
+	widen_window       = 50
+	maxDepth     uint8 = 7
+	maxTimeInMs        = 10000
 )
 
 type Search struct {
 	pos   position.Position
-	score int
 	nodes uint64
 	m     *sync.Mutex
 	PV    pvline.PVLine
+}
+
+type SearchParameter struct {
+	WTime     int
+	BTime     int
+	WInc      int
+	BInc      int
+	MovesToGo int
+	Depth     uint8
+	MoveTime  int
+	Infinite  bool
 }
 
 type Info struct {
@@ -50,22 +63,34 @@ func NewSearch(pos position.Position) *Search {
 	}
 }
 
-func (s *Search) Search(ctx context.Context, maxDepth uint8, info chan Info) {
-	s.SearchIterative(ctx, maxDepth, info)
+func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
+	ctx, cancel := s.contextFromSearchParameter(ctx, sp)
+	depth := maxDepth
+	if sp.Depth > 0 {
+		depth = sp.Depth
+	}
+	s.SearchIterative(ctx, depth)
+	cancel()
+	return s.BestMove()
 }
 
-func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8, info chan Info) {
+func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 	alpha := -inf
 	beta := inf
 	var depth uint8 = 1
 	for depth <= maxDepth {
-		i := s.SearchRoot(ctx, depth, alpha, beta)
+		i, err := s.SearchRoot(ctx, depth, alpha, beta)
+		// Timeout
+		if err != nil {
+			return
+		}
 
 		// Reduce the search space by using an aspiration window
 		// See https://www.chessprogramming.org/Aspiration_Windows
 		// If the score is not in the last windows,
 		// re-run the search with the wider window, do not use the result and do not increase the depth.
 		if i.Score <= alpha || i.Score >= beta {
+			fmt.Printf("info string windows [%v,%v] too small. Re-run search.\n", alpha, beta)
 			alpha = -inf
 			beta = inf
 			continue
@@ -78,37 +103,42 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8, info chan 
 		beta = i.Score + widen_window
 		depth++
 
-		// value to info channel and check if we are done
-		select {
-		case info <- i:
-		case <-ctx.Done():
-			return
-		default:
-		}
+		// Print info
+		fmt.Printf("info depth %v score cp %v nodes %v time %v pv %v\n", i.Depth, i.Score, i.Nodes, i.Time, i.PV)
+
 	}
 }
 
-func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int) Info {
+func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int) (Info, error) {
 	start := time.Now()
 	pos := s.pos
 	pvl := pvline.PVLine{}
-	score := s.negamax(ctx, &pos, alpha, beta, depth, true, &pvl, true)
-	s.PV = pvl
+	score, err := s.negamax(ctx, &pos, alpha, beta, depth, true, &pvl, true)
+	if err != nil {
+		return Info{}, err
+	}
 	return Info{
 		Depth: depth,
 		Time:  time.Since(start).Milliseconds(),
 		Nodes: s.nodes,
 		Score: score,
 		PV:    *pvl.Copy(),
-	}
+	}, nil
 }
 
-func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, depth uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool) int {
+func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, depth uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool) (int, error) {
 	s.nodes++
+
+	// value to info channel and check if we are done
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	default:
+	}
 
 	// Evaluate the leaf node
 	if depth == 0 {
-		return pos.Evaluation()
+		return pos.Evaluation(), nil
 		// return s.quiescence(ctx, pos, alpha, beta)
 	}
 
@@ -119,13 +149,13 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			switch te.NodeType {
 			case transpositiontable.AlphaNode:
 				// return the smaller value of alpha and score
-				return max(te.Score, alpha)
+				return max(te.Score, alpha), nil
 			case transpositiontable.BetaNode:
 				// return the smaller value of beta and score
-				return min(te.Score, beta)
+				return min(te.Score, beta), nil
 			case transpositiontable.PVNode:
 				// return exact value
-				return te.Score
+				return te.Score, nil
 			}
 		}
 		isRoot = false
@@ -144,15 +174,25 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		prevPos = *pos
 		pos.MakeMove(m)
 		if pos.IsLegal() {
-			score := s.negamax(ctx, pos, -beta, -alpha, depth-1, pvNode, &potentialPVLine, isRoot)
-			score *= -1
+			score, err := s.negamax(ctx, pos, -beta, -alpha, depth-1, pvNode, &potentialPVLine, isRoot)
+			if err != nil {
+				return 0, err
+			}
+			score = -score
+			// value to info channel and check if we are done
+			select {
+			case <-ctx.Done():
+				return 0, ctx.Err()
+			default:
+			}
+
 			if pvNode {
 				pvNode = false
 			}
 
 			if score >= beta {
 				transpositiontable.TTable.PotentiallySave(prevPos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
-				return beta
+				return beta, nil
 			}
 
 			if score > alpha {
@@ -170,7 +210,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		nt = transpositiontable.AlphaNode
 	}
 	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
-	return alpha
+	return alpha, nil
 }
 
 func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, beta int) int {
@@ -219,4 +259,35 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParameter) (context.Context, context.CancelFunc) {
+	// No need for any timeout
+	if sp.Infinite {
+		fmt.Println("info string calculate until stopped")
+		return ctx, func() {}
+	}
+
+	var t, inc int
+	if s.pos.SideToMove == types.BLACK {
+		t = sp.BTime
+		inc = sp.BInc
+	} else {
+		t = sp.WTime
+		inc = sp.WInc
+	}
+
+	var movetime int
+	if sp.MoveTime > 0 {
+		movetime = sp.MoveTime
+	} else if t > 0 && sp.MovesToGo > 0 {
+		// calculate reasonable time, there is possibly a better way
+		movetime = (t + inc*sp.MovesToGo) / sp.MovesToGo
+		// do not calculate too long
+		movetime = min(movetime, maxTimeInMs)
+	} else {
+		movetime = maxTimeInMs
+	}
+	fmt.Printf("info string calculated timeout %v\n", movetime)
+	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
 }
