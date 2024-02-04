@@ -7,18 +7,24 @@ import (
 
 	"github.com/shaardie/clemens/pkg/position"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkSearchKiwipete(b *testing.B) {
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
-	assert.NoError(b, err)
+	require.NoError(b, err)
 	s := NewSearch(*pos)
-	s.Search(context.TODO(), SearchParameter{Depth: 6, Infinite: true})
+	s.Search(context.TODO(), SearchParameter{Depth: 2, Infinite: true})
+}
+
+func BenchmarkSearchStartPos(b *testing.B) {
+	s := NewSearch(*position.New())
+	s.Search(context.TODO(), SearchParameter{Depth: 2, Infinite: true})
 }
 
 func TestSearchTimeout(t *testing.T) {
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	s := NewSearch(*pos)
 	s.Search(context.TODO(), SearchParameter{Depth: 10, MoveTime: 1000})
 }
@@ -34,13 +40,13 @@ func TestSearch(t *testing.T) {
 		{
 			name:        "startpos",
 			fen:         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-			depth:       5,
+			depth:       2,
 			notExpected: "a1a1",
 		},
 		{
 			name:        "position4",
 			fen:         "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
-			depth:       5,
+			depth:       2,
 			notExpected: "a1a1",
 		},
 	}

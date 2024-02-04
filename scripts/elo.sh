@@ -3,9 +3,9 @@
 set -eux
 
 cutechess-cli -tournament gauntlet -concurrency 1 -pgnout output_pgn_file.pgn \
-    -engine cmd=clemens tc=40/60+1 \
-    -engine cmd=stockfish tc=40/60+1 \
-    -engine cmd=blunder tc=40/60+1 \
+    -engine cmd=clemens tc=40/5+1 \
+    -engine cmd=stockfish tc=40/5+1 \
+    -engine cmd=blunder tc=40/5+1 \
     -each proto=uci \
     -draw movenumber=40 movecount=4 score=8 \
     -resign movecount=4 score=500 \

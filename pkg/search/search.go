@@ -14,10 +14,11 @@ import (
 )
 
 const (
-	inf                = 100000
-	widen_window       = 50
-	maxDepth     uint8 = 7
-	maxTimeInMs        = 10000
+	inf                        = 100000
+	widen_window               = 50
+	max_depth            uint8 = 5
+	quiescence_max_depth uint8 = 10
+	maxTimeInMs                = 10000
 )
 
 type Search struct {
@@ -65,7 +66,7 @@ func NewSearch(pos position.Position) *Search {
 
 func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 	ctx, cancel := s.contextFromSearchParameter(ctx, sp)
-	depth := maxDepth
+	depth := max_depth
 	if sp.Depth > 0 {
 		depth = sp.Depth
 	}
@@ -138,7 +139,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	// Evaluate the leaf node
 	if depth == 0 {
-		return pos.Evaluation(), nil
+		return s.quiescence(ctx, pos, alpha, beta)
 		// return s.quiescence(ctx, pos, alpha, beta)
 	}
 
@@ -213,16 +214,32 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	return alpha, nil
 }
 
-func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, beta int) int {
+func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, beta int) (int, error) {
+	return s.quiescenceWithMaxDepth(ctx, pos, alpha, beta, quiescence_max_depth)
+}
+
+func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Position, alpha, beta int, depth uint8) (int, error) {
 	s.nodes++
+
+	// value to info channel and check if we are done
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	default:
+	}
 
 	stand_pat := pos.Evaluation()
 	if stand_pat >= beta {
-		return beta
+		return beta, nil
 	}
 	if alpha < stand_pat {
 		alpha = stand_pat
 	}
+
+	if depth == 0 {
+		return alpha, nil
+	}
+	depth--
 
 	var prevPos position.Position
 
@@ -234,9 +251,13 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 		prevPos = *pos
 		pos.MakeMove(m)
 		if pos.IsLegal() {
-			score := -s.quiescence(ctx, pos, -beta, -alpha)
+			score, err := s.quiescence(ctx, pos, -beta, -alpha)
+			if err != nil {
+				return 0, err
+			}
+			score = -score
 			if score >= beta {
-				return beta
+				return beta, nil
 			}
 
 			if score > alpha {
@@ -245,7 +266,7 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 		}
 		*pos = prevPos
 	}
-	return alpha
+	return alpha, nil
 }
 
 func min(a, b int) int {
