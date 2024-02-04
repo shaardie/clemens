@@ -79,8 +79,9 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 	alpha := -inf
 	beta := inf
 	var depth uint8 = 1
+	goodGuess := move.NullMove
 	for depth <= maxDepth {
-		i, err := s.SearchRoot(ctx, depth, alpha, beta)
+		i, err := s.SearchRoot(ctx, depth, alpha, beta, goodGuess)
 		// Timeout
 		if err != nil {
 			return
@@ -99,6 +100,7 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 
 		s.m.Lock()
 		s.PV = *i.PV.Copy()
+		goodGuess = s.PV.GetBestMove()
 		s.m.Unlock()
 		alpha = i.Score - widen_window
 		beta = i.Score + widen_window
@@ -110,7 +112,7 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 	}
 }
 
-func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int) (Info, error) {
+func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, goodGuess move.Move) (Info, error) {
 	start := time.Now()
 	pos := s.pos
 	pvl := pvline.PVLine{}
@@ -143,9 +145,13 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		// return s.quiescence(ctx, pos, alpha, beta)
 	}
 
+	goodGuess := move.NullMove
+
 	// Check if we can use the transition table but not on root
-	if !isRoot {
-		te, found := transpositiontable.TTable.Get(pos.ZobristHash, depth)
+	if isRoot {
+		goodGuess = s.PV.GetBestMove()
+	} else {
+		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, depth)
 		if found {
 			switch te.NodeType {
 			case transpositiontable.AlphaNode:
@@ -155,12 +161,17 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 				// return the smaller value of beta and score
 				return min(te.Score, beta), nil
 			case transpositiontable.PVNode:
-				// return exact value
-				return te.Score, nil
+				if !pvNode {
+					// return exact value
+					return te.Score, nil
+				}
 			}
 		}
-		isRoot = false
+		if isGoodGuess {
+			goodGuess = te.BestMove
+		}
 	}
+	isRoot = false
 
 	oldAlpha := alpha
 	potentialPVLine := pvline.PVLine{}
@@ -169,6 +180,9 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	// Generate all moves
 	moves := move.NewMoveList()
+	if goodGuess != move.NullMove {
+		moves.UseFirst(goodGuess)
+	}
 	pos.GeneratePseudoLegalMoves(moves)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
@@ -285,7 +299,6 @@ func max(a, b int) int {
 func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParameter) (context.Context, context.CancelFunc) {
 	// No need for any timeout
 	if sp.Infinite {
-		fmt.Println("info string calculate until stopped")
 		return ctx, func() {}
 	}
 

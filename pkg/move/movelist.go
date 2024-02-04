@@ -41,6 +41,17 @@ func (ml *MoveList) Set(idx uint8, m Move) {
 		ml.size = idx + 1
 	}
 }
+
+func (ml *MoveList) UseFirst(m Move) {
+	for idx := uint8(0); idx < ml.size; idx++ {
+		if ml.moves[idx] != m {
+			continue
+		}
+		ml.moves[idx] = ml.moves[0]
+		ml.moves[0] = m
+	}
+}
+
 func (ml *MoveList) String() string {
 	ss := make([]string, ml.Length())
 	for i := range ss {

@@ -15,11 +15,12 @@ func BenchmarkSearchKiwipete(b *testing.B) {
 	require.NoError(b, err)
 	s := NewSearch(*pos)
 	s.Search(context.TODO(), SearchParameter{Depth: 2, Infinite: true})
+	s.Search(context.TODO(), SearchParameter{Depth: 2, Infinite: true})
 }
 
 func BenchmarkSearchStartPos(b *testing.B) {
 	s := NewSearch(*position.New())
-	s.Search(context.TODO(), SearchParameter{Depth: 2, Infinite: true})
+	s.Search(context.TODO(), SearchParameter{Depth: 3, Infinite: true})
 }
 
 func TestSearchTimeout(t *testing.T) {

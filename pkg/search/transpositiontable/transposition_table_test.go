@@ -116,7 +116,7 @@ func TestTranspositionTable_Get(t *testing.T) {
 			for _, s := range tt.saves {
 				TTable.PotentiallySave(s.ZobristHash, s.BestMove, s.Depth, s.Score, s.NodeType)
 			}
-			entry, found := TTable.Get(tt.arg, tt.arg1)
+			entry, found, _ := TTable.Get(tt.arg, tt.arg1)
 			assert.Equal(t, tt.found, found)
 			if found {
 				assert.Equal(t, entry, tt.want)

@@ -39,20 +39,21 @@ func reset() {
 	TTable = make([]TranspositionEntry, transpositionTableSize)
 }
 
-func (tt TranspositionTable) Get(zobristHash uint64, depth uint8) (TranspositionEntry, bool) {
+func (tt TranspositionTable) Get(zobristHash uint64, depth uint8) (te TranspositionEntry, found bool, isGoodGuess bool) {
 	key := zobristHash % transpositionTableSize
-	te := tt[key]
+	te = tt[key]
 	if te.ZobristHash != zobristHash {
-		return te, false
+		return te, false, false
 	}
 
 	// Only use the value, if the depth of the entry is bigger that the current one.
 	// Remember that the depth decreases, while going down the tree.
+	// If we use this entry or not. The move should be a good guess.
 	if te.Depth < depth {
-		return te, false
+		return te, false, true
 	}
 
-	return te, true
+	return te, true, true
 }
 
 // PotentiallySave save the new transposition entry, if it is a better fit.
