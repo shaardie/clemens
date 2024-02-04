@@ -16,8 +16,8 @@ import (
 const (
 	inf                        = 100000
 	widen_window               = 50
-	max_depth            uint8 = 5
-	quiescence_max_depth uint8 = 10
+	max_depth            uint8 = 10
+	quiescence_max_depth uint8 = 20
 	maxTimeInMs                = 10000
 )
 
