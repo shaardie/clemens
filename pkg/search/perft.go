@@ -23,7 +23,7 @@ func Perft(pos *position.Position, depth int) int {
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 		prevPos = *pos
-		pos.MakeMove(m)
+		pos.MakeMove(*m)
 		if pos.IsLegal() {
 			nodes += Perft(pos, depth-1)
 		}
@@ -44,11 +44,11 @@ func Divided(pos *position.Position, depth int) []PerftResults {
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 		prevPos := *pos
-		pos.MakeMove(m)
+		pos.MakeMove(*m)
 		if pos.IsLegal() {
 			results = append(results,
 				PerftResults{
-					Move:     m,
+					Move:     *m,
 					Position: *pos,
 					Leafs:    Perft(pos, depth-1),
 				},

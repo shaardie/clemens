@@ -2,6 +2,7 @@ package position
 
 import (
 	"errors"
+	"math"
 
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/move"
@@ -13,6 +14,49 @@ import (
 	"github.com/shaardie/clemens/pkg/pieces/rook"
 	"github.com/shaardie/clemens/pkg/types"
 )
+
+// Static Values for MVV-LVA Ordering
+// See https://www.chessprogramming.org/MVV-LVA
+var MVV_LVA_SCORES [types.PIECE_TYPE_NUMBER - 1][types.PIECE_TYPE_NUMBER]uint16
+
+func init() {
+	// Init the MVV-LVA Values
+	// For the values to be disjunct, the victim is multiplied by 10
+	// To make a difference for PAWNs (value 0) victim a increased by 1
+	for victim := types.QUEEN; victim >= types.PAWN; victim-- {
+		for aggressor := types.PAWN; aggressor < types.PIECE_TYPE_NUMBER; aggressor++ {
+			MVV_LVA_SCORES[victim][aggressor] = uint16(10*(victim+1) - (aggressor))
+		}
+	}
+}
+
+func (pos *Position) sortMoves(moves *move.MoveList, bestGuess move.Move) {
+	for idx := uint8(0); idx < moves.Length(); idx++ {
+		m := moves.Get(idx)
+		if *m == bestGuess {
+			m.SetScore(math.MaxUint16)
+			continue
+		}
+
+		// Score captures
+		target := pos.GetPiece(m.GetTargetSquare())
+		// No capture no score
+		if target == types.NO_PIECE {
+			m.SetScore(0)
+			continue
+		}
+		source := pos.GetPiece(m.GetSourceSquare())
+		m.SetScore(MVV_LVA_SCORES[target.Type()][source.Type()])
+	}
+
+	moves.Sort()
+}
+
+// GeneratePseudoLegalCapturesOrdered generates all pseudo legal moves and directly order them
+func (pos *Position) GeneratePseudoLegalCapturesOrdered(moves *move.MoveList, bestGuess move.Move) {
+	pos.GeneratePseudoLegalCaptures(moves)
+	pos.sortMoves(moves, bestGuess)
+}
 
 func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 	occupied := pos.AllPieces()
@@ -89,6 +133,12 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 			}
 		}
 	}
+}
+
+// GeneratePseudoLegalMovesOrdered generates all pseudo legal moves and directly order them
+func (pos *Position) GeneratePseudoLegalMovesOrdered(moves *move.MoveList, bestGuess move.Move) {
+	pos.GeneratePseudoLegalMoves(moves)
+	pos.sortMoves(moves, bestGuess)
 }
 
 // GeneratePseudoLegalMoves generates all pseudo legal moves

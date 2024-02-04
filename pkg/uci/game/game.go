@@ -39,15 +39,13 @@ func New() Game {
 	return newGameImpl()
 }
 func newGameImpl() *gameImpl {
-	g := &gameImpl{
+	return &gameImpl{
 		isWorking:   &sync.Mutex{},
 		state:       state.New(),
 		maxTimeInMs: 5000,
 		maxDepth:    6,
 		info:        make(chan search.Info, infoChannelSize),
 	}
-	go g.showInfo()
-	return g
 }
 
 func (g *gameImpl) private() {}
@@ -247,23 +245,4 @@ func (g *gameImpl) StopSearch() {
 		return
 	}
 	g.searchCancel()
-}
-
-func (g *gameImpl) printBestMove() {
-	fmt.Printf("bestmove %v\n", g.search.BestMove())
-}
-
-func (g *gameImpl) showInfo() {
-	for info := range g.info {
-		// Only print while running
-		// if g.state.Get() != state.RUNNING {
-		// 	return
-		// }
-		infoString := fmt.Sprintf("info depth %v score cp %v nodes %v time %v", info.Depth, info.Score, info.Nodes, info.Time)
-		pvString := info.PV.String()
-		if pvString != "" {
-			infoString = fmt.Sprintf("%v pv %v", infoString, pvString)
-		}
-		fmt.Println(infoString)
-	}
 }

@@ -127,6 +127,28 @@ func TestPosition_GeneratePseudoLegalMoves(t *testing.T) {
 	}
 }
 
+func TestPosition_GeneratePseudoLegalMovesOrdered(t *testing.T) {
+	tests := []struct {
+		name      string
+		beforeFen string
+		moves     string
+	}{{
+		name:      "Promotion",
+		beforeFen: "r3k2r/p1ppqpb1/bn2pnp1/1N1PN3/1p2P3/5Q2/PPPB1PpP/R3KB1R b KQkq - 0 1",
+		moves:     "g2h1r g2h1n g2h1q g2h1b g2f1b g2f1q g2f1r g2f1n a6b5 e6d5 b6d5 f6d5 f6e4 h8h2 a6c8 g2g1b e7c5 e7d6 e7d8 e7f8 b6a4 b6c4 g7h6 b6c8 a8b8 f6g4 a6b7 f6h5 f6h7 f6g8 e8d8 e8f8 g2g1n g7f8 g2g1r g2g1q h8g8 h8f8 h8h7 h8h6 h8h5 h8h4 h8h3 a8d8 b4b3 a8c8 g6g5 c7c5 c7c6 d7d6 e8g8 e8c8",
+	},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pos, err := NewFromFen(tt.beforeFen)
+			assert.NoError(t, err)
+			moves := move.NewMoveList()
+			pos.GeneratePseudoLegalMovesOrdered(moves, move.NullMove)
+			assert.Equal(t, tt.moves, fmt.Sprint(moves))
+		})
+	}
+}
+
 func TestPosition_GeneratePseudoLegalCaptures(t *testing.T) {
 	tests := []struct {
 		name      string

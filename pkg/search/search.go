@@ -22,10 +22,13 @@ const (
 )
 
 type Search struct {
-	pos   position.Position
-	nodes uint64
-	m     *sync.Mutex
-	PV    pvline.PVLine
+	pos             position.Position
+	nodes           uint64
+	betaCutOffs     uint64
+	alphaCutOffs    uint64
+	quiescenceNodes uint64
+	m               *sync.Mutex
+	PV              pvline.PVLine
 }
 
 type SearchParameter struct {
@@ -42,13 +45,8 @@ type SearchParameter struct {
 type Info struct {
 	Depth uint8
 	Time  int64
-	Nodes uint64
 	PV    pvline.PVLine
 	Score int
-}
-
-func (i Info) String() string {
-	return fmt.Sprintf("depth=%v, time=%v, nodes=%v, pvline=%v, score=%v", i.Depth, i.Time, i.Nodes, i.PV, i.Score)
 }
 
 func (s *Search) BestMove() move.Move {
@@ -107,8 +105,8 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 		depth++
 
 		// Print info
-		fmt.Printf("info depth %v score cp %v nodes %v time %v pv %v\n", i.Depth, i.Score, i.Nodes, i.Time, i.PV)
-
+		fmt.Printf("info depth %v score cp %v nodes %v time %v pv %v\n", i.Depth, i.Score, s.nodes, i.Time, i.PV)
+		// fmt.Printf("info string beta-cutoffs %v alpha-cutoffs %v quiescence-nodes %v\n", s.betaCutOffs, s.alphaCutOffs, s.quiescenceNodes)
 	}
 }
 
@@ -123,7 +121,6 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 	return Info{
 		Depth: depth,
 		Time:  time.Since(start).Milliseconds(),
-		Nodes: s.nodes,
 		Score: score,
 		PV:    *pvl.Copy(),
 	}, nil
@@ -142,7 +139,6 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	// Evaluate the leaf node
 	if depth == 0 {
 		return s.quiescence(ctx, pos, alpha, beta)
-		// return s.quiescence(ctx, pos, alpha, beta)
 	}
 
 	goodGuess := move.NullMove
@@ -156,9 +152,11 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			switch te.NodeType {
 			case transpositiontable.AlphaNode:
 				// return the smaller value of alpha and score
+				s.alphaCutOffs++
 				return max(te.Score, alpha), nil
 			case transpositiontable.BetaNode:
 				// return the smaller value of beta and score
+				s.betaCutOffs++
 				return min(te.Score, beta), nil
 			case transpositiontable.PVNode:
 				if !pvNode {
@@ -180,14 +178,11 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	// Generate all moves
 	moves := move.NewMoveList()
-	if goodGuess != move.NullMove {
-		moves.UseFirst(goodGuess)
-	}
-	pos.GeneratePseudoLegalMoves(moves)
+	pos.GeneratePseudoLegalMovesOrdered(moves, goodGuess)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 		prevPos = *pos
-		pos.MakeMove(m)
+		pos.MakeMove(*m)
 		if pos.IsLegal() {
 			score, err := s.negamax(ctx, pos, -beta, -alpha, depth-1, pvNode, &potentialPVLine, isRoot)
 			if err != nil {
@@ -207,12 +202,13 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 			if score >= beta {
 				transpositiontable.TTable.PotentiallySave(prevPos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
+				s.betaCutOffs++
 				return beta, nil
 			}
 
 			if score > alpha {
 				alpha = score
-				bestMove = m
+				bestMove = *m
 				pvl.Update(bestMove, &potentialPVLine)
 			}
 		}
@@ -222,6 +218,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	nt := transpositiontable.PVNode
 	if oldAlpha == alpha {
+		s.alphaCutOffs++
 		nt = transpositiontable.AlphaNode
 	}
 	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
@@ -234,7 +231,7 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 
 func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Position, alpha, beta int, depth uint8) (int, error) {
 	s.nodes++
-
+	s.quiescenceNodes++
 	// value to info channel and check if we are done
 	select {
 	case <-ctx.Done():
@@ -244,6 +241,7 @@ func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Posit
 
 	stand_pat := pos.Evaluation()
 	if stand_pat >= beta {
+		s.betaCutOffs++
 		return beta, nil
 	}
 	if alpha < stand_pat {
@@ -259,11 +257,11 @@ func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Posit
 
 	// Generate all captures
 	moves := move.NewMoveList()
-	pos.GeneratePseudoLegalCaptures(moves)
+	pos.GeneratePseudoLegalCapturesOrdered(moves, move.NullMove)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 		prevPos = *pos
-		pos.MakeMove(m)
+		pos.MakeMove(*m)
 		if pos.IsLegal() {
 			score, err := s.quiescence(ctx, pos, -beta, -alpha)
 			if err != nil {
