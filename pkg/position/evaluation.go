@@ -255,8 +255,8 @@ func (pos *Position) Evaluation() int {
 		bb = pos.piecesBitboard[types.BLACK][pieceType]
 		for bb != bitboard.Empty {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
-			scores[midgame] += evalData.midgamePieceSquareTables[types.BLACK][pieceType][square]
-			scores[endgame] += evalData.endgamePieceSquareTables[types.BLACK][pieceType][square]
+			scores[midgame] -= evalData.midgamePieceSquareTables[types.BLACK][pieceType][square]
+			scores[endgame] -= evalData.endgamePieceSquareTables[types.BLACK][pieceType][square]
 		}
 	}
 
