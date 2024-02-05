@@ -14,12 +14,12 @@ func BenchmarkSearchKiwipete(b *testing.B) {
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
 	require.NoError(b, err)
 	s := NewSearch(*pos)
-	s.Search(context.TODO(), SearchParameter{Depth: 5, Infinite: true})
+	s.Search(context.TODO(), SearchParameter{Depth: 7, Infinite: true})
 }
 
 func BenchmarkSearchStartPos(b *testing.B) {
 	s := NewSearch(*position.New())
-	s.Search(context.TODO(), SearchParameter{Depth: 5, Infinite: true})
+	s.Search(context.TODO(), SearchParameter{Depth: 7, Infinite: true})
 }
 
 func TestSearchTimeout(t *testing.T) {

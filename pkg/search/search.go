@@ -17,7 +17,7 @@ const (
 	inf                        = 100000
 	widen_window               = 50
 	max_depth            uint8 = 10
-	quiescence_max_depth uint8 = 20
+	quiescence_max_depth uint8 = 100
 	maxTimeInMs                = 10000
 )
 
@@ -114,7 +114,7 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 	start := time.Now()
 	pos := s.pos
 	pvl := pvline.PVLine{}
-	score, err := s.negamax(ctx, &pos, alpha, beta, depth, true, &pvl, true)
+	score, err := s.negamax(ctx, &pos, alpha, beta, depth, 0, true, &pvl, true)
 	if err != nil {
 		return Info{}, err
 	}
@@ -126,7 +126,7 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 	}, nil
 }
 
-func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, depth uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool) (int, error) {
+func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool) (int, error) {
 	s.nodes++
 
 	// value to info channel and check if we are done
@@ -137,8 +137,8 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	}
 
 	// Evaluate the leaf node
-	if depth == 0 {
-		return s.quiescence(ctx, pos, alpha, beta)
+	if ply == maxDepth {
+		return s.quiescence(ctx, pos, alpha, beta, ply)
 	}
 
 	goodGuess := move.NullMove
@@ -147,7 +147,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	if isRoot {
 		goodGuess = s.PV.GetBestMove()
 	} else {
-		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, depth)
+		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, maxDepth-ply)
 		if found {
 			switch te.NodeType {
 			case transpositiontable.AlphaNode:
@@ -175,6 +175,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
+	var legalMoves uint8
 
 	// Generate all moves
 	moves := move.NewMoveList()
@@ -184,7 +185,8 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		prevPos = *pos
 		pos.MakeMove(*m)
 		if pos.IsLegal() {
-			score, err := s.negamax(ctx, pos, -beta, -alpha, depth-1, pvNode, &potentialPVLine, isRoot)
+			legalMoves++
+			score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, isRoot)
 			if err != nil {
 				return 0, err
 			}
@@ -201,7 +203,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			}
 
 			if score >= beta {
-				transpositiontable.TTable.PotentiallySave(prevPos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
+				transpositiontable.TTable.PotentiallySave(prevPos.ZobristHash, bestMove, maxDepth-ply, beta, transpositiontable.BetaNode)
 				s.betaCutOffs++
 				return beta, nil
 			}
@@ -216,20 +218,27 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		potentialPVLine.Reset()
 	}
 
+	// There are no legal moves, so it is either a checkmate or a stalemate
+	if legalMoves == 0 {
+		// Checkmate, set lowest possible value, but increase by the number of plys,
+		// so the engine is looking for shorter mates.
+		if pos.IsInCheck(pos.SideToMove) {
+			return -inf + int(ply), nil
+		}
+		// stalemate
+		return 0, nil
+	}
+
 	nt := transpositiontable.PVNode
 	if oldAlpha == alpha {
 		s.alphaCutOffs++
 		nt = transpositiontable.AlphaNode
 	}
-	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
+	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, maxDepth-ply, alpha, nt)
 	return alpha, nil
 }
 
-func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, beta int) (int, error) {
-	return s.quiescenceWithMaxDepth(ctx, pos, alpha, beta, quiescence_max_depth)
-}
-
-func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Position, alpha, beta int, depth uint8) (int, error) {
+func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, beta int, ply uint8) (int, error) {
 	s.nodes++
 	s.quiescenceNodes++
 	// value to info channel and check if we are done
@@ -248,10 +257,10 @@ func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Posit
 		alpha = stand_pat
 	}
 
-	if depth == 0 {
+	// Hard limit
+	if ply == quiescence_max_depth {
 		return alpha, nil
 	}
-	depth--
 
 	var prevPos position.Position
 
@@ -263,7 +272,7 @@ func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Posit
 		prevPos = *pos
 		pos.MakeMove(*m)
 		if pos.IsLegal() {
-			score, err := s.quiescence(ctx, pos, -beta, -alpha)
+			score, err := s.quiescence(ctx, pos, -beta, -alpha, ply+1)
 			if err != nil {
 				return 0, err
 			}
@@ -278,6 +287,7 @@ func (s *Search) quiescenceWithMaxDepth(ctx context.Context, pos *position.Posit
 		}
 		*pos = prevPos
 	}
+
 	return alpha, nil
 }
 
