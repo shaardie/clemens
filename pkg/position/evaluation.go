@@ -11,8 +11,8 @@ const (
 	game_number
 )
 
-// These tables are from https://github.com/nescitus/cpw-engine/blob/master/eval_init.cpp
 var (
+	// These tables are from https://github.com/nescitus/cpw-engine/blob/master/eval_init.cpp
 	pieceTables = [types.PIECE_TYPE_NUMBER][game_number][types.SQUARE_NUMBER]int{
 		/******************************************************************************
 		 *                           PAWN PCSQ                                         *
@@ -190,31 +190,26 @@ var (
 			},
 		},
 	}
-)
-
-type evalDataStruct struct {
-	pieceValue               [types.PIECE_TYPE_NUMBER]int
 	midgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
 	endgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
 
-	shield2Value int
-	shield3Value int
-}
+	pieceValue = [types.PIECE_TYPE_NUMBER]int{100, 300, 300, 500, 800, 2000}
 
-var evalData evalDataStruct
+	/* adjustements of piece value based on the number of own pawns */
+	knight_pawn_adjustment = [9]int{-20, -16, -12, -8, -4, 0, 4, 8, 12}
+	rook_pawn_adjustment   = [9]int{15, 12, 9, 6, 3, 0, -3, -6, -9}
+)
+
+const (
+	shield2Value = 10
+	shield3Value = 5
+
+	bishopPair = 30
+	knightPair = -8
+	rookPair   = -16
+)
 
 func init() {
-	// Basic Values
-	evalData.pieceValue[types.KING] = 2000
-	evalData.pieceValue[types.QUEEN] = 800
-	evalData.pieceValue[types.ROOK] = 500
-	evalData.pieceValue[types.BISHOP] = 300
-	evalData.pieceValue[types.KNIGHT] = 300
-	evalData.pieceValue[types.PAWN] = 100
-
-	evalData.shield2Value = 10
-	evalData.shield3Value = 5
-
 	// Set Piece Square Tables
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
 		for _, color := range []types.Color{types.WHITE, types.BLACK} {
@@ -224,8 +219,8 @@ func init() {
 				colorAwareSquare = square ^ 56
 			}
 			for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
-				evalData.midgamePieceSquareTables[color][pieceType][square] = pieceTables[pieceType][midgame][colorAwareSquare]
-				evalData.endgamePieceSquareTables[color][pieceType][square] = pieceTables[pieceType][endgame][colorAwareSquare]
+				midgamePieceSquareTables[color][pieceType][square] = pieceTables[pieceType][midgame][colorAwareSquare]
+				endgamePieceSquareTables[color][pieceType][square] = pieceTables[pieceType][endgame][colorAwareSquare]
 			}
 		}
 
@@ -255,14 +250,14 @@ func (pos *Position) Evaluation() int {
 		bb = pos.piecesBitboard[types.WHITE][pieceType]
 		for bb != bitboard.Empty {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
-			scores[midgame] += evalData.midgamePieceSquareTables[types.WHITE][pieceType][square]
-			scores[endgame] += evalData.endgamePieceSquareTables[types.WHITE][pieceType][square]
+			scores[midgame] += midgamePieceSquareTables[types.WHITE][pieceType][square]
+			scores[endgame] += endgamePieceSquareTables[types.WHITE][pieceType][square]
 		}
 		bb = pos.piecesBitboard[types.BLACK][pieceType]
 		for bb != bitboard.Empty {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
-			scores[midgame] -= evalData.midgamePieceSquareTables[types.BLACK][pieceType][square]
-			scores[endgame] -= evalData.endgamePieceSquareTables[types.BLACK][pieceType][square]
+			scores[midgame] -= midgamePieceSquareTables[types.BLACK][pieceType][square]
+			scores[endgame] -= endgamePieceSquareTables[types.BLACK][pieceType][square]
 		}
 	}
 
@@ -273,41 +268,41 @@ func (pos *Position) Evaluation() int {
 	if kingFile > types.FILE_E {
 
 		if pos.GetPiece(types.SQUARE_F2) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield2Value
+			scores[midgame] += shield2Value
 		} else if pos.GetPiece(types.SQUARE_F3) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield3Value
+			scores[midgame] += shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_G2) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield2Value
+			scores[midgame] += shield2Value
 		} else if pos.GetPiece(types.SQUARE_G3) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield3Value
+			scores[midgame] += shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_H2) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield2Value
+			scores[midgame] += shield2Value
 		} else if pos.GetPiece(types.SQUARE_H3) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield3Value
+			scores[midgame] += shield3Value
 		}
 	} else
 	// Queen Side
 	if kingFile < types.FILE_D {
 		if pos.GetPiece(types.SQUARE_A2) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield2Value
+			scores[midgame] += shield2Value
 		} else if pos.GetPiece(types.SQUARE_A3) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield3Value
+			scores[midgame] += shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_B2) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield2Value
+			scores[midgame] += shield2Value
 		} else if pos.GetPiece(types.SQUARE_B3) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield3Value
+			scores[midgame] += shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_C2) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield2Value
+			scores[midgame] += shield2Value
 		} else if pos.GetPiece(types.SQUARE_C3) == types.WHITE_PAWN {
-			scores[midgame] += evalData.shield3Value
+			scores[midgame] += shield3Value
 		}
 	}
 
@@ -317,41 +312,41 @@ func (pos *Position) Evaluation() int {
 	if kingFile > types.FILE_E {
 
 		if pos.GetPiece(types.SQUARE_F7) == types.BLACK_PAWN {
-			scores[midgame] -= evalData.shield2Value
+			scores[midgame] -= shield2Value
 		} else if pos.GetPiece(types.SQUARE_F6) == types.BLACK_PAWN {
-			scores[midgame] -= evalData.shield3Value
+			scores[midgame] -= shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_G7) == types.BLACK_PAWN {
-			scores[midgame] -= evalData.shield2Value
+			scores[midgame] -= shield2Value
 		} else if pos.GetPiece(types.SQUARE_G6) == types.BLACK_PAWN {
-			scores[midgame] -= evalData.shield3Value
+			scores[midgame] -= shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_H7) == types.BLACK_PAWN {
-			scores[midgame] -= evalData.shield2Value
+			scores[midgame] -= shield2Value
 		} else if pos.GetPiece(types.SQUARE_H6) == types.BLACK_PAWN {
-			scores[midgame] -= evalData.shield3Value
+			scores[midgame] -= shield3Value
 		}
 	} else
 	// Queen Side
 	if kingFile < types.FILE_D {
 		if pos.GetPiece(types.SQUARE_A7) == types.WHITE_PAWN {
-			scores[midgame] -= evalData.shield2Value
+			scores[midgame] -= shield2Value
 		} else if pos.GetPiece(types.SQUARE_A6) == types.WHITE_PAWN {
-			scores[midgame] -= evalData.shield3Value
+			scores[midgame] -= shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_B7) == types.WHITE_PAWN {
-			scores[midgame] -= evalData.shield2Value
+			scores[midgame] -= shield2Value
 		} else if pos.GetPiece(types.SQUARE_B6) == types.WHITE_PAWN {
-			scores[midgame] -= evalData.shield3Value
+			scores[midgame] -= shield3Value
 		}
 
 		if pos.GetPiece(types.SQUARE_C7) == types.WHITE_PAWN {
-			scores[midgame] -= evalData.shield2Value
+			scores[midgame] -= shield2Value
 		} else if pos.GetPiece(types.SQUARE_C6) == types.WHITE_PAWN {
-			scores[midgame] -= evalData.shield3Value
+			scores[midgame] -= shield3Value
 		}
 	}
 
@@ -360,8 +355,37 @@ func (pos *Position) Evaluation() int {
 
 	// Basic Material Score
 	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
-		score += evalData.pieceValue[pieceType] * (pos.piecesBitboard[types.WHITE][pieceType].PopulationCount() - pos.piecesBitboard[types.BLACK][pieceType].PopulationCount())
+		score += pieceValue[pieceType] * (pos.piecesBitboard[types.WHITE][pieceType].PopulationCount() - pos.piecesBitboard[types.BLACK][pieceType].PopulationCount())
 	}
+
+	// Adjust piece type values based on different factor
+	// Pairs give bonus or malus, see for example https://www.chessprogramming.org/Bishop_Pair
+	if pos.piecesBitboard[types.WHITE][types.BISHOP].PopulationCount() > 1 {
+		score += bishopPair
+	}
+	if pos.piecesBitboard[types.BLACK][types.BISHOP].PopulationCount() > 1 {
+		score -= bishopPair
+	}
+	if pos.piecesBitboard[types.WHITE][types.KNIGHT].PopulationCount() > 1 {
+		score += knightPair
+	}
+	if pos.piecesBitboard[types.BLACK][types.KNIGHT].PopulationCount() > 1 {
+		score -= knightPair
+	}
+	if pos.piecesBitboard[types.WHITE][types.ROOK].PopulationCount() > 1 {
+		score += rookPair
+	}
+	if pos.piecesBitboard[types.BLACK][types.ROOK].PopulationCount() > 1 {
+		score -= rookPair
+	}
+
+	// Adjustments based on the number of pawns
+	numberOfWhitePawns := pos.piecesBitboard[types.WHITE][types.PAWN].PopulationCount()
+	numberOfBlackPawns := pos.piecesBitboard[types.BLACK][types.PAWN].PopulationCount()
+	score += knight_pawn_adjustment[numberOfWhitePawns] * pos.piecesBitboard[types.WHITE][types.KNIGHT].PopulationCount()
+	score -= knight_pawn_adjustment[numberOfBlackPawns] * pos.piecesBitboard[types.BLACK][types.KNIGHT].PopulationCount()
+	score += rook_pawn_adjustment[numberOfWhitePawns] * pos.piecesBitboard[types.WHITE][types.ROOK].PopulationCount()
+	score -= rook_pawn_adjustment[numberOfBlackPawns] * pos.piecesBitboard[types.BLACK][types.ROOK].PopulationCount()
 
 	// Make the result side aware
 	if pos.SideToMove == types.BLACK {
