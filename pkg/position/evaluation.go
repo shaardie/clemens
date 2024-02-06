@@ -196,6 +196,9 @@ type evalDataStruct struct {
 	pieceValue               [types.PIECE_TYPE_NUMBER]int
 	midgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
 	endgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
+
+	shield2Value int
+	shield3Value int
 }
 
 var evalData evalDataStruct
@@ -208,6 +211,9 @@ func init() {
 	evalData.pieceValue[types.BISHOP] = 300
 	evalData.pieceValue[types.KNIGHT] = 300
 	evalData.pieceValue[types.PAWN] = 100
+
+	evalData.shield2Value = 10
+	evalData.shield3Value = 5
 
 	// Set Piece Square Tables
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
@@ -257,6 +263,95 @@ func (pos *Position) Evaluation() int {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
 			scores[midgame] -= evalData.midgamePieceSquareTables[types.BLACK][pieceType][square]
 			scores[endgame] -= evalData.endgamePieceSquareTables[types.BLACK][pieceType][square]
+		}
+	}
+
+	// Kind Shield Evalutation
+	// White
+	kingFile := types.FileOfSquare(bitboard.LeastSignificantOneBit(pos.piecesBitboard[types.WHITE][types.KING]))
+	// King Side
+	if kingFile > types.FILE_E {
+
+		if pos.GetPiece(types.SQUARE_F2) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_F3) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_G2) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_G3) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_H2) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_H3) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield3Value
+		}
+	} else
+	// Queen Side
+	if kingFile < types.FILE_D {
+		if pos.GetPiece(types.SQUARE_A2) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_A3) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_B2) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_B3) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_C2) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_C3) == types.WHITE_PAWN {
+			scores[midgame] += evalData.shield3Value
+		}
+	}
+
+	// Black
+	kingFile = types.FileOfSquare(bitboard.LeastSignificantOneBit(pos.piecesBitboard[types.BLACK][types.KING]))
+	// King Side
+	if kingFile > types.FILE_E {
+
+		if pos.GetPiece(types.SQUARE_F7) == types.BLACK_PAWN {
+			scores[midgame] -= evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_F6) == types.BLACK_PAWN {
+			scores[midgame] -= evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_G7) == types.BLACK_PAWN {
+			scores[midgame] -= evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_G6) == types.BLACK_PAWN {
+			scores[midgame] -= evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_H7) == types.BLACK_PAWN {
+			scores[midgame] -= evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_H6) == types.BLACK_PAWN {
+			scores[midgame] -= evalData.shield3Value
+		}
+	} else
+	// Queen Side
+	if kingFile < types.FILE_D {
+		if pos.GetPiece(types.SQUARE_A7) == types.WHITE_PAWN {
+			scores[midgame] -= evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_A6) == types.WHITE_PAWN {
+			scores[midgame] -= evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_B7) == types.WHITE_PAWN {
+			scores[midgame] -= evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_B6) == types.WHITE_PAWN {
+			scores[midgame] -= evalData.shield3Value
+		}
+
+		if pos.GetPiece(types.SQUARE_C7) == types.WHITE_PAWN {
+			scores[midgame] -= evalData.shield2Value
+		} else if pos.GetPiece(types.SQUARE_C6) == types.WHITE_PAWN {
+			scores[midgame] -= evalData.shield3Value
 		}
 	}
 
