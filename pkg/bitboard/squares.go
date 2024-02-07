@@ -14,6 +14,10 @@ func RankMaskOfSquare(square int) Bitboard {
 	return RankMask1 << (8 * types.RankOfSquare(square))
 }
 
+func FileMaskOfSquare(square int) Bitboard {
+	return FileMaskA << types.FileOfSquare(square)
+}
+
 func BitboardFromRankAndFile(rank int, file int) Bitboard {
 	return BitBySquares(types.SquareFromRankAndFile(rank, file))
 }

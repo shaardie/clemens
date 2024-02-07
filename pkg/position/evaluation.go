@@ -207,6 +207,11 @@ const (
 	bishopPair = 30
 	knightPair = -8
 	rookPair   = -16
+
+	rookSeventhMidgame = 20
+	rookSeventhEndgame = 30
+	rookOpenFile       = 10
+	rookHalfOpenFile   = 5
 )
 
 func init() {
@@ -248,13 +253,13 @@ func (pos *Position) Evaluation() int {
 	// piece tables
 	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
 		bb = pos.piecesBitboard[types.WHITE][pieceType]
-		for bb != bitboard.Empty {
+		for bb != 0 {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
 			scores[midgame] += midgamePieceSquareTables[types.WHITE][pieceType][square]
 			scores[endgame] += endgamePieceSquareTables[types.WHITE][pieceType][square]
 		}
 		bb = pos.piecesBitboard[types.BLACK][pieceType]
-		for bb != bitboard.Empty {
+		for bb != 0 {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
 			scores[midgame] -= midgamePieceSquareTables[types.BLACK][pieceType][square]
 			scores[endgame] -= endgamePieceSquareTables[types.BLACK][pieceType][square]
@@ -347,6 +352,46 @@ func (pos *Position) Evaluation() int {
 			scores[midgame] -= shield2Value
 		} else if pos.GetPiece(types.SQUARE_C6) == types.WHITE_PAWN {
 			scores[midgame] -= shield3Value
+		}
+	}
+
+	// Rook Evaluation
+	// Rook on the seventh with either the king on the eigth or enemy pawns on the seven
+	// https://www.chessprogramming.org/Rook_on_Seventh
+	if pos.piecesBitboard[types.WHITE][types.ROOK]&bitboard.RankMask7 > 0 && (pos.piecesBitboard[types.BLACK][types.KING]&bitboard.RankMask8 > 0 ||
+		pos.piecesBitboard[types.BLACK][types.PAWN]&bitboard.RankMask7 > 0) {
+		scores[midgame] += rookSeventhMidgame
+		scores[endgame] += rookSeventhEndgame
+	}
+	// vice versa
+	if pos.piecesBitboard[types.BLACK][types.ROOK]&bitboard.RankMask2 > 0 && (pos.piecesBitboard[types.WHITE][types.KING]&bitboard.RankMask1 > 0 ||
+		pos.piecesBitboard[types.WHITE][types.PAWN]&bitboard.RankMask2 > 0) {
+		scores[midgame] -= rookSeventhMidgame
+		scores[endgame] -= rookSeventhEndgame
+	}
+
+	// Rooks are on an open or half open file
+	// https://www.chessprogramming.org/Rook_on_Open_File
+	rooks := pos.piecesBitboard[types.WHITE][types.ROOK]
+	for rooks != 0 {
+		fileMask := bitboard.FileMaskOfSquare(bitboard.SquareIndexSerializationNextSquare(&rooks))
+		if pos.piecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
+			if pos.piecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
+				scores[midgame] += rookOpenFile
+				continue
+			}
+			scores[endgame] += rookHalfOpenFile
+		}
+	}
+	rooks = pos.piecesBitboard[types.BLACK][types.ROOK]
+	for rooks != 0 {
+		fileMask := bitboard.FileMaskOfSquare(bitboard.SquareIndexSerializationNextSquare(&rooks))
+		if pos.piecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
+			if pos.piecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
+				scores[midgame] -= rookOpenFile
+				continue
+			}
+			scores[endgame] -= rookHalfOpenFile
 		}
 	}
 
