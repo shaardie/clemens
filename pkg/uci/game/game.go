@@ -168,6 +168,17 @@ func parseGo(tokens []string) (sp search.SearchParameter) {
 				return
 			}
 			tokens = tokens[1:]
+		case "movetime":
+			if len(tokens) == 0 {
+				fmt.Println("info string movetime missing")
+				return
+			}
+			sp.MoveTime, err = strconv.Atoi(tokens[0])
+			if err != nil {
+				fmt.Printf("info string movetime broken, %v\n", err)
+				return
+			}
+			tokens = tokens[1:]
 		case "depth":
 			if len(tokens) == 0 {
 				fmt.Println("info string depth missing")
