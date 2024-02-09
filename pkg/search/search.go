@@ -127,7 +127,6 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 }
 
 func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool) (int, error) {
-	s.nodes++
 
 	// value to info channel and check if we are done
 	select {
@@ -136,10 +135,28 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	default:
 	}
 
+	mateValue := -inf + int(ply)
+
+	// Mate Distance Pruning
+	// https://www.chessprogramming.org/Mate_Distance_Pruning
+	if !isRoot {
+		if alpha < mateValue {
+			alpha = mateValue
+		}
+		if beta > -mateValue+1 {
+			beta = -mateValue + 1
+		}
+		if alpha >= beta {
+			return alpha, nil
+		}
+	}
+
 	// Evaluate the leaf node
 	if ply == maxDepth {
 		return s.quiescence(ctx, pos, alpha, beta, ply)
 	}
+
+	s.nodes++
 
 	goodGuess := move.NullMove
 
@@ -223,7 +240,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		// Checkmate, set lowest possible value, but increase by the number of plys,
 		// so the engine is looking for shorter mates.
 		if pos.IsInCheck(pos.SideToMove) {
-			return -inf + int(ply), nil
+			return mateValue, nil
 		}
 		// stalemate
 		return 0, nil
