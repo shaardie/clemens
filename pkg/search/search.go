@@ -115,7 +115,7 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 	start := time.Now()
 	pos := s.pos
 	pvl := pvline.PVLine{}
-	score, err := s.negamax(ctx, &pos, alpha, beta, depth, 0, true, &pvl, true)
+	score, err := s.negamax(ctx, &pos, alpha, beta, depth, 0, true, &pvl, true, true)
 	if err != nil {
 		return Info{}, err
 	}
@@ -127,7 +127,7 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 	}, nil
 }
 
-func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool) (int, error) {
+func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool, canNull bool) (int, error) {
 
 	// value to info channel and check if we are done
 	select {
@@ -150,6 +150,13 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		if alpha >= beta {
 			return alpha, nil
 		}
+	}
+
+	// Increase Depth, if in Check.
+	// This also means that we do not enter quiescence, if in check.
+	isInCheck := pos.IsInCheck(pos.SideToMove)
+	if isInCheck {
+		maxDepth++
 	}
 
 	// Evaluate the leaf node
@@ -188,7 +195,26 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			goodGuess = te.BestMove
 		}
 	}
-	isRoot = false
+
+	// Null Move Pruning
+	// https://www.chessprogramming.org/Null_Move_Pruning
+	if maxDepth-ply > 2 && canNull && pos.Evaluation() > beta && !isInCheck && !pvNode {
+		oldPos := *pos
+		pos.MakeNullMove()
+		adaptiveDepth := uint8(2)
+		if maxDepth-ply > 6 {
+			adaptiveDepth = 3
+		}
+
+		v, err := s.negamax(ctx, pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, false, &pvline.PVLine{}, false, false)
+		if err != nil {
+			return 0, err
+		}
+		if v < beta {
+			return beta, nil
+		}
+		*pos = oldPos
+	}
 
 	oldAlpha := alpha
 	potentialPVLine := pvline.PVLine{}
@@ -208,7 +234,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			continue
 		}
 		legalMoves++
-		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, isRoot)
+		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, isRoot, true)
 		*pos = prevPos
 		if err != nil {
 			return 0, err

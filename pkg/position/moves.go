@@ -363,6 +363,33 @@ func (pos *Position) MakeMove(m move.Move) {
 	pos.generateHelperBitboards()
 }
 
+func (pos *Position) MakeNullMove() {
+	pos.ply++
+
+	if pos.enPassant != types.SQUARE_NONE {
+		pos.zobristUpdateEnPassant(pos.enPassant)
+		pos.enPassant = types.SQUARE_NONE
+
+	}
+
+	// Update Side to Move
+	pos.SideToMove = types.SwitchColor(pos.SideToMove)
+	pos.zobristUpdateColor()
+}
+
+func (pos *Position) UnMakeNullMove(enPassantSquare int) {
+	pos.ply--
+
+	if enPassantSquare != types.SQUARE_NONE {
+		pos.enPassant = enPassantSquare
+		pos.zobristUpdateEnPassant(pos.enPassant)
+	}
+
+	// Update Side to Move
+	pos.SideToMove = types.SwitchColor(pos.SideToMove)
+	pos.zobristUpdateColor()
+}
+
 // generateMovesHelper generates a list of moves from a given list of paramters
 func generateMovesHelper(moves *move.MoveList, sources, occupied, destinations bitboard.Bitboard, attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) {
 	var sourceSquare, targetSquare int
