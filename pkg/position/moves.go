@@ -349,9 +349,7 @@ func (pos *Position) MakeMove(m move.Move) {
 	}
 
 	// Update Side to Move
-	if pos.SideToMove == types.BLACK {
-		pos.numberOfFullMoves = pos.numberOfFullMoves + 1
-	}
+	pos.ply++
 	pos.SideToMove = types.SwitchColor(pos.SideToMove)
 	pos.zobristUpdateColor()
 

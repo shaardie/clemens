@@ -20,9 +20,9 @@ type Position struct {
 	// Castling possibilities
 	castling Castling
 	// En passant square
-	enPassant         int
-	HalfMoveClock     uint8
-	numberOfFullMoves int
+	enPassant     int
+	HalfMoveClock uint8
+	ply           int
 
 	ZobristHash      uint64
 	allPieces        bitboard.Bitboard
@@ -41,10 +41,10 @@ func New() *Position {
 			types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN, types.BLACK_PAWN,
 			types.BLACK_ROOK, types.BLACK_KNIGHT, types.BLACK_BISHOP, types.BLACK_QUEEN, types.BLACK_KING, types.BLACK_BISHOP, types.BLACK_KNIGHT, types.BLACK_ROOK,
 		},
-		SideToMove:        types.WHITE,
-		castling:          WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
-		enPassant:         types.SQUARE_NONE,
-		numberOfFullMoves: 1,
+		SideToMove: types.WHITE,
+		castling:   WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
+		enPassant:  types.SQUARE_NONE,
+		ply:        0,
 	}
 	pos.boardToBitBoard()
 	pos.generateHelperBitboards()
