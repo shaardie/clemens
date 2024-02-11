@@ -178,8 +178,8 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 				s.betaCutOffs++
 				return min(te.Score, beta), nil
 			case transpositiontable.PVNode:
-				if !pvNode {
-					// return exact value
+				// In PV Nodes only return on exact hit, ignore check mates for now
+				if !pvNode || (te.Score > alpha && te.Score < beta) || te.Score > -inf+100 || te.Score < inf-100 {
 					return te.Score, nil
 				}
 			}
