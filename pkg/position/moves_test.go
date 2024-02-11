@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPosition_MakeMove(t *testing.T) {
+func TestPosition_MakeAndUnmakeMove(t *testing.T) {
 	tests := []struct {
 		name      string
 		beforeFen string
@@ -99,8 +99,10 @@ func TestPosition_MakeMove(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pos, err := NewFromFen(tt.beforeFen)
 			assert.NoError(t, err)
-			pos.MakeMove(tt.m)
+			s := pos.MakeMove(tt.m)
 			assert.Equal(t, tt.afterFen, pos.ToFen())
+			pos.UnMakeMove(s)
+			assert.Equal(t, tt.beforeFen, pos.ToFen())
 		})
 	}
 }

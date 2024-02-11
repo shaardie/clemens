@@ -21,6 +21,13 @@ func (pos *Position) SetPiece(p types.Piece, square int) {
 	pos.zobristUpdatePiece(square, c, t)
 }
 
+// setPieceWithoutZobrist adds a pieces to the given square without updating the zobrist hash.
+// It is meant for unmake moves.
+func (pos *Position) setPieceWithoutZobrist(p types.Piece, square int) {
+	pos.piecesBoard[square] = p
+	pos.piecesBitboard[p.Color()][p.Type()] |= bitboard.BitBySquares(square)
+}
+
 // DeletePiece deletes the piece on the given square
 func (pos *Position) DeletePiece(square int) types.Piece {
 	// Get Piece from pieceBoard
@@ -32,15 +39,35 @@ func (pos *Position) DeletePiece(square int) types.Piece {
 	pos.piecesBoard[square] = types.NO_PIECE
 
 	// Remove Piece from Bitboard by generating the difference
-	pos.piecesBitboard[p.Color()][p.Type()] &= ^bitboard.BitBySquares(square)
+	pos.piecesBitboard[c][t] &= ^bitboard.BitBySquares(square)
 
 	// Update zobrist Hash
 	pos.zobristUpdatePiece(square, c, t)
 	return p
 }
 
+// deletePieceWithoutZobrist deletes the piece on the given square without updating the zobrist hash.
+// It is meant for unmake moves.
+func (pos *Position) deletePieceWithoutZobrist(square int) types.Piece {
+	// Get Piece from pieceBoard
+	p := pos.piecesBoard[square]
+
+	// Remove Piece from pieceBoard
+	pos.piecesBoard[square] = types.NO_PIECE
+
+	// Remove Piece from Bitboard by generating the difference
+	pos.piecesBitboard[p.Color()][p.Type()] &= ^bitboard.BitBySquares(square)
+	return p
+}
+
 func (pos *Position) MovePiece(fromSquare, toSquare int) types.Piece {
 	p := pos.DeletePiece(fromSquare)
 	pos.SetPiece(p, toSquare)
+	return p
+}
+
+func (pos *Position) movePieceWithoutZobrist(fromSquare, toSquare int) types.Piece {
+	p := pos.deletePieceWithoutZobrist(fromSquare)
+	pos.setPieceWithoutZobrist(p, toSquare)
 	return p
 }

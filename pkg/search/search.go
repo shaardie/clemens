@@ -128,7 +128,6 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 }
 
 func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool) (int, error) {
-
 	// value to info channel and check if we are done
 	select {
 	case <-ctx.Done():
@@ -154,6 +153,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	// Evaluate the leaf node
 	if ply == maxDepth {
+		// return pos.Evaluation(), nil
 		return s.quiescence(ctx, pos, alpha, beta, ply)
 	}
 
@@ -192,24 +192,23 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	oldAlpha := alpha
 	potentialPVLine := pvline.PVLine{}
-	var prevPos position.Position
 	var bestMove move.Move
 	var legalMoves uint8
+	var state position.State
 
 	// Generate all moves
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMovesOrdered(moves, goodGuess)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
-		prevPos = *pos
-		pos.MakeMove(*m)
+		state = pos.MakeMove(*m)
 		if !pos.IsLegal() {
-			*pos = prevPos
+			pos.UnMakeMove(state)
 			continue
 		}
 		legalMoves++
 		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, isRoot)
-		*pos = prevPos
+		pos.UnMakeMove(state)
 		if err != nil {
 			return 0, err
 		}
@@ -284,21 +283,21 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 		return alpha, nil
 	}
 
-	var prevPos position.Position
+	// var prev position.Position
+	var state position.State
 
 	// Generate all captures
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalCapturesOrdered(moves, move.NullMove)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
-		prevPos = *pos
-		pos.MakeMove(*m)
+		state = pos.MakeMove(*m)
 		if !pos.IsLegal() {
-			*pos = prevPos
+			pos.UnMakeMove(state)
 			continue
 		}
 		score, err := s.quiescence(ctx, pos, -beta, -alpha, ply+1)
-		*pos = prevPos
+		pos.UnMakeMove(state)
 		if err != nil {
 			return 0, err
 		}
@@ -311,7 +310,6 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 			alpha = score
 		}
 	}
-
 	return alpha, nil
 }
 
