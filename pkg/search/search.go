@@ -22,13 +22,14 @@ const (
 )
 
 type Search struct {
-	pos             position.Position
-	nodes           uint64
-	betaCutOffs     uint64
-	alphaCutOffs    uint64
-	quiescenceNodes uint64
-	m               *sync.Mutex
-	PV              pvline.PVLine
+	pos                    position.Position
+	nodes                  uint64
+	betaCutOffs            uint64
+	alphaCutOffs           uint64
+	quiescenceNodes        uint64
+	transpositiontableHits uint64
+	m                      *sync.Mutex
+	PV                     pvline.PVLine
 }
 
 type SearchParameter struct {
@@ -106,7 +107,7 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 
 		// Print info
 		fmt.Printf("info depth %v score cp %v nodes %v time %v pv %v\n", i.Depth, i.Score, s.nodes, i.Time, i.PV)
-		// fmt.Printf("info string beta-cutoffs %v alpha-cutoffs %v quiescence-nodes %v\n", s.betaCutOffs, s.alphaCutOffs, s.quiescenceNodes)
+		fmt.Printf("info string beta-cutoffs %v alpha-cutoffs %v quiescence-nodes %v transpositiontable-hits %v\n", s.betaCutOffs, s.alphaCutOffs, s.quiescenceNodes, s.transpositiontableHits)
 	}
 }
 
@@ -166,6 +167,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	} else {
 		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, maxDepth-ply)
 		if found {
+			s.transpositiontableHits++
 			switch te.NodeType {
 			case transpositiontable.AlphaNode:
 				// return the smaller value of alpha and score
