@@ -354,6 +354,10 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 	} else {
 		movetime = maxTimeInMs
 	}
+
+	// Current bad puffer
+	movetime -= 100
+
 	fmt.Printf("info string calculated timeout %v\n", movetime)
 	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
 }
