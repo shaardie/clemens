@@ -227,7 +227,7 @@ func init() {
 	// Set Piece Square Tables
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
 		for _, color := range []types.Color{types.WHITE, types.BLACK} {
-			var colorAwareSquare int
+			colorAwareSquare := square
 			if types.BLACK == color {
 				// Flipping square, see https://www.chessprogramming.org/Color_Flipping#Flipping_an_8x8_Board
 				colorAwareSquare = square ^ 56
@@ -237,9 +237,7 @@ func init() {
 				endgamePieceSquareTables[color][pieceType][square] = pieceTables[pieceType][endgame][colorAwareSquare]
 			}
 		}
-
 	}
-
 }
 
 func (pos *Position) Evaluation() int {
