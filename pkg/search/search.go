@@ -201,37 +201,40 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		m := moves.Get(i)
 		prevPos = *pos
 		pos.MakeMove(*m)
-		if pos.IsLegal() {
-			legalMoves++
-			score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, isRoot)
-			if err != nil {
-				return 0, err
-			}
-			score = -score
-			// value to info channel and check if we are done
-			select {
-			case <-ctx.Done():
-				return 0, ctx.Err()
-			default:
-			}
-
-			if pvNode {
-				pvNode = false
-			}
-
-			if score >= beta {
-				transpositiontable.TTable.PotentiallySave(prevPos.ZobristHash, bestMove, maxDepth-ply, beta, transpositiontable.BetaNode)
-				s.betaCutOffs++
-				return beta, nil
-			}
-
-			if score > alpha {
-				alpha = score
-				bestMove = *m
-				pvl.Update(bestMove, &potentialPVLine)
-			}
+		if !pos.IsLegal() {
+			*pos = prevPos
+			continue
 		}
+		legalMoves++
+		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, isRoot)
 		*pos = prevPos
+		if err != nil {
+			return 0, err
+		}
+		score = -score
+		// value to info channel and check if we are done
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		default:
+		}
+
+		if pvNode {
+			pvNode = false
+		}
+
+		if score >= beta {
+			transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, maxDepth-ply, beta, transpositiontable.BetaNode)
+			s.betaCutOffs++
+			return beta, nil
+		}
+
+		if score > alpha {
+			alpha = score
+			bestMove = *m
+			pvl.Update(bestMove, &potentialPVLine)
+		}
+
 		potentialPVLine.Reset()
 	}
 
@@ -288,21 +291,23 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 		m := moves.Get(i)
 		prevPos = *pos
 		pos.MakeMove(*m)
-		if pos.IsLegal() {
-			score, err := s.quiescence(ctx, pos, -beta, -alpha, ply+1)
-			if err != nil {
-				return 0, err
-			}
-			score = -score
-			if score >= beta {
-				return beta, nil
-			}
-
-			if score > alpha {
-				alpha = score
-			}
+		if !pos.IsLegal() {
+			*pos = prevPos
+			continue
 		}
+		score, err := s.quiescence(ctx, pos, -beta, -alpha, ply+1)
 		*pos = prevPos
+		if err != nil {
+			return 0, err
+		}
+		score = -score
+		if score >= beta {
+			return beta, nil
+		}
+
+		if score > alpha {
+			alpha = score
+		}
 	}
 
 	return alpha, nil
