@@ -363,9 +363,9 @@ func (pos *Position) MakeMove(m move.Move) {
 	pos.generateHelperBitboards()
 }
 
-func (pos *Position) MakeNullMove() {
+func (pos *Position) MakeNullMove() int {
 	pos.ply++
-
+	ep := pos.enPassant
 	if pos.enPassant != types.SQUARE_NONE {
 		pos.zobristUpdateEnPassant(pos.enPassant)
 		pos.enPassant = types.SQUARE_NONE
@@ -375,6 +375,7 @@ func (pos *Position) MakeNullMove() {
 	// Update Side to Move
 	pos.SideToMove = types.SwitchColor(pos.SideToMove)
 	pos.zobristUpdateColor()
+	return ep
 }
 
 func (pos *Position) UnMakeNullMove(enPassantSquare int) {

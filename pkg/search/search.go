@@ -204,21 +204,19 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	// Null Move Pruning
 	// https://www.chessprogramming.org/Null_Move_Pruning
 	if maxDepth-ply > 2 && canNull && pos.Evaluation() > beta && !isInCheck && !pvNode {
-		oldPos := *pos
-		pos.MakeNullMove()
+		ep := pos.MakeNullMove()
 		adaptiveDepth := uint8(2)
 		if maxDepth-ply > 6 {
 			adaptiveDepth = 3
 		}
-
 		v, err := s.negamax(ctx, pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, false, &pvline.PVLine{}, false, false)
+		pos.UnMakeNullMove(ep)
 		if err != nil {
 			return 0, err
 		}
 		if v < beta {
 			return beta, nil
 		}
-		*pos = oldPos
 	}
 
 	oldAlpha := alpha
