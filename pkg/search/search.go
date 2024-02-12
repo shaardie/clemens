@@ -71,6 +71,11 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 	}
 	s.SearchIterative(ctx, depth)
 	cancel()
+
+	// We need at least a valid move
+	if s.BestMove() == move.NullMove {
+		s.SearchIterative(context.TODO(), 1)
+	}
 	return s.BestMove()
 }
 
@@ -381,8 +386,8 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 		movetime = maxTimeInMs
 	}
 
-	// Current bad puffer
-	movetime -= 100
+	// Current puffer of 10% for teardown process
+	movetime = movetime - movetime/10
 
 	fmt.Printf("info string calculated timeout %v\n", movetime)
 	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
