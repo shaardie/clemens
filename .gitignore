@@ -21,3 +21,6 @@ go.work
 # benchmark
 search.test
 profile.out
+
+# Rating
+output_pgn_file.pgn
