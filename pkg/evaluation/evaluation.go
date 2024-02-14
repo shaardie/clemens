@@ -242,6 +242,12 @@ func init() {
 }
 
 func Evaluation(pos *position.Position) int {
+
+	score, found := tTable.get(pos.ZobristHash)
+	if found {
+		return score
+	}
+
 	bb := bitboard.Empty
 	var scores [game_number]int
 
@@ -404,7 +410,7 @@ func Evaluation(pos *position.Position) int {
 	}
 
 	// Merge midgame and endgame value
-	score := (scores[midgame]*gamePhase + scores[endgame]*(24-gamePhase)) / 24
+	score = (scores[midgame]*gamePhase + scores[endgame]*(24-gamePhase)) / 24
 
 	// Basic Material Score
 	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
@@ -447,6 +453,9 @@ func Evaluation(pos *position.Position) int {
 	if pos.SideToMove == types.BLACK {
 		score *= -1
 	}
+
+	// Save score in transposition table
+	tTable.save(pos.ZobristHash, score)
 
 	return score
 }
