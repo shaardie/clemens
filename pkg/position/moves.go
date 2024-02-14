@@ -59,26 +59,26 @@ func (pos *Position) GeneratePseudoLegalCapturesOrdered(moves *move.MoveList, be
 }
 
 func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
-	occupied := pos.AllPieces()
-	destinations := pos.AllPiecesByColor(types.SwitchColor(pos.SideToMove))
+	occupied := pos.AllPieces
+	destinations := pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)]
 	// Sliding Pieces
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.ROOK],
+		pos.PiecesBitboard[pos.SideToMove][types.ROOK],
 		occupied,
 		destinations,
 		rook.AttacksBySquare,
 	)
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.BISHOP],
+		pos.PiecesBitboard[pos.SideToMove][types.BISHOP],
 		occupied,
 		destinations,
 		bishop.AttacksBySquare,
 	)
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.QUEEN],
+		pos.PiecesBitboard[pos.SideToMove][types.QUEEN],
 		occupied,
 		destinations,
 		queen.AttacksBySquare,
@@ -87,7 +87,7 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 	// Pieces ignoring occupation
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.KNIGHT],
+		pos.PiecesBitboard[pos.SideToMove][types.KNIGHT],
 		bitboard.Empty,
 		destinations,
 		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
@@ -96,7 +96,7 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 	)
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.KING],
+		pos.PiecesBitboard[pos.SideToMove][types.KING],
 		bitboard.Empty,
 		destinations,
 		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
@@ -105,12 +105,12 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 	)
 
 	// Pawns
-	pawnSquares := pos.piecesBitboard[pos.SideToMove][types.PAWN]
+	pawnSquares := pos.PiecesBitboard[pos.SideToMove][types.PAWN]
 	for pawnSquares != bitboard.Empty {
 		sourceSquare := bitboard.SquareIndexSerializationNextSquare(&pawnSquares)
 
 		// Attacks
-		targets := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & pos.AllPiecesByColor(types.SwitchColor(pos.SideToMove))
+		targets := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)]
 		for targets != bitboard.Empty {
 			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
 			var m move.Move
@@ -121,8 +121,8 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 		}
 
 		// En Passant
-		if pos.enPassant != types.SQUARE_NONE {
-			attackingPawns := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & bitboard.BitBySquares(pos.enPassant)
+		if pos.EnPassant != types.SQUARE_NONE {
+			attackingPawns := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & bitboard.BitBySquares(pos.EnPassant)
 			for attackingPawns != bitboard.Empty {
 				targetSquare := bitboard.SquareIndexSerializationNextSquare(&attackingPawns)
 				var m move.Move
@@ -143,20 +143,20 @@ func (pos *Position) GeneratePseudoLegalMovesOrdered(moves *move.MoveList, bestG
 
 // GeneratePseudoLegalMoves generates all pseudo legal moves
 func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
-	occupied := pos.AllPieces()
-	destinations := ^pos.AllPiecesByColor(pos.SideToMove)
+	occupied := pos.AllPieces
+	destinations := ^pos.AllPiecesByColor[pos.SideToMove]
 
 	// Sliding Pieces
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.ROOK],
+		pos.PiecesBitboard[pos.SideToMove][types.ROOK],
 		occupied,
 		destinations,
 		rook.AttacksBySquare,
 	)
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.BISHOP],
+		pos.PiecesBitboard[pos.SideToMove][types.BISHOP],
 		occupied,
 		destinations,
 		bishop.AttacksBySquare,
@@ -164,7 +164,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.QUEEN],
+		pos.PiecesBitboard[pos.SideToMove][types.QUEEN],
 		occupied,
 		destinations,
 		queen.AttacksBySquare,
@@ -173,7 +173,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	// Pieces ignoring occupation
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.KNIGHT],
+		pos.PiecesBitboard[pos.SideToMove][types.KNIGHT],
 		bitboard.Empty,
 		destinations,
 		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
@@ -182,7 +182,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	)
 	generateMovesHelper(
 		moves,
-		pos.piecesBitboard[pos.SideToMove][types.KING],
+		pos.PiecesBitboard[pos.SideToMove][types.KING],
 		bitboard.Empty,
 		destinations,
 		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
@@ -191,7 +191,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	)
 
 	// Pawns
-	pawnSquares := pos.piecesBitboard[pos.SideToMove][types.PAWN]
+	pawnSquares := pos.PiecesBitboard[pos.SideToMove][types.PAWN]
 	for pawnSquares != bitboard.Empty {
 		sourceSquare := bitboard.SquareIndexSerializationNextSquare(&pawnSquares)
 
@@ -207,7 +207,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		}
 
 		// Attacks
-		targets = pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & pos.AllPiecesByColor(types.SwitchColor(pos.SideToMove))
+		targets = pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)]
 		for targets != bitboard.Empty {
 			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
 			var m move.Move
@@ -218,8 +218,8 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		}
 
 		// En Passant
-		if pos.enPassant != types.SQUARE_NONE {
-			attackingPawns := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & bitboard.BitBySquares(pos.enPassant)
+		if pos.EnPassant != types.SQUARE_NONE {
+			attackingPawns := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & bitboard.BitBySquares(pos.EnPassant)
 			for attackingPawns != bitboard.Empty {
 				targetSquare := bitboard.SquareIndexSerializationNextSquare(&attackingPawns)
 				var m move.Move
@@ -241,7 +241,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		}
 		var m move.Move
 		m.SetMoveType(move.CASTLING)
-		sourceSquare := bitboard.LeastSignificantOneBit(pos.piecesBitboard[pos.SideToMove][types.KING])
+		sourceSquare := bitboard.LeastSignificantOneBit(pos.PiecesBitboard[pos.SideToMove][types.KING])
 		var targetSquare int
 		switch c.Side() {
 		case CASTLING_KING:
@@ -258,9 +258,9 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 func (pos *Position) MakeMove(m move.Move) {
 	resetHalfmoveClock := false
 
-	if pos.enPassant != types.SQUARE_NONE {
-		pos.zobristUpdateEnPassant(pos.enPassant)
-		pos.enPassant = types.SQUARE_NONE
+	if pos.EnPassant != types.SQUARE_NONE {
+		pos.zobristUpdateEnPassant(pos.EnPassant)
+		pos.EnPassant = types.SQUARE_NONE
 
 	}
 
@@ -276,23 +276,23 @@ func (pos *Position) MakeMove(m move.Move) {
 	for _, s := range []int{sourceSquare, targetSquare} {
 		switch s {
 		case types.SQUARE_A1:
-			pos.castling = pos.castling &^ WHITE_CASTLING_QUEEN
+			pos.Castling = pos.Castling &^ WHITE_CASTLING_QUEEN
 			pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
 		case types.SQUARE_H1:
-			pos.castling = pos.castling &^ WHITE_CASTLING_KING
+			pos.Castling = pos.Castling &^ WHITE_CASTLING_KING
 			pos.zobristUpdateCastling(WHITE_CASTLING_KING)
 		case types.SQUARE_A8:
-			pos.castling = pos.castling &^ BLACK_CASTLING_QUEEN
+			pos.Castling = pos.Castling &^ BLACK_CASTLING_QUEEN
 			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
 		case types.SQUARE_H8:
-			pos.castling = pos.castling &^ BLACK_CASTLING_KING
+			pos.Castling = pos.Castling &^ BLACK_CASTLING_KING
 			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
 		case types.SQUARE_E1:
-			pos.castling = pos.castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
+			pos.Castling = pos.Castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
 			pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
 			pos.zobristUpdateCastling(WHITE_CASTLING_KING)
 		case types.SQUARE_E8:
-			pos.castling = pos.castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
+			pos.Castling = pos.Castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
 			pos.zobristUpdateCastling(BLACK_CASTLING_QUEEN)
 			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
 		}
@@ -304,13 +304,13 @@ func (pos *Position) MakeMove(m move.Move) {
 	case types.PAWN:
 		resetHalfmoveClock = true
 		if abs(sourceSquare-targetSquare) == 2*types.FILE_NUMBER {
-			pos.enPassant = targetSquare
-			pos.zobristUpdateEnPassant(pos.enPassant)
+			pos.EnPassant = targetSquare
+			pos.zobristUpdateEnPassant(pos.EnPassant)
 			switch pos.SideToMove {
 			case types.BLACK:
-				pos.enPassant += types.FILE_NUMBER
+				pos.EnPassant += types.FILE_NUMBER
 			case types.WHITE:
-				pos.enPassant -= types.FILE_NUMBER
+				pos.EnPassant -= types.FILE_NUMBER
 			default:
 				panic("unknown color")
 			}
@@ -349,7 +349,7 @@ func (pos *Position) MakeMove(m move.Move) {
 	}
 
 	// Update Side to Move
-	pos.ply++
+	pos.Ply++
 	pos.SideToMove = types.SwitchColor(pos.SideToMove)
 	pos.zobristUpdateColor()
 
@@ -364,11 +364,11 @@ func (pos *Position) MakeMove(m move.Move) {
 }
 
 func (pos *Position) MakeNullMove() int {
-	pos.ply++
-	ep := pos.enPassant
-	if pos.enPassant != types.SQUARE_NONE {
-		pos.zobristUpdateEnPassant(pos.enPassant)
-		pos.enPassant = types.SQUARE_NONE
+	pos.Ply++
+	ep := pos.EnPassant
+	if pos.EnPassant != types.SQUARE_NONE {
+		pos.zobristUpdateEnPassant(pos.EnPassant)
+		pos.EnPassant = types.SQUARE_NONE
 
 	}
 
@@ -379,11 +379,11 @@ func (pos *Position) MakeNullMove() int {
 }
 
 func (pos *Position) UnMakeNullMove(enPassantSquare int) {
-	pos.ply--
+	pos.Ply--
 
 	if enPassantSquare != types.SQUARE_NONE {
-		pos.enPassant = enPassantSquare
-		pos.zobristUpdateEnPassant(pos.enPassant)
+		pos.EnPassant = enPassantSquare
+		pos.zobristUpdateEnPassant(pos.EnPassant)
 	}
 
 	// Update Side to Move

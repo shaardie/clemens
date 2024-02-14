@@ -42,7 +42,7 @@ func init() {
 func (pos *Position) initZobristHash() {
 	pos.ZobristHash = 0
 
-	for square, piece := range pos.piecesBoard {
+	for square, piece := range pos.PiecesBoard {
 		if piece != types.NO_PIECE {
 			pos.zobristUpdatePiece(square, piece.Color(), piece.Type())
 		}
@@ -53,13 +53,13 @@ func (pos *Position) initZobristHash() {
 	}
 
 	for _, castling := range []Castling{WHITE_CASTLING_KING, WHITE_CASTLING_QUEEN, BLACK_CASTLING_KING, BLACK_CASTLING_QUEEN} {
-		if pos.castling|castling != 0 {
+		if pos.Castling|castling != 0 {
 			pos.zobristUpdateCastling(castling)
 		}
 	}
 
-	if pos.enPassant != types.SQUARE_NONE {
-		pos.ZobristHash ^= z.enPassant[types.FileOfSquare(pos.enPassant)]
+	if pos.EnPassant != types.SQUARE_NONE {
+		pos.ZobristHash ^= z.enPassant[types.FileOfSquare(pos.EnPassant)]
 	}
 }
 

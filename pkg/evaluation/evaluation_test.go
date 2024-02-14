@@ -1,8 +1,9 @@
-package position
+package evaluation
 
 import (
 	"testing"
 
+	"github.com/shaardie/clemens/pkg/position"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,9 +26,9 @@ func TestPosition_Evaluation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pos, err := NewFromFen(tt.fen)
+			pos, err := position.NewFromFen(tt.fen)
 			assert.NoError(t, err)
-			eval := pos.Evaluation()
+			eval := Evaluation(pos)
 			if tt.evalutationOverZero {
 				assert.Positive(t, eval)
 			} else {

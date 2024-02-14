@@ -54,7 +54,7 @@ func (c Castling) Color() types.Color {
 // CanCastle returns true, if castling is possible possible in theory,
 // because rook and kind did not move yet.
 func (pos *Position) CanCastle(c Castling) bool {
-	return c&pos.castling != NO_CASTLING
+	return c&pos.Castling != NO_CASTLING
 }
 
 // CanCastleNow returns true, if castling is now.
@@ -83,7 +83,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 		freeFiles = 3
 	}
 
-	square := bitboard.LeastSignificantOneBit(pos.piecesBitboard[pos.SideToMove][types.KING])
+	square := bitboard.LeastSignificantOneBit(pos.PiecesBitboard[pos.SideToMove][types.KING])
 	for attackedFiles > 0 || freeFiles > 0 {
 		if side == CASTLING_QUEEN {
 			square--
@@ -95,7 +95,7 @@ func (pos *Position) CanCastleNow(c Castling) bool {
 		}
 		freeFiles--
 
-		if attackedFiles > 0 && pos.SquareAttackedBy(square)&pos.AllPiecesByColor(types.SwitchColor(pos.SideToMove)) != bitboard.Empty {
+		if attackedFiles > 0 && pos.SquareAttackedBy(square)&pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)] != bitboard.Empty {
 			return false
 		}
 		attackedFiles--

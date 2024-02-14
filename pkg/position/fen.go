@@ -51,9 +51,9 @@ func NewFromFen(fen string) (*Position, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to set number of full moves fen token, %w", err)
 	}
-	pos.ply = 2*numberOfFullMoves - 1
+	pos.Ply = 2*numberOfFullMoves - 1
 	if pos.SideToMove == types.WHITE {
-		pos.ply--
+		pos.Ply--
 	}
 
 	// Create initial zobrist hash
@@ -113,17 +113,17 @@ func (pos *Position) ToFen() string {
 	}
 	sb.WriteRune(' ')
 
-	if pos.enPassant == types.SQUARE_NONE {
+	if pos.EnPassant == types.SQUARE_NONE {
 		sb.WriteRune('-')
 	} else {
-		sb.WriteString(types.SquareToString(pos.enPassant))
+		sb.WriteString(types.SquareToString(pos.EnPassant))
 	}
 	sb.WriteRune(' ')
 
 	sb.WriteString(strconv.Itoa(int(pos.HalfMoveClock)))
 	sb.WriteRune(' ')
 
-	numberOfFullMoves := pos.ply/2 + 1
+	numberOfFullMoves := pos.Ply/2 + 1
 	sb.WriteString(strconv.Itoa(numberOfFullMoves))
 	return sb.String()
 }
@@ -180,7 +180,7 @@ func (pos *Position) fenSetSideToMove(token string) error {
 
 // fenSetCastling set castling from part of the fen string
 func (pos *Position) fenSetCastling(token string) error {
-	pos.castling = NO_CASTLING
+	pos.Castling = NO_CASTLING
 
 	// No castling
 	if token == "-" {
@@ -197,13 +197,13 @@ func (pos *Position) fenSetCastling(token string) error {
 			return fmt.Errorf("failed to read castling, %w", err)
 		}
 		if r == 'K' {
-			pos.castling |= WHITE_CASTLING_KING
+			pos.Castling |= WHITE_CASTLING_KING
 		} else if r == 'Q' {
-			pos.castling |= WHITE_CASTLING_QUEEN
+			pos.Castling |= WHITE_CASTLING_QUEEN
 		} else if r == 'k' {
-			pos.castling |= BLACK_CASTLING_KING
+			pos.Castling |= BLACK_CASTLING_KING
 		} else if r == 'q' {
-			pos.castling |= BLACK_CASTLING_QUEEN
+			pos.Castling |= BLACK_CASTLING_QUEEN
 		} else {
 			return fmt.Errorf("unknown castling rule, %v", string(r))
 		}
@@ -212,7 +212,7 @@ func (pos *Position) fenSetCastling(token string) error {
 
 // fenSetEnPassant set en passant from part of the fen string
 func (pos *Position) fenSetEnPassant(token string) error {
-	pos.enPassant = types.SQUARE_NONE
+	pos.EnPassant = types.SQUARE_NONE
 
 	// No en passant
 	if token == "-" {
@@ -224,6 +224,6 @@ func (pos *Position) fenSetEnPassant(token string) error {
 		return fmt.Errorf("failed to parse token as square, %w", err)
 	}
 
-	pos.enPassant = square
+	pos.EnPassant = square
 	return nil
 }

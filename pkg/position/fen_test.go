@@ -20,10 +20,10 @@ func TestNewFromFen(t *testing.T) {
 func TestPosition_fenSetPieces(t *testing.T) {
 	startPos := New()
 	anotherPos := &Position{}
-	anotherPos.piecesBoard[types.SQUARE_H1] = types.WHITE_ROOK
-	anotherPos.piecesBoard[types.SQUARE_E2] = types.WHITE_KING
-	anotherPos.piecesBoard[types.SQUARE_E7] = types.BLACK_KNIGHT
-	anotherPos.piecesBoard[types.SQUARE_C8] = types.BLACK_KING
+	anotherPos.PiecesBoard[types.SQUARE_H1] = types.WHITE_ROOK
+	anotherPos.PiecesBoard[types.SQUARE_E2] = types.WHITE_KING
+	anotherPos.PiecesBoard[types.SQUARE_E7] = types.BLACK_KNIGHT
+	anotherPos.PiecesBoard[types.SQUARE_C8] = types.BLACK_KING
 	anotherPos.boardToBitBoard()
 
 	tests := []struct {
@@ -36,8 +36,8 @@ func TestPosition_fenSetPieces(t *testing.T) {
 			name:  "beginning",
 			token: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
 			wantedPos: &Position{
-				piecesBoard:    startPos.piecesBoard,
-				piecesBitboard: startPos.piecesBitboard,
+				PiecesBoard:    startPos.PiecesBoard,
+				PiecesBitboard: startPos.PiecesBitboard,
 			},
 			wantErr: false,
 		},
@@ -62,8 +62,8 @@ func TestPosition_fenSetPieces(t *testing.T) {
 				assert.Error(t, err)
 			}
 			if tt.wantedPos != nil {
-				assert.Equal(t, tt.wantedPos.piecesBitboard, pos.piecesBitboard)
-				assert.Equal(t, tt.wantedPos.piecesBitboard, pos.piecesBitboard)
+				assert.Equal(t, tt.wantedPos.PiecesBitboard, pos.PiecesBitboard)
+				assert.Equal(t, tt.wantedPos.PiecesBitboard, pos.PiecesBitboard)
 			}
 		})
 	}
@@ -130,7 +130,7 @@ func TestPosition_fenSetCastling(t *testing.T) {
 			name:  "no castling",
 			token: "-",
 			wantedPos: &Position{
-				castling: NO_CASTLING,
+				Castling: NO_CASTLING,
 			},
 			wantErr: false,
 		},
@@ -138,7 +138,7 @@ func TestPosition_fenSetCastling(t *testing.T) {
 			name:  "some castling",
 			token: "Kk",
 			wantedPos: &Position{
-				castling: WHITE_CASTLING_KING | BLACK_CASTLING_KING,
+				Castling: WHITE_CASTLING_KING | BLACK_CASTLING_KING,
 			},
 			wantErr: false,
 		},
@@ -146,7 +146,7 @@ func TestPosition_fenSetCastling(t *testing.T) {
 			name:  "all castling",
 			token: "KQkq",
 			wantedPos: &Position{
-				castling: ANY_CASTLING,
+				Castling: ANY_CASTLING,
 			},
 			wantErr: false,
 		},
@@ -182,7 +182,7 @@ func TestPosition_fenSetEnPassant(t *testing.T) {
 			name:  "no en passant",
 			token: "-",
 			wantedPos: &Position{
-				enPassant: types.SQUARE_NONE,
+				EnPassant: types.SQUARE_NONE,
 			},
 			wantErr: false,
 		},
@@ -190,7 +190,7 @@ func TestPosition_fenSetEnPassant(t *testing.T) {
 			name:  "en passant d6",
 			token: "d6",
 			wantedPos: &Position{
-				enPassant: types.SQUARE_D6,
+				EnPassant: types.SQUARE_D6,
 			},
 			wantErr: false,
 		},

@@ -12,26 +12,26 @@ import (
 
 type Position struct {
 	// Array of Pieces on the Board
-	piecesBoard [types.SQUARE_NUMBER]types.Piece
+	PiecesBoard [types.SQUARE_NUMBER]types.Piece
 	// Array of bitboards for all pieces
-	piecesBitboard [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
+	PiecesBitboard [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
 	// Color of the side to move
 	SideToMove types.Color
 	// Castling possibilities
-	castling Castling
+	Castling Castling
 	// En passant square
-	enPassant     int
+	EnPassant     int
 	HalfMoveClock uint8
-	ply           int
+	Ply           int
 
 	ZobristHash      uint64
-	allPieces        bitboard.Bitboard
-	allPiecesByColor [types.COLOR_NUMBER]bitboard.Bitboard
+	AllPieces        bitboard.Bitboard
+	AllPiecesByColor [types.COLOR_NUMBER]bitboard.Bitboard
 }
 
 func New() *Position {
 	pos := &Position{
-		piecesBoard: [types.SQUARE_NUMBER]types.Piece{
+		PiecesBoard: [types.SQUARE_NUMBER]types.Piece{
 			types.WHITE_ROOK, types.WHITE_KNIGHT, types.WHITE_BISHOP, types.WHITE_QUEEN, types.WHITE_KING, types.WHITE_BISHOP, types.WHITE_KNIGHT, types.WHITE_ROOK,
 			types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN, types.WHITE_PAWN,
 			types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE, types.NO_PIECE,
@@ -42,9 +42,9 @@ func New() *Position {
 			types.BLACK_ROOK, types.BLACK_KNIGHT, types.BLACK_BISHOP, types.BLACK_QUEEN, types.BLACK_KING, types.BLACK_BISHOP, types.BLACK_KNIGHT, types.BLACK_ROOK,
 		},
 		SideToMove: types.WHITE,
-		castling:   WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
-		enPassant:  types.SQUARE_NONE,
-		ply:        0,
+		Castling:   WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING,
+		EnPassant:  types.SQUARE_NONE,
+		Ply:        0,
 	}
 	pos.boardToBitBoard()
 	pos.generateHelperBitboards()
@@ -59,27 +59,27 @@ func New() *Position {
 // The main idea behind the implementation is to use a piece on the specified square and let it attack all other pieces with all attack pattern,
 // then intercept this attacks with the pieces capable of this attack pattern.
 func (pos *Position) SquareAttackedBy(square int) bitboard.Bitboard {
-	occupied := pos.AllPieces()
+	occupied := pos.AllPieces
 
 	// Knight attacks
-	knights := pos.piecesBitboard[types.WHITE][types.KNIGHT] | pos.piecesBitboard[types.BLACK][types.KNIGHT]
+	knights := pos.PiecesBitboard[types.WHITE][types.KNIGHT] | pos.PiecesBitboard[types.BLACK][types.KNIGHT]
 	attacks := knight.AttacksBySquare(square) & knights
 
 	// King attacks
-	kings := pos.piecesBitboard[types.WHITE][types.KING] | pos.piecesBitboard[types.BLACK][types.KING]
+	kings := pos.PiecesBitboard[types.WHITE][types.KING] | pos.PiecesBitboard[types.BLACK][types.KING]
 	attacks |= king.AttacksBySquare(square) & kings
 
 	// Diagonal attacks
-	diagonalSlider := pos.piecesBitboard[types.WHITE][types.BISHOP] | pos.piecesBitboard[types.BLACK][types.BISHOP] | pos.piecesBitboard[types.WHITE][types.QUEEN] | pos.piecesBitboard[types.BLACK][types.QUEEN]
+	diagonalSlider := pos.PiecesBitboard[types.WHITE][types.BISHOP] | pos.PiecesBitboard[types.BLACK][types.BISHOP] | pos.PiecesBitboard[types.WHITE][types.QUEEN] | pos.PiecesBitboard[types.BLACK][types.QUEEN]
 	attacks |= bishop.AttacksBySquare(square, occupied) & diagonalSlider
 
 	// Vertical attacks
-	verticalAndHorizonalSlider := pos.piecesBitboard[types.WHITE][types.ROOK] | pos.piecesBitboard[types.BLACK][types.ROOK] | pos.piecesBitboard[types.WHITE][types.QUEEN] | pos.piecesBitboard[types.BLACK][types.QUEEN]
+	verticalAndHorizonalSlider := pos.PiecesBitboard[types.WHITE][types.ROOK] | pos.PiecesBitboard[types.BLACK][types.ROOK] | pos.PiecesBitboard[types.WHITE][types.QUEEN] | pos.PiecesBitboard[types.BLACK][types.QUEEN]
 	attacks |= rook.AttacksBySquare(square, occupied) & verticalAndHorizonalSlider
 
 	// Pawn attacks, we need to switch color to emuluate that
-	attacks |= pawn.AttacksBySquare(types.WHITE, square) & pos.piecesBitboard[types.BLACK][types.PAWN]
-	attacks |= pawn.AttacksBySquare(types.BLACK, square) & pos.piecesBitboard[types.WHITE][types.PAWN]
+	attacks |= pawn.AttacksBySquare(types.WHITE, square) & pos.PiecesBitboard[types.BLACK][types.PAWN]
+	attacks |= pawn.AttacksBySquare(types.BLACK, square) & pos.PiecesBitboard[types.WHITE][types.PAWN]
 	return attacks
 }
 
@@ -89,32 +89,24 @@ func (pos *Position) Empty(square int) bool {
 }
 
 func (pos *Position) boardToBitBoard() {
-	for square, piece := range pos.piecesBoard {
+	for square, piece := range pos.PiecesBoard {
 		if piece == types.NO_PIECE {
 			continue
 		}
-		pos.piecesBitboard[piece.Color()][piece.Type()] |= bitboard.BitBySquares(square)
+		pos.PiecesBitboard[piece.Color()][piece.Type()] |= bitboard.BitBySquares(square)
 	}
 }
 
 func (pos *Position) generateHelperBitboards() {
-	pos.allPieces = bitboard.Empty
+	pos.AllPieces = bitboard.Empty
 	for _, c := range []types.Color{types.WHITE, types.BLACK} {
 		bb := bitboard.Empty
-		for _, piece := range pos.piecesBitboard[c] {
+		for _, piece := range pos.PiecesBitboard[c] {
 			bb |= piece
 		}
-		pos.allPiecesByColor[c] = bb
-		pos.allPieces |= bb
+		pos.AllPiecesByColor[c] = bb
+		pos.AllPieces |= bb
 	}
-}
-
-func (pos *Position) AllPieces() bitboard.Bitboard {
-	return pos.allPieces
-}
-
-func (pos *Position) AllPiecesByColor(c types.Color) bitboard.Bitboard {
-	return pos.allPiecesByColor[c]
 }
 
 func (pos *Position) IsLegal() bool {

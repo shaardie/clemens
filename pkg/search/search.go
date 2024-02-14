@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/shaardie/clemens/pkg/evaluation"
 	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/position"
 	"github.com/shaardie/clemens/pkg/search/pvline"
@@ -203,7 +204,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	// Null Move Pruning
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if maxDepth-ply > 2 && canNull && pos.Evaluation() > beta && !isInCheck && !pvNode {
+	if maxDepth-ply > 2 && canNull && evaluation.Evaluation(pos) > beta && !isInCheck && !pvNode {
 		ep := pos.MakeNullMove()
 		adaptiveDepth := uint8(2)
 		if maxDepth-ply > 6 {
@@ -299,7 +300,7 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 	default:
 	}
 
-	stand_pat := pos.Evaluation()
+	stand_pat := evaluation.Evaluation(pos)
 	if stand_pat >= beta {
 		s.betaCutOffs++
 		return beta, nil

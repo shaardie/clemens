@@ -1,4 +1,4 @@
-package position
+package evaluation
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
@@ -8,6 +8,7 @@ import (
 	"github.com/shaardie/clemens/pkg/pieces/pawn"
 	"github.com/shaardie/clemens/pkg/pieces/queen"
 	"github.com/shaardie/clemens/pkg/pieces/rook"
+	"github.com/shaardie/clemens/pkg/position"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -240,7 +241,7 @@ func init() {
 	}
 }
 
-func (pos *Position) Evaluation() int {
+func Evaluation(pos *position.Position) int {
 	bb := bitboard.Empty
 	var scores [game_number]int
 
@@ -248,10 +249,10 @@ func (pos *Position) Evaluation() int {
 	// maxed by 24 to a a better linear interpolation later.
 	var gamePhase int
 	for color := types.WHITE; color < types.COLOR_NUMBER; color++ {
-		gamePhase += pos.piecesBitboard[color][types.BISHOP].PopulationCount()
-		gamePhase += pos.piecesBitboard[color][types.KNIGHT].PopulationCount()
-		gamePhase += 2 * pos.piecesBitboard[color][types.ROOK].PopulationCount()
-		gamePhase += 4 * pos.piecesBitboard[color][types.QUEEN].PopulationCount()
+		gamePhase += pos.PiecesBitboard[color][types.BISHOP].PopulationCount()
+		gamePhase += pos.PiecesBitboard[color][types.KNIGHT].PopulationCount()
+		gamePhase += 2 * pos.PiecesBitboard[color][types.ROOK].PopulationCount()
+		gamePhase += 4 * pos.PiecesBitboard[color][types.QUEEN].PopulationCount()
 	}
 	if gamePhase > 24 {
 		gamePhase = 24
@@ -259,13 +260,13 @@ func (pos *Position) Evaluation() int {
 
 	// piece tables
 	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
-		bb = pos.piecesBitboard[types.WHITE][pieceType]
+		bb = pos.PiecesBitboard[types.WHITE][pieceType]
 		for bb != 0 {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
 			scores[midgame] += midgamePieceSquareTables[types.WHITE][pieceType][square]
 			scores[endgame] += endgamePieceSquareTables[types.WHITE][pieceType][square]
 		}
-		bb = pos.piecesBitboard[types.BLACK][pieceType]
+		bb = pos.PiecesBitboard[types.BLACK][pieceType]
 		for bb != 0 {
 			square := bitboard.SquareIndexSerializationNextSquare(&bb)
 			scores[midgame] -= midgamePieceSquareTables[types.BLACK][pieceType][square]
@@ -275,7 +276,7 @@ func (pos *Position) Evaluation() int {
 
 	// Kind Shield Evalutation
 	// White
-	kingFile := types.FileOfSquare(bitboard.LeastSignificantOneBit(pos.piecesBitboard[types.WHITE][types.KING]))
+	kingFile := types.FileOfSquare(bitboard.LeastSignificantOneBit(pos.PiecesBitboard[types.WHITE][types.KING]))
 	// King Side
 	if kingFile > types.FILE_E {
 
@@ -319,7 +320,7 @@ func (pos *Position) Evaluation() int {
 	}
 
 	// Black
-	kingFile = types.FileOfSquare(bitboard.LeastSignificantOneBit(pos.piecesBitboard[types.BLACK][types.KING]))
+	kingFile = types.FileOfSquare(bitboard.LeastSignificantOneBit(pos.PiecesBitboard[types.BLACK][types.KING]))
 	// King Side
 	if kingFile > types.FILE_E {
 
@@ -365,36 +366,36 @@ func (pos *Position) Evaluation() int {
 	// Rook Evaluation
 	// Rook on the seventh with either the king on the eigth or enemy pawns on the seven
 	// https://www.chessprogramming.org/Rook_on_Seventh
-	if pos.piecesBitboard[types.WHITE][types.ROOK]&bitboard.RankMask7 > 0 && (pos.piecesBitboard[types.BLACK][types.KING]&bitboard.RankMask8 > 0 ||
-		pos.piecesBitboard[types.BLACK][types.PAWN]&bitboard.RankMask7 > 0) {
+	if pos.PiecesBitboard[types.WHITE][types.ROOK]&bitboard.RankMask7 > 0 && (pos.PiecesBitboard[types.BLACK][types.KING]&bitboard.RankMask8 > 0 ||
+		pos.PiecesBitboard[types.BLACK][types.PAWN]&bitboard.RankMask7 > 0) {
 		scores[midgame] += rookSeventhMidgame
 		scores[endgame] += rookSeventhEndgame
 	}
 	// vice versa
-	if pos.piecesBitboard[types.BLACK][types.ROOK]&bitboard.RankMask2 > 0 && (pos.piecesBitboard[types.WHITE][types.KING]&bitboard.RankMask1 > 0 ||
-		pos.piecesBitboard[types.WHITE][types.PAWN]&bitboard.RankMask2 > 0) {
+	if pos.PiecesBitboard[types.BLACK][types.ROOK]&bitboard.RankMask2 > 0 && (pos.PiecesBitboard[types.WHITE][types.KING]&bitboard.RankMask1 > 0 ||
+		pos.PiecesBitboard[types.WHITE][types.PAWN]&bitboard.RankMask2 > 0) {
 		scores[midgame] -= rookSeventhMidgame
 		scores[endgame] -= rookSeventhEndgame
 	}
 
 	// Rooks are on an open or half open file
 	// https://www.chessprogramming.org/Rook_on_Open_File
-	rooks := pos.piecesBitboard[types.WHITE][types.ROOK]
+	rooks := pos.PiecesBitboard[types.WHITE][types.ROOK]
 	for rooks != 0 {
 		fileMask := bitboard.FileMaskOfSquare(bitboard.SquareIndexSerializationNextSquare(&rooks))
-		if pos.piecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
-			if pos.piecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
+		if pos.PiecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
+			if pos.PiecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
 				scores[midgame] += rookOpenFile
 				continue
 			}
 			scores[endgame] += rookHalfOpenFile
 		}
 	}
-	rooks = pos.piecesBitboard[types.BLACK][types.ROOK]
+	rooks = pos.PiecesBitboard[types.BLACK][types.ROOK]
 	for rooks != 0 {
 		fileMask := bitboard.FileMaskOfSquare(bitboard.SquareIndexSerializationNextSquare(&rooks))
-		if pos.piecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
-			if pos.piecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
+		if pos.PiecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
+			if pos.PiecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
 				scores[midgame] -= rookOpenFile
 				continue
 			}
@@ -407,40 +408,40 @@ func (pos *Position) Evaluation() int {
 
 	// Basic Material Score
 	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
-		score += pieceValue[pieceType] * (pos.piecesBitboard[types.WHITE][pieceType].PopulationCount() - pos.piecesBitboard[types.BLACK][pieceType].PopulationCount())
+		score += pieceValue[pieceType] * (pos.PiecesBitboard[types.WHITE][pieceType].PopulationCount() - pos.PiecesBitboard[types.BLACK][pieceType].PopulationCount())
 	}
 
 	// Adjust piece type values based on different factor
 	// Pairs give bonus or malus, see for example https://www.chessprogramming.org/Bishop_Pair
-	if pos.piecesBitboard[types.WHITE][types.BISHOP].PopulationCount() > 1 {
+	if pos.PiecesBitboard[types.WHITE][types.BISHOP].PopulationCount() > 1 {
 		score += bishopPair
 	}
-	if pos.piecesBitboard[types.BLACK][types.BISHOP].PopulationCount() > 1 {
+	if pos.PiecesBitboard[types.BLACK][types.BISHOP].PopulationCount() > 1 {
 		score -= bishopPair
 	}
-	if pos.piecesBitboard[types.WHITE][types.KNIGHT].PopulationCount() > 1 {
+	if pos.PiecesBitboard[types.WHITE][types.KNIGHT].PopulationCount() > 1 {
 		score += knightPair
 	}
-	if pos.piecesBitboard[types.BLACK][types.KNIGHT].PopulationCount() > 1 {
+	if pos.PiecesBitboard[types.BLACK][types.KNIGHT].PopulationCount() > 1 {
 		score -= knightPair
 	}
-	if pos.piecesBitboard[types.WHITE][types.ROOK].PopulationCount() > 1 {
+	if pos.PiecesBitboard[types.WHITE][types.ROOK].PopulationCount() > 1 {
 		score += rookPair
 	}
-	if pos.piecesBitboard[types.BLACK][types.ROOK].PopulationCount() > 1 {
+	if pos.PiecesBitboard[types.BLACK][types.ROOK].PopulationCount() > 1 {
 		score -= rookPair
 	}
 
 	// Adjustments based on the number of pawns
-	numberOfWhitePawns := pos.piecesBitboard[types.WHITE][types.PAWN].PopulationCount()
-	numberOfBlackPawns := pos.piecesBitboard[types.BLACK][types.PAWN].PopulationCount()
-	score += knight_pawn_adjustment[numberOfWhitePawns] * pos.piecesBitboard[types.WHITE][types.KNIGHT].PopulationCount()
-	score -= knight_pawn_adjustment[numberOfBlackPawns] * pos.piecesBitboard[types.BLACK][types.KNIGHT].PopulationCount()
-	score += rook_pawn_adjustment[numberOfWhitePawns] * pos.piecesBitboard[types.WHITE][types.ROOK].PopulationCount()
-	score -= rook_pawn_adjustment[numberOfBlackPawns] * pos.piecesBitboard[types.BLACK][types.ROOK].PopulationCount()
+	numberOfWhitePawns := pos.PiecesBitboard[types.WHITE][types.PAWN].PopulationCount()
+	numberOfBlackPawns := pos.PiecesBitboard[types.BLACK][types.PAWN].PopulationCount()
+	score += knight_pawn_adjustment[numberOfWhitePawns] * pos.PiecesBitboard[types.WHITE][types.KNIGHT].PopulationCount()
+	score -= knight_pawn_adjustment[numberOfBlackPawns] * pos.PiecesBitboard[types.BLACK][types.KNIGHT].PopulationCount()
+	score += rook_pawn_adjustment[numberOfWhitePawns] * pos.PiecesBitboard[types.WHITE][types.ROOK].PopulationCount()
+	score -= rook_pawn_adjustment[numberOfBlackPawns] * pos.PiecesBitboard[types.BLACK][types.ROOK].PopulationCount()
 
 	// Mobility and King Square Attacks
-	score += pos.evalMobilityAndKingAttackValue()
+	score += evalMobilityAndKingAttackValue(pos)
 
 	// Make the result side aware
 	if pos.SideToMove == types.BLACK {
@@ -450,34 +451,34 @@ func (pos *Position) Evaluation() int {
 	return score
 }
 
-func (pos *Position) evalMobilityAndKingAttackValue() int {
-	return pos.evalMobilityAndKingAttackValueByColor(types.WHITE) - pos.evalMobilityAndKingAttackValueByColor(types.BLACK)
+func evalMobilityAndKingAttackValue(pos *position.Position) int {
+	return evalMobilityAndKingAttackValueByColor(pos, types.WHITE) - evalMobilityAndKingAttackValueByColor(pos, types.BLACK)
 }
 
-func (pos *Position) evalMobilityAndKingAttackValueByColor(we types.Color) int {
+func evalMobilityAndKingAttackValueByColor(pos *position.Position, we types.Color) int {
 	var pieces bitboard.Bitboard
 	var mobility bitboard.Bitboard
 	var square int
 	var val int
 	them := types.SwitchColor(we)
-	destination := ^pos.allPiecesByColor[them]
-	kingSquares := king.AttacksBySquare(bitboard.LeastSignificantOneBit(pos.piecesBitboard[types.WHITE][types.KING]))
+	destination := ^pos.AllPiecesByColor[them]
+	kingSquares := king.AttacksBySquare(bitboard.LeastSignificantOneBit(pos.PiecesBitboard[types.WHITE][types.KING]))
 	for pt := types.PAWN; pt < types.PIECE_TYPE_NUMBER; pt++ {
-		pieces = pos.piecesBitboard[types.BLACK][pt]
+		pieces = pos.PiecesBitboard[types.BLACK][pt]
 		for pieces != 0 {
 			square = bitboard.SquareIndexSerializationNextSquare(&pieces)
 			switch pt {
 			case types.PAWN:
-				val += (pawn.PushesBySquare(we, square, pos.allPieces) & destination).PopulationCount()
+				val += (pawn.PushesBySquare(we, square, pos.AllPieces) & destination).PopulationCount()
 				mobility = pawn.AttacksBySquare(we, square)
 			case types.BISHOP:
-				mobility = bishop.AttacksBySquare(square, pos.allPieces)
+				mobility = bishop.AttacksBySquare(square, pos.AllPieces)
 			case types.KNIGHT:
 				mobility = knight.AttacksBySquare(square)
 			case types.ROOK:
-				mobility = rook.AttacksBySquare(square, pos.allPieces)
+				mobility = rook.AttacksBySquare(square, pos.AllPieces)
 			case types.QUEEN:
-				mobility = queen.AttacksBySquare(square, pos.allPieces)
+				mobility = queen.AttacksBySquare(square, pos.AllPieces)
 			case types.KING:
 				mobility = king.AttacksBySquare(square)
 			}

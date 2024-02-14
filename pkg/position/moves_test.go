@@ -13,7 +13,7 @@ import (
 func TestPosition_MakeAndUnMakeNullMove(t *testing.T) {
 	pos, err := NewFromFen("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1")
 	require.NoError(t, err)
-	ep := pos.enPassant
+	ep := pos.EnPassant
 	oldPos := *pos
 	pos.MakeNullMove()
 	newPos := *pos
