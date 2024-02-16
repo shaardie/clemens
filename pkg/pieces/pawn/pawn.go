@@ -68,3 +68,18 @@ func doublePushTargets(c types.Color, pawns, occupied bitboard.Bitboard) bitboar
 	}
 	panic("unknown color")
 }
+
+// NumberOfIsolanis returns tthe number of isolanis from a bitboard of pawns.
+func NumberOfIsolanis(pawns bitboard.Bitboard) int {
+	fileFill := bitboard.FileFill(pawns)
+	westAttackFileFill := bitboard.WestOne(fileFill)
+	eastAttackFileFill := bitboard.EastOne(fileFill)
+	r := pawns & ^westAttackFileFill & ^eastAttackFileFill
+	return r.PopulationCount()
+}
+
+// NumberOfDoubledPawns calculates the number of doubled pawns,
+// we do not care that tripple pawns a counted twice, etc.
+func NumberOfDoubledPawns(pawns bitboard.Bitboard) int {
+	return (bitboard.NorthOne(bitboard.NorthFill(pawns)) & pawns).PopulationCount()
+}

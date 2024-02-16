@@ -409,6 +409,11 @@ func Evaluation(pos *position.Position) int {
 		}
 	}
 
+	// Pawn Evaluation
+	m, e := pawnEvaluation(pos)
+	scores[midgame] += m
+	scores[endgame] += e
+
 	// Merge midgame and endgame value
 	score = (scores[midgame]*gamePhase + scores[endgame]*(24-gamePhase)) / 24
 
@@ -458,6 +463,30 @@ func Evaluation(pos *position.Position) int {
 	tTable.save(pos.ZobristHash, score)
 
 	return score
+}
+
+const (
+	midgameIsolanis    = -20
+	endgameIsolanis    = -5
+	midgameDoubledPawn = -5
+	endgameDoubledPawn = -15
+)
+
+// pawnEvaluation evaluates the pawn structure
+func pawnEvaluation(pos *position.Position) (midgame, endgame int) {
+	whitePawns := pos.PiecesBitboard[types.WHITE][types.PAWN]
+	blackPawns := pos.PiecesBitboard[types.BLACK][types.PAWN]
+
+	// Isolanis
+	isolaniDiff := pawn.NumberOfIsolanis(whitePawns) - pawn.NumberOfIsolanis(blackPawns)
+	midgame += midgameIsolanis * isolaniDiff
+	endgame += endgameIsolanis * isolaniDiff
+
+	// Double Pawns
+	doublePawnDiff := pawn.NumberOfDoubledPawns(whitePawns) - pawn.NumberOfDoubledPawns(blackPawns)
+	midgame += midgameDoubledPawn * doublePawnDiff
+	endgame += endgameDoubledPawn * doublePawnDiff
+	return
 }
 
 func evalMobilityAndKingAttackValue(pos *position.Position) int {

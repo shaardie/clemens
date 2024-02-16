@@ -6,6 +6,7 @@ import (
 
 	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_doublePushTargets(t *testing.T) {
@@ -62,5 +63,43 @@ func Test_doublePushTargets(t *testing.T) {
 				t.Errorf("doublePushTargets() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestNumberOfIsolanis(t *testing.T) {
+	tests := []struct {
+		pawns bitboard.Bitboard
+		want  int
+	}{
+		{
+			pawns: bitboard.BitBySquares(
+				types.SQUARE_A2,
+				types.SQUARE_C2,
+				types.SQUARE_D2,
+				types.SQUARE_F2),
+			want: 2,
+		},
+	}
+	for _, tt := range tests {
+		assert.Equal(t, tt.want, NumberOfIsolanis(tt.pawns))
+	}
+}
+
+func TestNumberDoublePawns(t *testing.T) {
+	tests := []struct {
+		pawns bitboard.Bitboard
+		want  int
+	}{
+		{
+			pawns: bitboard.BitBySquares(
+				types.SQUARE_A2, types.SQUARE_A3, types.SQUARE_A4,
+				types.SQUARE_C2,
+				types.SQUARE_D2, types.SQUARE_D5,
+			),
+			want: 3,
+		},
+	}
+	for _, tt := range tests {
+		assert.Equal(t, tt.want, NumberOfIsolanis(tt.pawns))
 	}
 }
