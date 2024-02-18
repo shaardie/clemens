@@ -69,3 +69,11 @@ The first version that you could somehow play against.
 * [Basic Evaluation](https://www.chessprogramming.org/Evaluation#Where_to_Start)
 * Rudimentary[UCI](https://www.shredderchess.com/de/schach-features/uci-universal-chess-interface.html) Implementation
 * [Alpha-Beta](https://www.chessprogramming.org/Alpha-Beta) Search Funktion
+
+## Special Thanks
+
+Since I had no idea how to write a chess engine at the beginning of the project, I did a lot of reading.
+Therefore, my special thanks go to the [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page), an excellent source of information, but also to the engines [Blunder](https://github.com/algerbrex/blunder), [CPW Engine](https://github.com/nescitus/cpw-engine) and [Stockfish](https://github.com/official-stockfish/Stockfish), from whose code I learned a lot.
+
+Also, to my father, who reintroduced me to playing chess and thus was the inspiration for this project.
+That's why the engine bears his name.
