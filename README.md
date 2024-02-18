@@ -1,5 +1,7 @@
 # Clemens
 
+Clemens is an [UCI](https://www.shredderchess.com/de/schach-features/uci-universal-chess-interface.html) compatible Chess Engine.
+
 ## Changelog
 
 ### Dev
