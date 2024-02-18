@@ -1,10 +1,11 @@
 # Clemens
 
-Clemens is an [UCI](https://www.shredderchess.com/de/schach-features/uci-universal-chess-interface.html) compatible Chess Engine.
+Clemens is an [UCI](https://www.shredderchess.com/de/schach-features/uci-universal-chess-interface.html) compatible Chess Engine written in [Go](https://go.dev/).
+
 
 ## Usage
 
-The binaries for Linux and Windows can be downloaded from the Releases section.
+The binaries for Linux and Windows can be downloaded from the [Releases](https://github.com/shaardie/clemens/releases) section.
 Those binaries can be used in every UCI compatible Chess GUI, like [Cute Chess](https://cutechess.com/) or the [Arena Chess GUI](http://www.playwitharena.de/).
 There is also a small web UI at [https://chess.haardiek.org/](https://chess.haardiek.org/) where you can play against the current version,
 Of course, this version is very limited.
