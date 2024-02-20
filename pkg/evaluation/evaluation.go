@@ -52,7 +52,6 @@ func (e *eval) do(pos *position.Position) int {
 	e.evalPieceSquareTables(pos)
 	e.evalKingShield(pos)
 	e.evalRooks(pos)
-	e.evalBishop(pos)
 	e.evalPawns(pos)
 	e.evalPairs(pos)
 	e.evalBaseMaterial(pos)
