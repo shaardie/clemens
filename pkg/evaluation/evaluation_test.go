@@ -12,16 +12,22 @@ func TestPosition_Evaluation(t *testing.T) {
 		name                string
 		fen                 string
 		evalutationOverZero bool
+		useExactValue       bool
+		exactValue          int
 	}{
 		{
 			name:                "from white",
 			fen:                 "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
 			evalutationOverZero: true,
+			useExactValue:       true,
+			exactValue:          142,
 		},
 		{
 			name:                "from black",
 			fen:                 "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 b kq - 0 1",
 			evalutationOverZero: false,
+			useExactValue:       true,
+			exactValue:          -142,
 		},
 	}
 	for _, tt := range tests {
@@ -33,6 +39,9 @@ func TestPosition_Evaluation(t *testing.T) {
 				assert.Positive(t, eval)
 			} else {
 				assert.Negative(t, eval)
+			}
+			if tt.useExactValue {
+				assert.Equal(t, tt.exactValue, eval)
 			}
 		})
 	}
