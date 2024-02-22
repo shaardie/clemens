@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/shaardie/clemens/pkg/evaluation"
@@ -29,7 +28,6 @@ type Search struct {
 	alphaCutOffs           uint64
 	quiescenceNodes        uint64
 	transpositiontableHits uint64
-	m                      *sync.Mutex
 	PV                     pvline.PVLine
 }
 
@@ -51,17 +49,12 @@ type Info struct {
 	Score int
 }
 
-func (s *Search) BestMove() move.Move {
-	s.m.Lock()
-	defer s.m.Unlock()
+func (s *Search) bestMove() move.Move {
 	return s.PV.GetBestMove()
 }
 
 func NewSearch(pos position.Position) *Search {
-	return &Search{
-		pos: pos,
-		m:   &sync.Mutex{},
-	}
+	return &Search{pos: pos}
 }
 
 func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
@@ -74,10 +67,10 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 	cancel()
 
 	// We need at least a valid move
-	if s.BestMove() == move.NullMove {
+	if s.bestMove() == move.NullMove {
 		s.SearchIterative(context.TODO(), 1)
 	}
-	return s.BestMove()
+	return s.bestMove()
 }
 
 func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
@@ -103,10 +96,8 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 			continue
 		}
 
-		s.m.Lock()
 		s.PV = *i.PV.Copy()
 		goodGuess = s.PV.GetBestMove()
-		s.m.Unlock()
 		alpha = i.Score - widen_window
 		beta = i.Score + widen_window
 		depth++

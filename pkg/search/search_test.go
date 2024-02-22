@@ -58,10 +58,10 @@ func TestSearch(t *testing.T) {
 			s := NewSearch(*pos)
 			s.Search(context.TODO(), SearchParameter{Depth: tt.depth, Infinite: true})
 			if tt.notExpected != "" {
-				assert.NotEqual(t, tt.notExpected, fmt.Sprintf("%v", s.m))
+				assert.NotEqual(t, tt.notExpected, s.bestMove().String())
 			}
 			if tt.expected != "" {
-				assert.Equal(t, tt.expected, fmt.Sprintf("%v", s.m))
+				assert.Equal(t, tt.expected, s.bestMove().String())
 			}
 		})
 	}

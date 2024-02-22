@@ -242,8 +242,7 @@ func (g *gameImpl) StartSearch(tokens []string) {
 	g.searchCancel = cancel
 	go func() {
 		defer cancel()
-		g.search.Search(ctx, gp)
-		fmt.Printf("bestmove %v\n", g.search.BestMove())
+		fmt.Printf("bestmove %v\n", g.search.Search(ctx, gp))
 		g.state.Set(state.IDLE)
 	}()
 	g.state.Set(state.RUNNING)
