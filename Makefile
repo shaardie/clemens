@@ -16,6 +16,9 @@ perft: test
 benchmark:
 	go test ./pkg/search -run=^$$ -bench ^BenchmarkSearch -benchtime=1x -cpuprofile profile.out
 
+elo:
+	docker build . -t elo && docker run elo:latest
+
 test:
 	go test ./... -cover
 

@@ -38,5 +38,8 @@ RUN make && install clemens /usr/bin
 # Copy Openings
 COPY openings.pgn scripts/elo.sh /
 
+RUN mkdir -p /save
+WORKDIR /save
+
 # Set tournement script
 CMD [ "/elo.sh" ]
