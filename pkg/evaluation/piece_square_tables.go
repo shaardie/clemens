@@ -208,19 +208,26 @@ func init() {
 
 // evalPieceSquareTables evaluates the position of each piece based on its current square.
 func (e *eval) evalPieceSquareTables(pos *position.Position) {
-	bb := bitboard.Empty
+	var square int
+	var it func() int
 
 	// piece tables
 	for pieceType := types.PAWN; pieceType < types.PIECE_TYPE_NUMBER; pieceType++ {
-		bb = pos.PiecesBitboard[types.WHITE][pieceType]
-		for bb != 0 {
-			square := bitboard.SquareIndexSerializationNextSquare(&bb)
+		it = bitboard.SquareIndexSerializationIterator(pos.PiecesBitboard[types.WHITE][pieceType])
+		for {
+			square = it()
+			if square == types.SQUARE_NONE {
+				break
+			}
 			e.phaseScores[midgame] += midgamePieceSquareTables[types.WHITE][pieceType][square]
 			e.phaseScores[endgame] += endgamePieceSquareTables[types.WHITE][pieceType][square]
 		}
-		bb = pos.PiecesBitboard[types.BLACK][pieceType]
-		for bb != 0 {
-			square := bitboard.SquareIndexSerializationNextSquare(&bb)
+		it = bitboard.SquareIndexSerializationIterator(pos.PiecesBitboard[types.BLACK][pieceType])
+		for {
+			square = it()
+			if square == types.SQUARE_NONE {
+				break
+			}
 			e.phaseScores[midgame] -= midgamePieceSquareTables[types.BLACK][pieceType][square]
 			e.phaseScores[endgame] -= endgamePieceSquareTables[types.BLACK][pieceType][square]
 		}

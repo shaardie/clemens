@@ -33,10 +33,14 @@ func (e *eval) evalRooks(pos *position.Position) {
 
 	// Rooks are on an open or half open file
 	// https://www.chessprogramming.org/Rook_on_Open_File
-	rooks := pos.PiecesBitboard[types.WHITE][types.ROOK]
-	for rooks != 0 {
+	it := bitboard.SquareIndexSerializationIterator(pos.PiecesBitboard[types.WHITE][types.ROOK])
+	for {
+		square := it()
+		if square == types.SQUARE_NONE {
+			break
+		}
 		numberOfRooks[types.WHITE]++
-		fileMask := bitboard.FileMaskOfSquare(bitboard.SquareIndexSerializationNextSquare(&rooks))
+		fileMask := bitboard.FileMaskOfSquare(square)
 		if pos.PiecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
 			if pos.PiecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
 				e.phaseScores[midgame] += rookOpenFile
@@ -45,10 +49,14 @@ func (e *eval) evalRooks(pos *position.Position) {
 			e.phaseScores[endgame] += rookHalfOpenFile
 		}
 	}
-	rooks = pos.PiecesBitboard[types.BLACK][types.ROOK]
-	for rooks != 0 {
+	it = bitboard.SquareIndexSerializationIterator(pos.PiecesBitboard[types.BLACK][types.ROOK])
+	for {
+		square := it()
+		if square == types.SQUARE_NONE {
+			break
+		}
 		numberOfRooks[types.BLACK]++
-		fileMask := bitboard.FileMaskOfSquare(bitboard.SquareIndexSerializationNextSquare(&rooks))
+		fileMask := bitboard.FileMaskOfSquare(square)
 		if pos.PiecesBitboard[types.WHITE][types.PAWN]&fileMask > 0 {
 			if pos.PiecesBitboard[types.BLACK][types.PAWN]&fileMask > 0 {
 				e.phaseScores[midgame] -= rookOpenFile

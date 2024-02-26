@@ -1,5 +1,7 @@
 package bitboard
 
+import "github.com/shaardie/clemens/pkg/types"
+
 func AllSubnetsOf(b Bitboard) []Bitboard {
 	setOfSubsets := []Bitboard{}
 	subset := Empty
@@ -33,8 +35,13 @@ func SquareIndexSerialization(b Bitboard) []int {
 	return idxs[0:length]
 }
 
-func SquareIndexSerializationNextSquare(b *Bitboard) int {
-	r := LeastSignificantOneBit(*b)
-	*b &= *b - 1
-	return r
+func SquareIndexSerializationIterator(b Bitboard) func() int {
+	return func() int {
+		if b == Empty {
+			return types.SQUARE_NONE
+		}
+		r := LeastSignificantOneBit(b)
+		b &= b - 1
+		return r
+	}
 }

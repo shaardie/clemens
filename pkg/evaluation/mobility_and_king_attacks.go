@@ -22,7 +22,6 @@ func (e *eval) evalMobilityAndKingAttackValue(pos *position.Position) {
 }
 
 func evalMobilityAndKingAttackValueByColor(pos *position.Position, we types.Color) int {
-	var pieces bitboard.Bitboard
 	var mobility bitboard.Bitboard
 	var square int
 	var val int
@@ -30,9 +29,12 @@ func evalMobilityAndKingAttackValueByColor(pos *position.Position, we types.Colo
 	destination := ^pos.AllPiecesByColor[them]
 	kingSquares := king.AttacksBySquare(bitboard.LeastSignificantOneBit(pos.PiecesBitboard[we][types.KING]))
 	for pt := types.PAWN; pt < types.PIECE_TYPE_NUMBER; pt++ {
-		pieces = pos.PiecesBitboard[them][pt]
-		for pieces != 0 {
-			square = bitboard.SquareIndexSerializationNextSquare(&pieces)
+		it := bitboard.SquareIndexSerializationIterator(pos.PiecesBitboard[them][pt])
+		for {
+			square = it()
+			if square == types.SQUARE_NONE {
+				break
+			}
 			switch pt {
 			case types.PAWN:
 				val += (pawn.PushesBySquare(we, square, pos.AllPieces) & destination).PopulationCount()

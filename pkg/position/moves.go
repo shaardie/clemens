@@ -105,14 +105,22 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 	)
 
 	// Pawns
-	pawnSquares := pos.PiecesBitboard[pos.SideToMove][types.PAWN]
-	for pawnSquares != bitboard.Empty {
-		sourceSquare := bitboard.SquareIndexSerializationNextSquare(&pawnSquares)
+	sourceSquareIt := bitboard.SquareIndexSerializationIterator(pos.PiecesBitboard[pos.SideToMove][types.PAWN])
+	for {
+		sourceSquare := sourceSquareIt()
+		if sourceSquare == types.SQUARE_NONE {
+			break
+		}
+
+		pawnAttacks := pawn.AttacksBySquare(pos.SideToMove, sourceSquare)
 
 		// Attacks
-		targets := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)]
-		for targets != bitboard.Empty {
-			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
+		targetSquareIt := bitboard.SquareIndexSerializationIterator(pawnAttacks & pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)])
+		for {
+			targetSquare := targetSquareIt()
+			if targetSquare == types.SQUARE_NONE {
+				break
+			}
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
 			m.SetTargetSquare(targetSquare)
@@ -122,9 +130,12 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 
 		// En Passant
 		if pos.EnPassant != types.SQUARE_NONE {
-			attackingPawns := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & bitboard.BitBySquares(pos.EnPassant)
-			for attackingPawns != bitboard.Empty {
-				targetSquare := bitboard.SquareIndexSerializationNextSquare(&attackingPawns)
+			targetSquareIt := bitboard.SquareIndexSerializationIterator(pawnAttacks & bitboard.BitBySquares(pos.EnPassant))
+			for {
+				targetSquare := targetSquareIt()
+				if targetSquare == types.SQUARE_NONE {
+					break
+				}
 				var m move.Move
 				m.SetSourceSquare(sourceSquare)
 				m.SetTargetSquare(targetSquare)
@@ -191,14 +202,22 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	)
 
 	// Pawns
-	pawnSquares := pos.PiecesBitboard[pos.SideToMove][types.PAWN]
-	for pawnSquares != bitboard.Empty {
-		sourceSquare := bitboard.SquareIndexSerializationNextSquare(&pawnSquares)
+	sourceSquareIt := bitboard.SquareIndexSerializationIterator(pos.PiecesBitboard[pos.SideToMove][types.PAWN])
+	for {
+		sourceSquare := sourceSquareIt()
+		if sourceSquare == types.SQUARE_NONE {
+			break
+		}
+
+		pawnAttacks := pawn.AttacksBySquare(pos.SideToMove, sourceSquare)
 
 		// Pushes
-		targets := pawn.PushesBySquare(pos.SideToMove, sourceSquare, occupied)
-		for targets != bitboard.Empty {
-			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
+		targetSquareIt := bitboard.SquareIndexSerializationIterator(pawn.PushesBySquare(pos.SideToMove, sourceSquare, occupied))
+		for {
+			targetSquare := targetSquareIt()
+			if targetSquare == types.SQUARE_NONE {
+				break
+			}
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
 			m.SetTargetSquare(targetSquare)
@@ -207,9 +226,12 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		}
 
 		// Attacks
-		targets = pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)]
-		for targets != bitboard.Empty {
-			targetSquare := bitboard.SquareIndexSerializationNextSquare(&targets)
+		targetSquareIt = bitboard.SquareIndexSerializationIterator(pawnAttacks & pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)])
+		for {
+			targetSquare := targetSquareIt()
+			if targetSquare == types.SQUARE_NONE {
+				break
+			}
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
 			m.SetTargetSquare(targetSquare)
@@ -219,9 +241,12 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 
 		// En Passant
 		if pos.EnPassant != types.SQUARE_NONE {
-			attackingPawns := pawn.AttacksBySquare(pos.SideToMove, sourceSquare) & bitboard.BitBySquares(pos.EnPassant)
-			for attackingPawns != bitboard.Empty {
-				targetSquare := bitboard.SquareIndexSerializationNextSquare(&attackingPawns)
+			targetSquareIt := bitboard.SquareIndexSerializationIterator(pawnAttacks & bitboard.BitBySquares(pos.EnPassant))
+			for {
+				targetSquare := targetSquareIt()
+				if targetSquare == types.SQUARE_NONE {
+					break
+				}
 				var m move.Move
 				m.SetSourceSquare(sourceSquare)
 				m.SetTargetSquare(targetSquare)
@@ -393,12 +418,20 @@ func (pos *Position) UnMakeNullMove(enPassantSquare int) {
 
 // generateMovesHelper generates a list of moves from a given list of paramters
 func generateMovesHelper(moves *move.MoveList, sources, occupied, destinations bitboard.Bitboard, attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) {
+	var targetSquareIt func() int
 	var sourceSquare, targetSquare int
-	for sources != bitboard.Empty {
-		sourceSquare = bitboard.SquareIndexSerializationNextSquare(&sources)
-		targets := attacks(sourceSquare, occupied) & destinations
-		for targets != bitboard.Empty {
-			targetSquare = bitboard.SquareIndexSerializationNextSquare(&targets)
+	sourceSquareIt := bitboard.SquareIndexSerializationIterator(sources)
+	for {
+		sourceSquare = sourceSquareIt()
+		if sourceSquare == types.SQUARE_NONE {
+			break
+		}
+		targetSquareIt = bitboard.SquareIndexSerializationIterator(attacks(sourceSquare, occupied) & destinations)
+		for {
+			targetSquare = targetSquareIt()
+			if targetSquare == types.SQUARE_NONE {
+				break
+			}
 			var m move.Move
 			m.SetSourceSquare(sourceSquare)
 			m.SetTargetSquare(targetSquare)
