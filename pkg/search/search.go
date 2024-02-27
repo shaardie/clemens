@@ -29,6 +29,7 @@ type Search struct {
 	quiescenceNodes        uint64
 	transpositiontableHits uint64
 	PV                     pvline.PVLine
+	KillerMoves            [1024][2]move.Move
 }
 
 type SearchParameter struct {
@@ -217,9 +218,11 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	var bestMove move.Move
 	var legalMoves uint8
 
-	// Generate all moves
+	// Generate all moves and order them
 	moves := move.NewMoveList()
-	pos.GeneratePseudoLegalMovesOrdered(moves, goodGuess)
+	pos.GeneratePseudoLegalMoves(moves)
+	s.orderMoves(pos, moves, goodGuess, ply)
+
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 		prevPos = *pos
@@ -255,6 +258,14 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		if score > alpha {
 			alpha = score
 			bestMove = *m
+			// Update Killer Move, if quiet move
+			if pos.GetPiece(m.GetTargetSquare()) == types.NO_PIECE {
+				if s.KillerMoves[ply][0] != bestMove {
+					s.KillerMoves[ply][1] = s.KillerMoves[ply][0]
+				}
+				s.KillerMoves[ply][0] = bestMove
+			}
+
 			pvl.Update(bestMove, &potentialPVLine)
 		}
 
@@ -307,9 +318,10 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 
 	var prevPos position.Position
 
-	// Generate all captures
+	// Generate all captures and order them
 	moves := move.NewMoveList()
-	pos.GeneratePseudoLegalCapturesOrdered(moves, move.NullMove)
+	pos.GeneratePseudoLegalCaptures(moves)
+	s.orderMoves(pos, moves, move.NullMove, ply)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 
