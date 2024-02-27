@@ -320,6 +320,11 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 			continue
 		}
 
+		// Static Exchange Evaluation, https://www.chessprogramming.org/Static_Exchange_Evaluation
+		if m.GetMoveType() != move.EN_PASSANT && evaluation.StaticExchangeEvaluation(pos, m) < 0 {
+			continue
+		}
+
 		prevPos = *pos
 		pos.MakeMove(*m)
 		if !pos.IsLegal() {
@@ -342,19 +347,6 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 	}
 
 	return alpha, nil
-}
-
-func min(a, b int) int {
-	if a > b {
-		return b
-	}
-	return a
-}
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParameter) (context.Context, context.CancelFunc) {
