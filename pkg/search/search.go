@@ -314,14 +314,14 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 		m := moves.Get(i)
 
 		// Delta Pruning, https://www.chessprogramming.org/Delta_Pruning
-		if m.GetMoveType() != move.PROMOTION &&
+		if m.GetMoveType() == move.NORMAL &&
 			!evaluation.IsEndgame(pos) &&
 			stand_pat+evaluation.PieceValue[pos.PiecesBoard[m.GetTargetSquare()].Type()]+200 < alpha {
 			continue
 		}
 
 		// Static Exchange Evaluation, https://www.chessprogramming.org/Static_Exchange_Evaluation
-		if m.GetMoveType() != move.EN_PASSANT && evaluation.StaticExchangeEvaluation(pos, m) < 0 {
+		if m.GetMoveType() == move.NORMAL && evaluation.StaticExchangeEvaluation(pos, m) < 0 {
 			continue
 		}
 
