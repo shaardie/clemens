@@ -25,6 +25,10 @@ RUN curl -L https://github.com/cutechess/cutechess/releases/download/v1.3.1/cute
 RUN curl -L https://github.com/michiguel/Ordo/releases/download/v1.2.6/ordo-1.2.6.tar.gz | tar xz && \
     install -T ordo-linux64 /usr/bin/ordo && \
     ordo --version
+RUN curl -LO https://github.com/algerbrex/blunder/releases/download/v8.5.5/blunder-8.5.5.zip && \
+    unzip blunder-8.5.5.zip && \
+    install -T blunder-8.5.5/linux/blunder-8.5.5-default /usr/bin/blunder && \
+    which blunder
 
 # Install current clemens engine
 RUN mkdir /go/clemens
