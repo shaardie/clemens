@@ -12,7 +12,9 @@ const (
 )
 
 const (
-	maxGamePhase         = 24
+	maxGamePhase  = 24
+	endgameBorder = 12
+
 	knightGamePhaseValue = 1
 	bishopGamePhaseValue = 1
 	RookGamePhaseValue   = 2
@@ -62,6 +64,20 @@ func (e *eval) do(pos *position.Position) int {
 
 // evalscore calculates the actual score based on the base score and the scores for the different game phases.
 func (e *eval) calculateScore(pos *position.Position) int {
+	gamePhase := gamePhase(pos)
+
+	// Merge midgame and endgame value proportionally and add base score
+	score := (e.phaseScores[midgame]*gamePhase + e.phaseScores[endgame]*(maxGamePhase-gamePhase)) / maxGamePhase
+	score += e.baseScore
+
+	// Make the result side aware
+	if pos.SideToMove == types.BLACK {
+		score *= -1
+	}
+	return score
+}
+
+func gamePhase(pos *position.Position) int {
 	// Calculate the game phase based on the number of specific PieceTypes maxed by maxGamePhase.
 	var gamePhase int
 	for color := types.WHITE; color < types.COLOR_NUMBER; color++ {
@@ -73,14 +89,9 @@ func (e *eval) calculateScore(pos *position.Position) int {
 	if gamePhase > maxGamePhase {
 		gamePhase = maxGamePhase
 	}
+	return gamePhase
+}
 
-	// Merge midgame and endgame value proportionally and add base score
-	score := (e.phaseScores[midgame]*gamePhase + e.phaseScores[endgame]*(maxGamePhase-gamePhase)) / maxGamePhase
-	score += e.baseScore
-
-	// Make the result side aware
-	if pos.SideToMove == types.BLACK {
-		score *= -1
-	}
-	return score
+func IsEndgame(pos *position.Position) bool {
+	return gamePhase(pos) > endgameBorder
 }

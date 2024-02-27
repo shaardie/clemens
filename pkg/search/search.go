@@ -312,6 +312,14 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 	pos.GeneratePseudoLegalCapturesOrdered(moves, move.NullMove)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
+
+		// Delta Pruning, https://www.chessprogramming.org/Delta_Pruning
+		if m.GetMoveType() != move.PROMOTION &&
+			!evaluation.IsEndgame(pos) &&
+			stand_pat+evaluation.PieceValue[pos.PiecesBoard[m.GetTargetSquare()].Type()]+200 < alpha {
+			continue
+		}
+
 		prevPos = *pos
 		pos.MakeMove(*m)
 		if !pos.IsLegal() {
