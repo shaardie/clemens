@@ -51,6 +51,9 @@ type eval struct {
 
 // do is the actual evaluation function
 func (e *eval) do(pos *position.Position) int {
+	if pos.HalfMoveClock >= 100 {
+		return 0
+	}
 	e.evalPieceSquareTables(pos)
 	e.evalKingShield(pos)
 	e.evalRooks(pos)

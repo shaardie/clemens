@@ -26,7 +26,6 @@ const (
 
 type gameImpl struct {
 	isWorking    *sync.Mutex
-	position     *position.Position
 	state        state.State
 	maxTimeInMs  int
 	maxDepth     uint8
@@ -70,9 +69,11 @@ func (g *gameImpl) NewPosition(tokens []string) {
 		return
 	}
 
+	var pos *position.Position
+
 	switch tokens[0] {
 	case "startpos":
-		g.position = position.New()
+		pos = position.New()
 		g.state.Set(state.POSITION_SET)
 		tokens = tokens[1:]
 	case "fen":
@@ -85,17 +86,17 @@ func (g *gameImpl) NewPosition(tokens []string) {
 			fmt.Printf("info string broken fen string, %v\n", err)
 			return
 		}
-		g.position = fenPos
+		pos = fenPos
 		g.state.Set(state.POSITION_SET)
 		tokens = tokens[7:]
 	}
+	g.search = search.NewSearch(*pos)
 	if len(tokens) <= 1 || tokens[0] != "moves" {
 		return
 	}
 	tokens = tokens[1:]
-
 	for _, token := range tokens {
-		err := g.position.MakeMoveFromString(token)
+		err := g.search.MakeMoveFromString(token)
 		if err != nil {
 			fmt.Printf("info string error while making move %v, %v \n", token, err)
 			return
@@ -230,14 +231,13 @@ func (g *gameImpl) StartSearch(tokens []string) {
 	g.isWorking.Lock()
 	defer g.isWorking.Unlock()
 
-	if g.state.Get() != state.POSITION_SET || g.position == nil {
+	if g.state.Get() != state.POSITION_SET || g.search == nil {
 		fmt.Println("info string no position is set")
 		return
 	}
 
 	// Create Search with the correct properties
 	gp := parseGo(tokens)
-	g.search = search.NewSearch(*g.position)
 	ctx, cancel := context.WithCancel(context.Background())
 	g.searchCancel = cancel
 	go func() {

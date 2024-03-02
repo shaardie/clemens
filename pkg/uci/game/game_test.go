@@ -49,7 +49,7 @@ func Test_game_newPosition(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := newGameImpl()
 			g.NewPosition(tt.tokens)
-			assert.Equal(t, tt.want, g.position.ToFen())
+			assert.Equal(t, tt.want, g.search.Pos.ToFen())
 		})
 	}
 }

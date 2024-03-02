@@ -22,7 +22,7 @@ const (
 )
 
 type Search struct {
-	pos                    position.Position
+	Pos                    position.Position
 	nodes                  uint64
 	betaCutOffs            uint64
 	alphaCutOffs           uint64
@@ -30,6 +30,8 @@ type Search struct {
 	transpositiontableHits uint64
 	PV                     pvline.PVLine
 	KillerMoves            [1024][2]move.Move
+	SearchHistory          [1024]uint64
+	SearchHistoryPly       int
 }
 
 type SearchParameter struct {
@@ -55,7 +57,21 @@ func (s *Search) bestMove() move.Move {
 }
 
 func NewSearch(pos position.Position) *Search {
-	return &Search{pos: pos}
+	s := &Search{
+		Pos: pos,
+	}
+	s.SearchHistory[s.SearchHistoryPly] = pos.ZobristHash
+	return s
+}
+
+func (s *Search) MakeMoveFromString(m string) error {
+	err := s.Pos.MakeMoveFromString(m)
+	if err != nil {
+		return err
+	}
+	s.SearchHistoryPly++
+	s.SearchHistory[s.SearchHistoryPly] = s.Pos.ZobristHash
+	return nil
 }
 
 func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
@@ -111,7 +127,7 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 
 func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, goodGuess move.Move) (Info, error) {
 	start := time.Now()
-	pos := s.pos
+	pos := s.Pos
 	pvl := pvline.PVLine{}
 	score, err := s.negamax(ctx, &pos, alpha, beta, depth, 0, true, &pvl, true, true)
 	if err != nil {
@@ -162,8 +178,20 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	if ply == maxDepth {
 		return s.quiescence(ctx, pos, alpha, beta, ply)
 	}
-
 	s.nodes++
+
+	if !isRoot && s.isRepetition(pos.ZobristHash) {
+		if evaluation.IsEndgame(pos) {
+			return 0, nil
+		}
+		return -100, nil
+	}
+	s.SearchHistoryPly++
+	s.SearchHistory[s.SearchHistoryPly] = pos.ZobristHash
+	defer func() {
+		s.SearchHistoryPly--
+		s.SearchHistory[s.SearchHistoryPly] = 0
+	}()
 
 	pvMove := s.PV.GetBestMoveByPly(ply)
 	ttMove := move.NullMove
@@ -233,6 +261,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			*pos = prevPos
 			continue
 		}
+
 		legalMoves++
 		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, false, true)
 		*pos = prevPos
@@ -370,7 +399,7 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 	}
 
 	var t, inc int
-	if s.pos.SideToMove == types.BLACK {
+	if s.Pos.SideToMove == types.BLACK {
 		t = sp.BTime
 		inc = sp.BInc
 	} else {
@@ -395,4 +424,13 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 
 	fmt.Printf("info string calculated timeout %v\n", movetime)
 	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
+}
+
+func (s *Search) isRepetition(hash uint64) bool {
+	for i := 0; i < s.SearchHistoryPly; i++ {
+		if s.SearchHistory[i] == hash {
+			return true
+		}
+	}
+	return false
 }
