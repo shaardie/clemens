@@ -27,11 +27,15 @@ func init() {
 	}
 }
 
-func MVVLVASort(pos *position.Position, moves *move.MoveList, bestGuess move.Move) {
+func MVVLVASort(pos *position.Position, moves *move.MoveList, principalVariationMove, transpositionTableMove move.Move) {
 	for idx := uint8(0); idx < moves.Length(); idx++ {
 		m := moves.Get(idx)
-		if *m == bestGuess {
+		if *m == principalVariationMove {
 			m.SetScore(math.MaxUint16)
+			continue
+		}
+		if *m == transpositionTableMove {
+			m.SetScore(math.MaxUint16 - 1)
 			continue
 		}
 
@@ -49,13 +53,19 @@ func MVVLVASort(pos *position.Position, moves *move.MoveList, bestGuess move.Mov
 	moves.Sort()
 }
 
-func (s *Search) orderMoves(pos *position.Position, moves *move.MoveList, bestGuess move.Move, ply uint8) {
+func (s *Search) orderMoves(pos *position.Position, moves *move.MoveList, principalVariationMove, transpositionTableMove move.Move, ply uint8) {
 	for idx := uint8(0); idx < moves.Length(); idx++ {
 		m := moves.Get(idx)
 
-		// Best Guess is searched first no matter what
-		if *m == bestGuess {
+		// Use the Move from the principal variation first
+		if *m == principalVariationMove {
 			m.SetScore(math.MaxUint16)
+			continue
+		}
+
+		// Use the Move from the transposition second
+		if *m == transpositionTableMove {
+			m.SetScore(math.MaxUint16 - 1)
 			continue
 		}
 

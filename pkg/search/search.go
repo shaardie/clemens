@@ -165,12 +165,11 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	s.nodes++
 
-	goodGuess := move.NullMove
+	pvMove := s.PV.GetBestMoveByPly(ply)
+	ttMove := move.NullMove
 
 	// Check if we can use the transition table but not on root
-	if isRoot {
-		goodGuess = s.PV.GetBestMove()
-	} else {
+	if !isRoot {
 		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, depth)
 		if found {
 			s.transpositiontableHits++
@@ -193,7 +192,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			}
 		}
 		if isGoodGuess {
-			goodGuess = te.BestMove
+			ttMove = te.BestMove
 		}
 	}
 
@@ -224,7 +223,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	// Generate all moves and order them
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves)
-	s.orderMoves(pos, moves, goodGuess, ply)
+	s.orderMoves(pos, moves, pvMove, ttMove, ply)
 
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
@@ -324,7 +323,7 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 	// Generate all captures and order them
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalCaptures(moves)
-	s.orderMoves(pos, moves, move.NullMove, ply)
+	s.orderMoves(pos, moves, move.NullMove, move.NullMove, ply)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 

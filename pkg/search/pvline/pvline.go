@@ -12,10 +12,14 @@ type PVLine struct {
 }
 
 func (pvline *PVLine) GetBestMove() move.Move {
-	if len(pvline.moves) == 0 {
+	return pvline.GetBestMoveByPly(0)
+}
+
+func (pvline *PVLine) GetBestMoveByPly(ply uint8) move.Move {
+	if uint8(len(pvline.moves)) <= ply {
 		return move.NullMove
 	}
-	return pvline.moves[0]
+	return pvline.moves[ply]
 }
 
 func (pvline *PVLine) Update(bestMove move.Move, newLine *PVLine) {

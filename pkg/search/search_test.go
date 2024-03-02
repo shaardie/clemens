@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/position"
@@ -13,9 +12,9 @@ import (
 
 func BenchmarkSearchKiwipete(b *testing.B) {
 	// Redirect standard out to null
-	stdout := os.Stdout
-	defer func() { os.Stdout = stdout }()
-	os.Stdout = os.NewFile(0, os.DevNull)
+	// stdout := os.Stdout
+	// defer func() { os.Stdout = stdout }()
+	// os.Stdout = os.NewFile(0, os.DevNull)
 
 	pos, err := position.NewFromFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
 	require.NoError(b, err)
@@ -25,9 +24,9 @@ func BenchmarkSearchKiwipete(b *testing.B) {
 
 func BenchmarkSearchStartPos(b *testing.B) {
 	// Redirect standard out to null
-	stdout := os.Stdout
-	defer func() { os.Stdout = stdout }()
-	os.Stdout = os.NewFile(0, os.DevNull)
+	// stdout := os.Stdout
+	// defer func() { os.Stdout = stdout }()
+	// os.Stdout = os.NewFile(0, os.DevNull)
 
 	s := NewSearch(*position.New())
 	s.Search(context.TODO(), SearchParameter{Depth: 7, Infinite: true})
