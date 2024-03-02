@@ -17,7 +17,7 @@ benchmark:
 	go test ./pkg/search -run=^$$ -bench ^BenchmarkSearch -cpuprofile profile.out
 
 elo:
-	docker build . -t elo && docker run elo:latest
+	docker build . -t elo && docker run --rm elo:latest
 
 test:
 	go test ./... -cover
