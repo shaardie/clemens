@@ -134,6 +134,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	default:
 	}
 
+	depth := maxDepth - ply
 	mateValue := -inf + int(ply)
 
 	// Mate Distance Pruning
@@ -170,18 +171,20 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	if isRoot {
 		goodGuess = s.PV.GetBestMove()
 	} else {
-		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, maxDepth-ply)
+		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, depth)
 		if found {
 			s.transpositiontableHits++
 			switch te.NodeType {
 			case transpositiontable.AlphaNode:
-				// return the smaller value of alpha and score
-				s.alphaCutOffs++
-				return max(te.Score, alpha), nil
+				if te.Score <= alpha {
+					s.alphaCutOffs++
+					return alpha, nil
+				}
 			case transpositiontable.BetaNode:
-				// return the smaller value of beta and score
-				s.betaCutOffs++
-				return min(te.Score, beta), nil
+				if te.Score > beta {
+					s.betaCutOffs++
+					return beta, nil
+				}
 			case transpositiontable.PVNode:
 				// In PV Nodes only return on exact hit, ignore check mates for now
 				if !pvNode || (te.Score > alpha && te.Score < beta) || te.Score > -inf+100 || te.Score < inf-100 {
@@ -196,10 +199,10 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	// Null Move Pruning
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if maxDepth-ply > 2 && canNull && evaluation.Evaluation(pos) > beta && !isInCheck && !pvNode {
+	if depth > 2 && canNull && evaluation.Evaluation(pos) > beta && !isInCheck && !pvNode {
 		ep := pos.MakeNullMove()
 		adaptiveDepth := uint8(2)
-		if maxDepth-ply > 6 {
+		if depth > 6 {
 			adaptiveDepth = 3
 		}
 		v, err := s.negamax(ctx, pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, false, &pvline.PVLine{}, false, false)
@@ -232,7 +235,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			continue
 		}
 		legalMoves++
-		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, isRoot, true)
+		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, false, true)
 		*pos = prevPos
 		if err != nil {
 			return 0, err
@@ -250,7 +253,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		}
 
 		if score >= beta {
-			transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, maxDepth-ply, beta, transpositiontable.BetaNode)
+			transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
 			s.betaCutOffs++
 			return beta, nil
 		}
@@ -288,7 +291,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		s.alphaCutOffs++
 		nt = transpositiontable.AlphaNode
 	}
-	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, maxDepth-ply, alpha, nt)
+	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
 	return alpha, nil
 }
 

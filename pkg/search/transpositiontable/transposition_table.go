@@ -62,8 +62,8 @@ func (tt TranspositionTable) PotentiallySave(zobristHash uint64, bestMove move.M
 	key := zobristHash % transpositionTableSize
 	oldTe := tt[key]
 
-	// Ignore the new entry, if there is a mathing entry with a higher depth
-	if oldTe.ZobristHash == zobristHash && oldTe.Depth > depth {
+	// Ignore the new entry, if there is an entry with a higher depth.
+	if oldTe.Depth > depth {
 		return
 	}
 
