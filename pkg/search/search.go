@@ -269,9 +269,6 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			return 0, err
 		}
 		score = -score
-		if pvNode {
-			pvNode = false
-		}
 
 		if score >= beta {
 			transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
