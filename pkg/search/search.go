@@ -269,13 +269,6 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			return 0, err
 		}
 		score = -score
-		// value to info channel and check if we are done
-		select {
-		case <-ctx.Done():
-			return 0, ctx.Err()
-		default:
-		}
-
 		if pvNode {
 			pvNode = false
 		}
