@@ -7,4 +7,4 @@ cutechess-cli -tournament gauntlet -concurrency 4 -pgnout output_pgn_file.pgn \
     -each proto=uci -draw movenumber=40 movecount=4 score=8 \
     -resign movecount=4 score=500 \
     -openings file=/openings.pgn order=random -repeat -rounds 200 -games 2
-ordo -Q -D -a 1900 -A "maia-1900" -W -n8 -s1000 -U "0,1,2,3,4,5,6,7,8,9,10" -p output_pgn_file.pgn
+ordo -D -W -a 1900 -A "maia-1900" -p output_pgn_file.pgn
