@@ -230,7 +230,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 	// Null Move Pruning
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if depth > 2 && canNull && evaluation.Evaluation(pos) > beta && !isInCheck && !pvNode {
+	if depth > 2 && canNull && !isInCheck && !pvNode && evaluation.Evaluation(pos) > beta && !evaluation.IsEndgame(pos) {
 		ep := pos.MakeNullMove()
 		adaptiveDepth := uint8(2)
 		if depth > 6 {
