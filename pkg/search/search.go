@@ -23,6 +23,7 @@ const (
 )
 
 type Search struct {
+	ctx                    context.Context
 	Pos                    position.Position
 	nodes                  uint64
 	betaCutOffs            uint64
@@ -81,23 +82,24 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 	if sp.Depth > 0 {
 		depth = sp.Depth
 	}
-	s.SearchIterative(ctx, depth)
+	s.ctx = ctx
+	s.SearchIterative(depth)
 	cancel()
 
 	// We need at least a valid move
 	if s.bestMove() == move.NullMove {
-		s.SearchIterative(context.TODO(), 1)
+		s.ctx = context.TODO()
+		s.SearchIterative(1)
 	}
 	return s.bestMove()
 }
 
-func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
+func (s *Search) SearchIterative(maxDepth uint8) {
 	alpha := -inf
 	beta := inf
 	var depth uint8 = 1
-	goodGuess := move.NullMove
 	for depth <= maxDepth {
-		i, err := s.SearchRoot(ctx, depth, alpha, beta, goodGuess)
+		i, err := s.SearchRoot(depth, alpha, beta)
 		// Timeout
 		if err != nil {
 			return
@@ -115,7 +117,6 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 		}
 
 		s.PV = *i.PV.Copy()
-		goodGuess = s.PV.GetBestMove()
 		alpha = i.Score - widen_window
 		beta = i.Score + widen_window
 		depth++
@@ -126,11 +127,11 @@ func (s *Search) SearchIterative(ctx context.Context, maxDepth uint8) {
 	}
 }
 
-func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, goodGuess move.Move) (Info, error) {
+func (s *Search) SearchRoot(depth uint8, alpha, beta int) (Info, error) {
 	start := time.Now()
 	pos := s.Pos
 	pvl := pvline.PVLine{}
-	score, err := s.negamax(ctx, &pos, alpha, beta, depth, 0, true, &pvl, true, true)
+	score, err := s.negamax(&pos, alpha, beta, depth, 0, &pvl, true)
 	if err != nil {
 		return Info{}, err
 	}
@@ -142,17 +143,18 @@ func (s *Search) SearchRoot(ctx context.Context, depth uint8, alpha, beta int, g
 	}, nil
 }
 
-func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvNode bool, pvl *pvline.PVLine, isRoot bool, canNull bool) (int, error) {
-
+func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvl *pvline.PVLine, canNull bool) (int, error) {
 	// value to info channel and check if we are done
 	select {
-	case <-ctx.Done():
-		return 0, ctx.Err()
+	case <-s.ctx.Done():
+		return 0, s.ctx.Err()
 	default:
 	}
 
+	isRoot := ply == 0
 	depth := maxDepth - ply
 	mateValue := -inf + int(ply)
+	pvNode := beta-alpha != 1
 
 	// Mate Distance Pruning
 	// https://www.chessprogramming.org/Mate_Distance_Pruning
@@ -177,7 +179,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 
 	// Evaluate the leaf node
 	if ply == maxDepth {
-		return s.quiescence(ctx, pos, alpha, beta, ply)
+		return s.quiescence(pos, alpha, beta, ply)
 	}
 	s.nodes++
 
@@ -233,7 +235,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		if depth > 6 {
 			adaptiveDepth = 3
 		}
-		v, err := s.negamax(ctx, pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, false, &pvline.PVLine{}, false, false)
+		v, err := s.negamax(pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, &pvline.PVLine{}, false)
 		pos.UnMakeNullMove(ep)
 		if err != nil {
 			return 0, err
@@ -243,7 +245,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		}
 	}
 
-	oldAlpha := alpha
+	alphaWasUpdated := false
 	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
@@ -264,7 +266,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 		}
 
 		legalMoves++
-		score, err := s.negamax(ctx, pos, -beta, -alpha, maxDepth, ply+1, pvNode, &potentialPVLine, false, true)
+		score, err := s.negamax(pos, -beta, -alpha, maxDepth, ply+1, &potentialPVLine, true)
 		*pos = prevPos
 		if err != nil {
 			return 0, err
@@ -289,6 +291,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 			}
 
 			pvl.Update(bestMove, &potentialPVLine)
+			alphaWasUpdated = true
 		}
 
 		potentialPVLine.Reset()
@@ -306,7 +309,7 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	}
 
 	nt := transpositiontable.PVNode
-	if oldAlpha == alpha {
+	if !alphaWasUpdated {
 		s.alphaCutOffs++
 		nt = transpositiontable.AlphaNode
 	}
@@ -314,13 +317,13 @@ func (s *Search) negamax(ctx context.Context, pos *position.Position, alpha, bet
 	return alpha, nil
 }
 
-func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, beta int, ply uint8) (int, error) {
+func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) (int, error) {
 	s.nodes++
 	s.quiescenceNodes++
 	// value to info channel and check if we are done
 	select {
-	case <-ctx.Done():
-		return 0, ctx.Err()
+	case <-s.ctx.Done():
+		return 0, s.ctx.Err()
 	default:
 	}
 
@@ -365,7 +368,7 @@ func (s *Search) quiescence(ctx context.Context, pos *position.Position, alpha, 
 			*pos = prevPos
 			continue
 		}
-		score, err := s.quiescence(ctx, pos, -beta, -alpha, ply+1)
+		score, err := s.quiescence(pos, -beta, -alpha, ply+1)
 		*pos = prevPos
 		if err != nil {
 			return 0, err
