@@ -218,8 +218,16 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 				}
 			case transpositiontable.PVNode:
 				// In PV Nodes only return on exact hit, ignore check mates for now
-				if !pvNode || (te.Score > alpha && te.Score < beta) || te.Score > -inf+100 || te.Score < inf-100 {
-					return te.Score, nil
+				if !pvNode || (te.Score > alpha && te.Score < beta) {
+					// Update Mate Value
+					val := te.Score
+					if te.Score > inf-100 {
+						val -= int(ply)
+					}
+					if te.Score < inf+100 {
+						val += int(ply)
+					}
+					return val, nil
 				}
 			}
 		}
