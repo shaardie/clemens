@@ -28,6 +28,7 @@ type Search struct {
 	nodes                  uint64
 	betaCutOffs            uint64
 	alphaCutOffs           uint64
+	pvsReruns              uint64
 	quiescenceNodes        uint64
 	transpositiontableHits uint64
 	PV                     pvline.PVLine
@@ -123,7 +124,7 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 
 		// Print info
 		fmt.Printf("info depth %v score cp %v nodes %v time %v pv %v\n", i.Depth, i.Score, s.nodes, i.Time, i.PV)
-		fmt.Printf("info string beta-cutoffs %v alpha-cutoffs %v quiescence-nodes %v transpositiontable-hits %v\n", s.betaCutOffs, s.alphaCutOffs, s.quiescenceNodes, s.transpositiontableHits)
+		fmt.Printf("info string beta-cutoffs %v alpha-cutoffs %v quiescence-nodes %v transpositiontable-hits %v pvs-reruns %v\n", s.betaCutOffs, s.alphaCutOffs, s.quiescenceNodes, s.transpositiontableHits, s.pvsReruns)
 	}
 }
 
@@ -266,12 +267,11 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		}
 
 		legalMoves++
-		score, err := s.negamax(pos, -beta, -alpha, maxDepth, ply+1, &potentialPVLine, true)
+		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, alphaWasUpdated)
 		*pos = prevPos
 		if err != nil {
 			return 0, err
 		}
-		score = -score
 
 		if score >= beta {
 			transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
