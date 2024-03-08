@@ -252,3 +252,5 @@ func NewPieceFromChar(r rune) (Piece, error) {
 	}
 	return Piece(idx), nil
 }
+
+const INF = 100000

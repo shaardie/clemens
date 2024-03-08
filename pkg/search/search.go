@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	inf                        = 100000
 	widen_window               = 50
 	max_depth            uint8 = math.MaxUint8
 	quiescence_max_depth uint8 = 100
@@ -26,8 +25,6 @@ type Search struct {
 	ctx                    context.Context
 	Pos                    position.Position
 	nodes                  uint64
-	betaCutOffs            uint64
-	alphaCutOffs           uint64
 	pvsReruns              uint64
 	quiescenceNodes        uint64
 	transpositiontableHits uint64
@@ -96,8 +93,8 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 }
 
 func (s *Search) SearchIterative(maxDepth uint8) {
-	alpha := -inf
-	beta := inf
+	alpha := -types.INF
+	beta := types.INF
 	var depth uint8 = 1
 	for depth <= maxDepth {
 		i, err := s.SearchRoot(depth, alpha, beta)
@@ -112,8 +109,8 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 		// re-run the search with the wider window, do not use the result and do not increase the depth.
 		if i.Score <= alpha || i.Score >= beta {
 			fmt.Printf("info string windows [%v,%v] too small. Re-run search.\n", alpha, beta)
-			alpha = -inf
-			beta = inf
+			alpha = -types.INF
+			beta = types.INF
 			continue
 		}
 
@@ -124,7 +121,7 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 
 		// Print info
 		fmt.Printf("info depth %v score cp %v nodes %v time %v pv %v\n", i.Depth, i.Score, s.nodes, i.Time, i.PV)
-		fmt.Printf("info string beta-cutoffs %v alpha-cutoffs %v quiescence-nodes %v transpositiontable-hits %v pvs-reruns %v\n", s.betaCutOffs, s.alphaCutOffs, s.quiescenceNodes, s.transpositiontableHits, s.pvsReruns)
+		fmt.Printf("info string quiescence-nodes %v transpositiontable-hits %v pvs-reruns %v\n", s.quiescenceNodes, s.transpositiontableHits, s.pvsReruns)
 	}
 }
 
@@ -154,7 +151,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 	isRoot := ply == 0
 	depth := maxDepth - ply
-	mateValue := -inf + int(ply)
+	mateValue := -types.INF + int(ply)
 	pvNode := beta-alpha != 1
 
 	// Mate Distance Pruning
@@ -198,49 +195,18 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	}()
 
 	pvMove := s.PV.GetBestMoveByPly(ply)
-	ttMove := move.NullMove
 
 	// Check if we can use the transition table but not on root
-	if !isRoot {
-		te, found, isGoodGuess := transpositiontable.TTable.Get(pos.ZobristHash, depth)
-		if found {
-			s.transpositiontableHits++
-			switch te.NodeType {
-			case transpositiontable.AlphaNode:
-				if te.Score <= alpha {
-					s.alphaCutOffs++
-					return alpha, nil
-				}
-			case transpositiontable.BetaNode:
-				if te.Score > beta {
-					s.betaCutOffs++
-					return beta, nil
-				}
-			case transpositiontable.PVNode:
-				// In PV Nodes only return on exact hit, ignore check mates for now
-				if !pvNode || (te.Score > alpha && te.Score < beta) {
-					// Update Mate Value
-					val := te.Score
-					if te.Score > inf-100 {
-						val -= int(ply)
-					}
-					if te.Score < inf+100 {
-						val += int(ply)
-					}
-					return val, nil
-				}
-			}
-		}
-		if isGoodGuess {
-			ttMove = te.BestMove
-		}
+	score, use, ttMove := transpositiontable.Get(pos.ZobristHash, alpha, beta, depth, ply)
+	if !isRoot && !pvNode && use {
+		return score, nil
 	}
 
 	/**************************************************************************
 	* EVAL PRUNING / STATIC NULL MOVE                                         *
 	**************************************************************************/
 
-	if depth < 3 && !pvNode && !isInCheck && abs(beta-1) > -inf+100 {
+	if depth < 3 && !pvNode && !isInCheck && abs(beta-1) > -types.INF+100 {
 		static_eval := evaluation.Evaluation(pos)
 		eval_margin := 120 * int(depth)
 		if static_eval-eval_margin >= beta {
@@ -316,8 +282,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		}
 
 		if score >= beta {
-			transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
-			s.betaCutOffs++
+			transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
 			return beta, nil
 		}
 
@@ -352,10 +317,9 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 	nt := transpositiontable.PVNode
 	if !alphaWasUpdated {
-		s.alphaCutOffs++
 		nt = transpositiontable.AlphaNode
 	}
-	transpositiontable.TTable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
+	transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
 	return alpha, nil
 }
 
@@ -371,7 +335,6 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) 
 
 	stand_pat := evaluation.Evaluation(pos)
 	if stand_pat >= beta {
-		s.betaCutOffs++
 		return beta, nil
 	}
 	if alpha < stand_pat {

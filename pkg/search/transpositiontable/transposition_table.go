@@ -4,6 +4,7 @@ import (
 	"unsafe"
 
 	"github.com/shaardie/clemens/pkg/move"
+	"github.com/shaardie/clemens/pkg/types"
 )
 
 type nodeType uint8
@@ -26,9 +27,9 @@ type TranspositionEntry struct {
 const transpositionTableSizeinMB = 1024 * 1024 * 64
 
 var transpositionTableSize uint64
-var TTable TranspositionTable
-
-type TranspositionTable []TranspositionEntry
+var (
+	tt []TranspositionEntry
+)
 
 func init() {
 	reset()
@@ -36,29 +37,50 @@ func init() {
 
 func reset() {
 	transpositionTableSize = uint64(transpositionTableSizeinMB / unsafe.Sizeof(TranspositionEntry{}))
-	TTable = make([]TranspositionEntry, transpositionTableSize)
+	tt = make([]TranspositionEntry, transpositionTableSize)
 }
 
-func (tt TranspositionTable) Get(zobristHash uint64, depth uint8) (te TranspositionEntry, found bool, isGoodGuess bool) {
+func Get(zobristHash uint64, alpha, beta int, depth, ply uint8) (score int, use bool, m move.Move) {
 	key := zobristHash % transpositionTableSize
-	te = tt[key]
+	te := &tt[key]
+
 	if te.ZobristHash != zobristHash {
-		return te, false, false
+		return 0, false, move.NullMove
 	}
 
 	// Only use the value, if the depth of the entry is bigger that the current one.
 	// Remember that the depth decreases, while going down the tree.
 	// If we use this entry or not. The move should be a good guess.
 	if te.Depth < depth {
-		return te, false, true
+		return 0, false, te.BestMove
 	}
 
-	return te, true, true
+	score = te.Score
+
+	// // Adjust if mate value
+	if score > types.INF-100 {
+		score -= int(ply)
+	} else if score < -types.INF+100 {
+		score += int(ply)
+	}
+
+	switch te.NodeType {
+	case AlphaNode:
+		if score <= alpha {
+			return alpha, true, te.BestMove
+		}
+	case BetaNode:
+		if score >= beta {
+			return beta, true, te.BestMove
+		}
+	}
+
+	return score, true, te.BestMove
 }
 
 // PotentiallySave save the new transposition entry, if it is a better fit.
 // Note, that we use single values as parameter for the case, so we not create the struct, if we do not have to
-func (tt TranspositionTable) PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int, nt nodeType) {
+func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int, nt nodeType) {
 	key := zobristHash % transpositionTableSize
 	oldTe := tt[key]
 
