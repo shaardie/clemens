@@ -31,6 +31,12 @@ var (
 	tt []TranspositionEntry
 )
 
+var hashEntries uint64
+
+func HashFull() uint64 {
+	return 1000 * hashEntries / transpositionTableSize
+}
+
 func init() {
 	reset()
 }
@@ -87,6 +93,11 @@ func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score 
 	// Ignore the new entry, if there is an entry with a higher depth.
 	if oldTe.Depth > depth {
 		return
+	}
+
+	// New Entry
+	if oldTe.ZobristHash == 0 {
+		hashEntries++
 	}
 
 	tt[key] = TranspositionEntry{

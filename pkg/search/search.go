@@ -18,20 +18,19 @@ const (
 	widen_window               = 50
 	max_depth            uint8 = math.MaxUint8
 	quiescence_max_depth uint8 = 100
-	maxTimeInMs                = 10000
+	maxTimeInMs                = 1000000
 )
 
 type Search struct {
-	ctx                    context.Context
-	Pos                    position.Position
-	nodes                  uint64
-	pvsReruns              uint64
-	quiescenceNodes        uint64
-	transpositiontableHits uint64
-	PV                     pvline.PVLine
-	KillerMoves            [1024][2]move.Move
-	SearchHistory          [1024]uint64
-	SearchHistoryPly       int
+	ctx              context.Context
+	Pos              position.Position
+	nodes            uint64
+	pvsReruns        uint64
+	quiescenceNodes  uint64
+	PV               pvline.PVLine
+	KillerMoves      [1024][2]move.Move
+	SearchHistory    [1024]uint64
+	SearchHistoryPly int
 }
 
 type SearchParameter struct {
@@ -120,8 +119,8 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 		depth++
 
 		// Print info
-		fmt.Printf("info depth %v score cp %v nodes %v time %v pv %v\n", i.Depth, i.Score, s.nodes, i.Time, i.PV)
-		fmt.Printf("info string quiescence-nodes %v transpositiontable-hits %v pvs-reruns %v\n", s.quiescenceNodes, s.transpositiontableHits, s.pvsReruns)
+		fmt.Printf("info depth %v score cp %v nodes %v time %v hashfull %v pv %v\n", i.Depth, i.Score, s.nodes, i.Time, transpositiontable.HashFull(), i.PV)
+		fmt.Printf("info string quiescence-nodes %v pvs-reruns %v\n", s.quiescenceNodes, s.pvsReruns)
 	}
 }
 
