@@ -247,11 +247,12 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	var fmargin = [4]int{0, 200, 300, 500}
 
 	fertilityPruning := depth <= 3 && !pvNode && !isInCheck && abs(alpha) < 9000 && evaluation.Evaluation(pos)+fmargin[depth] <= alpha
-	alphaWasUpdated := false
 	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
+	var bestScore int = -types.INF
 	var legalMoves uint8
+	nodeType := transpositiontable.AlphaNode
 
 	// Generate all moves and order them
 	moves := move.NewMoveList()
@@ -274,21 +275,28 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 			continue
 		}
 
-		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, alphaWasUpdated)
+		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, nodeType == transpositiontable.PVNode)
 		*pos = prevPos
 		if err != nil {
 			return 0, err
 		}
 
+		if score > bestScore {
+			bestScore = score
+			bestMove = *m
+		}
+
 		if score >= beta {
-			transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, beta, transpositiontable.BetaNode)
-			return beta, nil
+			nodeType = transpositiontable.BetaNode
+			break
 		}
 
 		if score > alpha {
+			nodeType = transpositiontable.PVNode
 			alpha = score
-			bestMove = *m
+
 			// Update Killer Move, if quiet move
+			// This is probably wrong and should go to beta
 			if pos.GetPiece(m.GetTargetSquare()) == types.NO_PIECE {
 				if s.KillerMoves[ply][0] != bestMove {
 					s.KillerMoves[ply][1] = s.KillerMoves[ply][0]
@@ -297,7 +305,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 			}
 
 			pvl.Update(bestMove, &potentialPVLine)
-			alphaWasUpdated = true
 		}
 		firstMove = false
 		potentialPVLine.Reset()
@@ -314,12 +321,8 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		return 0, nil
 	}
 
-	nt := transpositiontable.PVNode
-	if !alphaWasUpdated {
-		nt = transpositiontable.AlphaNode
-	}
-	transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, alpha, nt)
-	return alpha, nil
+	transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, bestScore, nodeType)
+	return bestScore, nil
 }
 
 func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) (int, error) {
