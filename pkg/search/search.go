@@ -276,10 +276,10 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		}
 
 		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, nodeType == transpositiontable.PVNode)
-		*pos = prevPos
 		if err != nil {
 			return 0, err
 		}
+		*pos = prevPos
 
 		if score > bestScore {
 			bestScore = score
@@ -314,14 +314,19 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	if legalMoves == 0 {
 		// Checkmate, set lowest possible value, but increase by the number of plys,
 		// so the engine is looking for shorter mates.
-		if pos.IsInCheck(pos.SideToMove) {
+		if isInCheck {
 			return mateValue, nil
 		}
 		// stalemate
 		return 0, nil
 	}
 
-	transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, bestScore, nodeType)
+	select {
+	case <-s.ctx.Done():
+		return 0, s.ctx.Err()
+	default:
+		transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, bestScore, nodeType)
+	}
 	return bestScore, nil
 }
 
