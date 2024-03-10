@@ -155,17 +155,17 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 	// Mate Distance Pruning
 	// https://www.chessprogramming.org/Mate_Distance_Pruning
-	if !isRoot {
-		if alpha < mateValue {
-			alpha = mateValue
-		}
-		if beta > -mateValue+1 {
-			beta = -mateValue + 1
-		}
-		if alpha >= beta {
-			return alpha, nil
-		}
-	}
+	// if !isRoot {
+	// 	if alpha < mateValue {
+	// 		alpha = mateValue
+	// 	}
+	// 	if beta > -mateValue+1 {
+	// 		beta = -mateValue + 1
+	// 	}
+	// 	if alpha >= beta {
+	// 		return alpha, nil
+	// 	}
+	// }
 
 	// Increase Depth, if in Check.
 	// This also means that we do not enter quiescence, if in check.
@@ -202,48 +202,48 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	* EVAL PRUNING / STATIC NULL MOVE                                         *
 	**************************************************************************/
 
-	if depth < 3 && !pvNode && !isInCheck && abs(beta-1) > -types.INF+100 {
-		static_eval := evaluation.Evaluation(pos)
-		eval_margin := 120 * int(depth)
-		if static_eval-eval_margin >= beta {
-			return static_eval - eval_margin, nil
-		}
-	}
+	// if depth < 3 && !pvNode && !isInCheck && abs(beta-1) > -types.INF+100 {
+	// 	static_eval := evaluation.Evaluation(pos)
+	// 	eval_margin := 120 * int(depth)
+	// 	if static_eval-eval_margin >= beta {
+	// 		return static_eval - eval_margin, nil
+	// 	}
+	// }
 
 	// Null Move Pruning
 	// https://www.chessprogramming.org/Null_Move_Pruning
-	if depth > 2 && canNull && !isInCheck && !pvNode && evaluation.Evaluation(pos) > beta && !evaluation.IsEndgame(pos) {
-		ep := pos.MakeNullMove()
-		adaptiveDepth := uint8(2)
-		if depth > 6 {
-			adaptiveDepth = 3
-		}
-		v, err := s.negamax(pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, &pvline.PVLine{}, false)
-		pos.UnMakeNullMove(ep)
-		if err != nil {
-			return 0, err
-		}
-		if v < beta {
-			return beta, nil
-		}
-	}
+	// if depth > 2 && canNull && !isInCheck && !pvNode && evaluation.Evaluation(pos) > beta && !evaluation.IsEndgame(pos) {
+	// 	ep := pos.MakeNullMove()
+	// 	adaptiveDepth := uint8(2)
+	// 	if depth > 6 {
+	// 		adaptiveDepth = 3
+	// 	}
+	// 	v, err := s.negamax(pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, &pvline.PVLine{}, false)
+	// 	pos.UnMakeNullMove(ep)
+	// 	if err != nil {
+	// 		return 0, err
+	// 	}
+	// 	if v < beta {
+	// 		return beta, nil
+	// 	}
+	// }
 
-	if !pvNode && !isInCheck && ttMove == move.NullMove && canNull && depth <= 3 {
-		threshold := alpha - 300 - (int(depth)-1)*60
-		if evaluation.Evaluation(pos) < threshold {
-			score, err := s.quiescence(pos, alpha, beta, ply)
-			if err != nil {
-				return 0, err
-			}
-			if score < threshold {
-				return alpha, nil
-			}
-		}
-	}
+	// if !pvNode && !isInCheck && ttMove == move.NullMove && canNull && depth <= 3 {
+	// 	threshold := alpha - 300 - (int(depth)-1)*60
+	// 	if evaluation.Evaluation(pos) < threshold {
+	// 		score, err := s.quiescence(pos, alpha, beta, ply)
+	// 		if err != nil {
+	// 			return 0, err
+	// 		}
+	// 		if score < threshold {
+	// 			return alpha, nil
+	// 		}
+	// 	}
+	// }
 
-	var fmargin = [4]int{0, 200, 300, 500}
+	// var fmargin = [4]int{0, 200, 300, 500}
 
-	fertilityPruning := depth <= 3 && !pvNode && !isInCheck && abs(alpha) < 9000 && evaluation.Evaluation(pos)+fmargin[depth] <= alpha
+	// fertilityPruning := depth <= 3 && !pvNode && !isInCheck && abs(alpha) < 9000 && evaluation.Evaluation(pos)+fmargin[depth] <= alpha
 	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
@@ -255,7 +255,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves)
 	s.orderMoves(pos, moves, pvMove, ttMove, ply)
-	firstMove := true
+	// firstMove := true
 
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
@@ -267,10 +267,10 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		}
 		legalMoves++
 
-		if fertilityPruning && !firstMove && m.GetMoveType() != move.PROMOTION && pos.PiecesBoard[m.GetTargetSquare()] == types.NO_PIECE && pos.IsInCheck(pos.SideToMove) {
-			*pos = prevPos
-			continue
-		}
+		// if fertilityPruning && !firstMove && m.GetMoveType() != move.PROMOTION && pos.PiecesBoard[m.GetTargetSquare()] == types.NO_PIECE && pos.IsInCheck(pos.SideToMove) {
+		// 	*pos = prevPos
+		// 	continue
+		// }
 
 		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, nodeType == transpositiontable.PVNode)
 		if err != nil {
@@ -303,7 +303,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 			pvl.Update(bestMove, &potentialPVLine)
 		}
-		firstMove = false
+		// firstMove = false
 		potentialPVLine.Reset()
 	}
 
