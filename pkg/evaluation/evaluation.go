@@ -96,5 +96,5 @@ func gamePhase(pos *position.Position) int {
 }
 
 func IsEndgame(pos *position.Position) bool {
-	return gamePhase(pos) > endgameBorder
+	return gamePhase(pos) < endgameBorder
 }
