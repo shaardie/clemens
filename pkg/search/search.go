@@ -181,10 +181,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	s.nodes++
 
 	if !isRoot && s.isRepetition(pos.ZobristHash) {
-		if evaluation.IsEndgame(pos) {
-			return 0, nil
-		}
-		return -100, nil
+		return evaluation.Contempt(pos), nil
 	}
 	s.SearchHistoryPly++
 	s.SearchHistory[s.SearchHistoryPly] = pos.ZobristHash
@@ -318,7 +315,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 			return mateValue, nil
 		}
 		// stalemate
-		return 0, nil
+		return evaluation.Contempt(pos), nil
 	}
 
 	select {
