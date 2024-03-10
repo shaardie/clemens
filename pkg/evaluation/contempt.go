@@ -12,7 +12,7 @@ func Contempt(pos *position.Position) int {
 	}
 
 	// We do not resign too early
-	score := -400
+	score := -100
 
 	// Make the result side aware
 	if pos.SideToMove == types.BLACK {
