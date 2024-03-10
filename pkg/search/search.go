@@ -425,8 +425,8 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 		movetime = maxTimeInMs
 	}
 
-	// Current puffer of 10% for teardown process
-	movetime = movetime - movetime/10
+	// Current puffer of 10% for teardown process, but at least 50milliseconds
+	movetime = movetime - max(movetime/10, 50)
 
 	fmt.Printf("info string calculated timeout %v\n", movetime)
 	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
