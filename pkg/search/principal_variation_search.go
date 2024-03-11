@@ -20,7 +20,6 @@ func (s *Search) PrincipalVariationSearch(pos *position.Position, alpha, beta in
 		}
 		// Rerun search
 		if -score > alpha {
-			s.pvsReruns++
 			score, err = s.negamax(pos, -beta, -alpha, maxDepth, ply+1, pvl, true)
 			if err != nil {
 				return 0, err

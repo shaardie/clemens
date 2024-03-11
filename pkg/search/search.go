@@ -25,8 +25,6 @@ type Search struct {
 	ctx              context.Context
 	Pos              position.Position
 	nodes            uint64
-	pvsReruns        uint64
-	quiescenceNodes  uint64
 	PV               pvline.PVLine
 	KillerMoves      [1024][2]move.Move
 	SearchHistory    [1024]uint64
@@ -46,7 +44,6 @@ type SearchParameter struct {
 
 type Info struct {
 	Depth uint8
-	Time  int64
 	PV    pvline.PVLine
 	Score int
 }
@@ -92,6 +89,7 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 }
 
 func (s *Search) SearchIterative(maxDepth uint8) {
+	start := time.Now()
 	alpha := -types.INF
 	beta := types.INF
 	var depth uint8 = 1
@@ -119,13 +117,22 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 		depth++
 
 		// Print info
-		fmt.Printf("info depth %v score cp %v nodes %v time %v hashfull %v pv %v\n", i.Depth, i.Score, s.nodes, i.Time, transpositiontable.HashFull(), i.PV)
-		fmt.Printf("info string quiescence-nodes %v pvs-reruns %v\n", s.quiescenceNodes, s.pvsReruns)
+		t := max(time.Since(start).Milliseconds(), 1) // should never be zero
+		fmt.Printf(
+			"info depth %v score cp %v time %v nodes %v nps %v hashfull %v pv %v\n",
+			i.Depth,
+			i.Score,
+			t,
+			s.nodes,
+			int64(s.nodes)*1000/t,
+			transpositiontable.HashFull(),
+			i.PV,
+		)
 	}
 }
 
 func (s *Search) SearchRoot(depth uint8, alpha, beta int) (Info, error) {
-	start := time.Now()
+
 	s.KillerMoves = [1024][2]move.Move{}
 	pos := s.Pos
 	pvl := pvline.PVLine{}
@@ -135,7 +142,6 @@ func (s *Search) SearchRoot(depth uint8, alpha, beta int) (Info, error) {
 	}
 	return Info{
 		Depth: depth,
-		Time:  time.Since(start).Milliseconds(),
 		Score: score,
 		PV:    *pvl.Copy(),
 	}, nil
@@ -262,7 +268,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) (int, error) {
 	s.nodes++
-	s.quiescenceNodes++
 	// value to info channel and check if we are done
 	select {
 	case <-s.ctx.Done():
