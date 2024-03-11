@@ -126,6 +126,7 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 
 func (s *Search) SearchRoot(depth uint8, alpha, beta int) (Info, error) {
 	start := time.Now()
+	s.KillerMoves = [1024][2]move.Move{}
 	pos := s.Pos
 	pvl := pvline.PVLine{}
 	score, err := s.negamax(&pos, alpha, beta, depth, 0, &pvl, true)
@@ -288,13 +289,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 		if score >= beta {
 			nodeType = transpositiontable.BetaNode
-			break
-		}
-
-		if score > alpha {
-			nodeType = transpositiontable.PVNode
-			alpha = score
-
 			// Update Killer Move, if quiet move
 			// This is probably wrong and should go to beta
 			if pos.GetPiece(m.GetTargetSquare()) == types.NO_PIECE {
@@ -303,6 +297,12 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 				}
 				s.KillerMoves[ply][0] = bestMove
 			}
+			break
+		}
+
+		if score > alpha {
+			nodeType = transpositiontable.PVNode
+			alpha = score
 
 			pvl.Update(bestMove, &potentialPVLine)
 		}
