@@ -154,20 +154,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	mateValue := -types.INF + int(ply)
 	pvNode := beta-alpha != 1
 
-	// Mate Distance Pruning
-	// https://www.chessprogramming.org/Mate_Distance_Pruning
-	if !isRoot {
-		if alpha < mateValue {
-			alpha = mateValue
-		}
-		if beta > -mateValue+1 {
-			beta = -mateValue + 1
-		}
-		if alpha >= beta {
-			return alpha, nil
-		}
-	}
-
 	// Increase Depth, if in Check.
 	// This also means that we do not enter quiescence, if in check.
 	isInCheck := pos.IsInCheck(pos.SideToMove)
@@ -202,52 +188,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		return score, nil
 	}
 
-	/**************************************************************************
-	* EVAL PRUNING / STATIC NULL MOVE                                         *
-	**************************************************************************/
-
-	if depth < 3 && !pvNode && !isInCheck && abs(beta-1) > -types.INF+100 {
-		static_eval := evaluation.Evaluation(pos)
-		eval_margin := 120 * int(depth)
-		if static_eval-eval_margin >= beta {
-			return static_eval - eval_margin, nil
-		}
-	}
-
-	// Null Move Pruning
-	// https://www.chessprogramming.org/Null_Move_Pruning
-	if depth > 2 && canNull && !isInCheck && !pvNode && evaluation.Evaluation(pos) > beta && !evaluation.IsEndgame(pos) {
-		ep := pos.MakeNullMove()
-		adaptiveDepth := uint8(2)
-		if depth > 6 {
-			adaptiveDepth = 3
-		}
-		v, err := s.negamax(pos, -beta, -beta+1, maxDepth-adaptiveDepth, ply+1, &pvline.PVLine{}, false)
-		pos.UnMakeNullMove(ep)
-		if err != nil {
-			return 0, err
-		}
-		if v < beta {
-			return beta, nil
-		}
-	}
-
-	if !pvNode && !isInCheck && ttMove == move.NullMove && canNull && depth <= 3 {
-		threshold := alpha - 300 - (int(depth)-1)*60
-		if evaluation.Evaluation(pos) < threshold {
-			score, err := s.quiescence(pos, alpha, beta, ply)
-			if err != nil {
-				return 0, err
-			}
-			if score < threshold {
-				return alpha, nil
-			}
-		}
-	}
-
-	var fmargin = [4]int{0, 200, 300, 500}
-
-	fertilityPruning := depth <= 3 && !pvNode && !isInCheck && abs(alpha) < 9000 && evaluation.Evaluation(pos)+fmargin[depth] <= alpha
 	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
@@ -259,7 +199,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves)
 	s.orderMoves(pos, moves, pvMove, ttMove, ply)
-	firstMove := true
 
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
@@ -270,11 +209,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 			continue
 		}
 		legalMoves++
-
-		if fertilityPruning && !firstMove && m.GetMoveType() != move.PROMOTION && pos.PiecesBoard[m.GetTargetSquare()] == types.NO_PIECE && pos.IsInCheck(pos.SideToMove) {
-			*pos = prevPos
-			continue
-		}
 
 		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, nodeType == transpositiontable.PVNode)
 		if err != nil {
@@ -306,7 +240,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 			pvl.Update(bestMove, &potentialPVLine)
 		}
-		firstMove = false
 		potentialPVLine.Reset()
 	}
 
@@ -361,18 +294,6 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) 
 	s.orderMoves(pos, moves, move.NullMove, move.NullMove, ply)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
-
-		// Delta Pruning, https://www.chessprogramming.org/Delta_Pruning
-		if m.GetMoveType() == move.NORMAL &&
-			!evaluation.IsEndgame(pos) &&
-			stand_pat+evaluation.PieceValue[pos.PiecesBoard[m.GetTargetSquare()].Type()]+200 < alpha {
-			continue
-		}
-
-		// Static Exchange Evaluation, https://www.chessprogramming.org/Static_Exchange_Evaluation
-		if m.GetMoveType() == move.NORMAL && evaluation.StaticExchangeEvaluation(pos, m) < 0 {
-			continue
-		}
 
 		prevPos = *pos
 		pos.MakeMove(*m)
@@ -439,11 +360,4 @@ func (s *Search) isRepetition(hash uint64) bool {
 		}
 	}
 	return false
-}
-
-func abs(a int) int {
-	if a < 0 {
-		return -a
-	}
-	return a
 }
