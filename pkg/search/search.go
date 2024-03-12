@@ -297,6 +297,21 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) 
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 
+		// Delta Pruning, https://www.chessprogramming.org/Delta_Pruning
+		// If the current capture plus some safety margin is not able to raise alpha, we can skip the move.
+		if m.GetMoveType() != move.EN_PASSANT {
+			// Safety margin of 2 centipawns
+			margin := 2 * evaluation.PieceValue[types.PAWN]
+			// Take promotion into account.
+			if m.GetMoveType() == move.PROMOTION {
+				margin = margin - evaluation.PieceValue[types.PAWN] + evaluation.PieceValue[m.GetPromitionPieceType()]
+			}
+			// Skip Delta Pruning in the endgame to not become blind against insufficient material.
+			if stand_pat+evaluation.PieceValue[pos.PiecesBoard[m.GetTargetSquare()].Type()]+margin < alpha && !evaluation.IsEndgame(pos) {
+				continue
+			}
+		}
+
 		// If the static exchange of pieces on the target square does not gain any positive material value,
 		// we can ignore this move completely.
 		// En Passants are excluded because the target square of the pawn is not the square of the capture.
