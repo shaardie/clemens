@@ -297,6 +297,13 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) 
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
 
+		// If the static exchange of pieces on the target square does not gain any positive material value,
+		// we can ignore this move completely.
+		// En Passants are excluded because the target square of the pawn is not the square of the capture.
+		if m.GetMoveType() != move.EN_PASSANT && evaluation.StaticExchangeEvaluation(pos, m) < 0 {
+			continue
+		}
+
 		prevPos = *pos
 		pos.MakeMove(*m)
 		if !pos.IsLegal() {

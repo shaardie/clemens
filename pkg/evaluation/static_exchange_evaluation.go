@@ -21,6 +21,7 @@ func getLeastValuablePiece(pos *position.Position, attacks bitboard.Bitboard, co
 	return 0 // empty set
 }
 
+// Static Exchange Evaluation, https://www.chessprogramming.org/Static_Exchange_Evaluation
 func StaticExchangeEvaluation(pos *position.Position, m *move.Move) int {
 	targetSquare := m.GetTargetSquare()
 	sourceSquare := m.GetSourceSquare()
