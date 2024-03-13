@@ -10,7 +10,7 @@ type transpositionEntry struct {
 }
 
 // 32MB
-const transpositionTableSizeinMB = 1024 * 1024 * 32
+const transpositionTableSizeinMB = 1024 * 1024 * 64
 
 var transpositionTableSize uint64
 var tTable transpositionTable
@@ -26,7 +26,7 @@ func reset() {
 	tTable = make([]transpositionEntry, transpositionTableSize)
 }
 
-func (tt transpositionTable) get(zobristHash uint64) (score int, found bool) {
+func (tt transpositionTable) get(zobristHash uint64) (int, bool) {
 	key := zobristHash % transpositionTableSize
 	te := tt[key]
 	if tt[key].zobristHash != zobristHash {
