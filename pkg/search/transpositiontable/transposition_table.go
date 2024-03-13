@@ -3,8 +3,8 @@ package transpositiontable
 import (
 	"unsafe"
 
+	"github.com/shaardie/clemens/pkg/evaluation"
 	"github.com/shaardie/clemens/pkg/move"
-	"github.com/shaardie/clemens/pkg/types"
 )
 
 type nodeType uint8
@@ -64,9 +64,9 @@ func Get(zobristHash uint64, alpha, beta int, depth, ply uint8) (score int, use 
 	score = te.Score
 
 	// // Adjust if mate value
-	if score > types.INF-100 {
+	if score > evaluation.INF-100 {
 		score -= int(ply)
-	} else if score < -types.INF+100 {
+	} else if score < -evaluation.INF+100 {
 		score += int(ply)
 	}
 

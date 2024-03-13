@@ -21,6 +21,10 @@ const (
 	maxTimeInMs                = 1000000
 )
 
+const futility_pruning_depth uint8 = 5
+
+var futility_pruning_margin = [futility_pruning_depth]int{0, 100, 150, 200, 250}
+
 type Search struct {
 	ctx              context.Context
 	Pos              position.Position
@@ -90,8 +94,8 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 
 func (s *Search) SearchIterative(maxDepth uint8) {
 	start := time.Now()
-	alpha := -types.INF
-	beta := types.INF
+	alpha := -evaluation.INF
+	beta := evaluation.INF
 	var depth uint8 = 1
 	for depth <= maxDepth {
 		i, err := s.SearchRoot(depth, alpha, beta)
@@ -106,8 +110,8 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 		// re-run the search with the wider window, do not use the result and do not increase the depth.
 		if i.Score <= alpha || i.Score >= beta {
 			fmt.Printf("info string windows [%v,%v] too small. Re-run search.\n", alpha, beta)
-			alpha = -types.INF
-			beta = types.INF
+			alpha = -evaluation.INF
+			beta = evaluation.INF
 			continue
 		}
 
@@ -157,7 +161,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 	isRoot := ply == 0
 	depth := maxDepth - ply
-	mateValue := -types.INF + int(ply)
+	mateValue := -evaluation.INF + int(ply)
 	pvNode := beta-alpha != 1
 
 	// Increase Depth, if in Check.
@@ -191,10 +195,18 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		return score, nil
 	}
 
+	// Check if we can use Futility Pruning
+	fPrune := !pvNode &&
+		depth < futility_pruning_depth &&
+		!isInCheck &&
+		!evaluation.IsCheckmateValue(alpha) &&
+		!evaluation.IsCheckmateValue(beta) &&
+		evaluation.Evaluation(pos)+futility_pruning_margin[depth] <= alpha
+
 	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
-	var bestScore int = -types.INF
+	var bestScore int = -evaluation.INF
 	var legalMoves uint8
 	nodeType := transpositiontable.AlphaNode
 
@@ -212,6 +224,12 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 			continue
 		}
 		legalMoves++
+
+		// Fulility Pruning
+		if fPrune && legalMoves > 0 && !prevPos.IsCapture(*m) && !pos.IsInCheck(pos.SideToMove) {
+			*pos = prevPos
+			continue
+		}
 
 		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, nodeType == transpositiontable.PVNode)
 		if err != nil {

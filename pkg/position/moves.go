@@ -14,6 +14,10 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
+func (pos *Position) IsCapture(m move.Move) bool {
+	return m.GetMoveType() == move.EN_PASSANT || pos.PiecesBoard[m.GetTargetSquare()] != types.NO_PIECE
+}
+
 func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 	occupied := pos.AllPieces
 	destinations := pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)]
