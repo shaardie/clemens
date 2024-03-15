@@ -88,23 +88,21 @@ func Get(zobristHash uint64, alpha, beta int, depth, ply uint8) (score int, use 
 // Note, that we use single values as parameter for the case, so we not create the struct, if we do not have to
 func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int, nt nodeType) {
 	key := zobristHash % transpositionTableSize
-	oldTe := tt[key]
+	te := &tt[key]
 
 	// Ignore the new entry, if there is an entry with a higher depth.
-	if oldTe.Depth > depth {
+	if te.Depth > depth {
 		return
 	}
 
 	// New Entry
-	if oldTe.ZobristHash == 0 {
+	if te.ZobristHash == 0 {
 		hashEntries++
 	}
 
-	tt[key] = TranspositionEntry{
-		ZobristHash: zobristHash,
-		BestMove:    bestMove,
-		Depth:       depth,
-		Score:       score,
-		NodeType:    nt,
-	}
+	te.ZobristHash = zobristHash
+	te.BestMove = bestMove
+	te.Depth = depth
+	te.Score = score
+	te.NodeType = nt
 }
