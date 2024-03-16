@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/shaardie/clemens/pkg/metadata"
+	"github.com/shaardie/clemens/pkg/search/transpositiontable"
 	"github.com/shaardie/clemens/pkg/uci/game"
 )
 
@@ -28,6 +29,7 @@ func handleInput(input string) {
 		return
 	case "ucinewgame":
 		g = game.New()
+		transpositiontable.Reset()
 		return
 	case "position":
 		g.NewPosition(tokens)
