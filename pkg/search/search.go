@@ -31,8 +31,8 @@ type Search struct {
 	nodes            uint64
 	PV               pvline.PVLine
 	KillerMoves      [1024][2]move.Move
-	SearchHistory    [1024]uint64
-	SearchHistoryPly int
+	searchHistory    [1024]uint64
+	searchHistoryPly int
 }
 
 type SearchParameter struct {
@@ -60,18 +60,7 @@ func NewSearch(pos position.Position) *Search {
 	s := &Search{
 		Pos: pos,
 	}
-	s.SearchHistory[s.SearchHistoryPly] = pos.ZobristHash
 	return s
-}
-
-func (s *Search) MakeMoveFromString(m string) error {
-	err := s.Pos.MakeMoveFromString(m)
-	if err != nil {
-		return err
-	}
-	s.SearchHistoryPly++
-	s.SearchHistory[s.SearchHistoryPly] = s.Pos.ZobristHash
-	return nil
 }
 
 func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
@@ -177,15 +166,14 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	}
 	s.nodes++
 
-	if !isRoot && s.isRepetition(pos.ZobristHash) {
+	// Check if the position is a repetition.
+	// On the first repetitions we return our contempt value.
+	// https://www.chessprogramming.org/Repetitions
+	if !isRoot && !isInCheck && s.isRepetition(pos) {
 		return evaluation.Contempt(pos), nil
 	}
-	s.SearchHistoryPly++
-	s.SearchHistory[s.SearchHistoryPly] = pos.ZobristHash
-	defer func() {
-		s.SearchHistoryPly--
-		s.SearchHistory[s.SearchHistoryPly] = 0
-	}()
+	s.pushHistory(pos)
+	defer s.popHistory()
 
 	pvMove := s.PV.GetBestMoveByPly(ply)
 
@@ -393,13 +381,4 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 
 	fmt.Printf("info string calculated timeout %v\n", movetime)
 	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
-}
-
-func (s *Search) isRepetition(hash uint64) bool {
-	for i := 0; i < s.SearchHistoryPly; i++ {
-		if s.SearchHistory[i] == hash {
-			return true
-		}
-	}
-	return false
 }
