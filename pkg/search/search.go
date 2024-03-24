@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/shaardie/clemens/pkg/evaluation"
@@ -16,7 +15,7 @@ import (
 
 const (
 	widen_window               = 50
-	max_depth            uint8 = math.MaxUint8
+	max_depth            uint8 = 100
 	quiescence_max_depth uint8 = 100
 	maxTimeInMs                = 1000000
 )
