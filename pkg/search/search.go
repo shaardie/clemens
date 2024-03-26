@@ -232,7 +232,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 		if score >= beta {
 			nodeType = transpositiontable.BetaNode
 			// Update Killer Move, if quiet move
-			// This is probably wrong and should go to beta
 			if pos.GetPiece(m.GetTargetSquare()) == types.NO_PIECE {
 				if s.KillerMoves[ply][0] != bestMove {
 					s.KillerMoves[ply][1] = s.KillerMoves[ply][0]
