@@ -97,7 +97,7 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 		// If the score is not in the last windows,
 		// re-run the search with the wider window, do not use the result and do not increase the depth.
 		if i.Score <= alpha || i.Score >= beta {
-			fmt.Printf("info string windows [%v,%v] too small. Re-run search.\n", alpha, beta)
+			fmt.Printf("info string windows [%v,%v] too small for value %v. Re-run search.\n", alpha, beta, i.Score)
 			alpha = -evaluation.INF
 			beta = evaluation.INF
 			continue
