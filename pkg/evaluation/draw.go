@@ -6,7 +6,11 @@ import (
 )
 
 // Draw Evaluation, https://www.chessprogramming.org/Draw_Evaluation
-func (e *eval) evalDraw(pos *position.Position) bool {
+func (e *eval) isDraw(pos *position.Position) bool {
+	if pos.HalfMoveClock >= 100 {
+		return true
+	}
+
 	// There are only kings left, it is a draw
 	if pos.AllPieces.PopulationCount() == 2 {
 		return true

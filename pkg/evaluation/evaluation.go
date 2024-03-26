@@ -51,10 +51,7 @@ type eval struct {
 
 // do is the actual evaluation function
 func (e *eval) do(pos *position.Position) int {
-	if pos.HalfMoveClock >= 100 {
-		return Contempt(pos)
-	}
-	if e.evalDraw(pos) {
+	if e.isDraw(pos) {
 		return Contempt(pos)
 	}
 	e.evalPieceSquareTables(pos)
