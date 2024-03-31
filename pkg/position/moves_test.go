@@ -126,7 +126,7 @@ func TestPosition_GeneratePseudoLegalMoves(t *testing.T) {
 	}{{
 		name:      "Promotion",
 		beforeFen: "r3k2r/p1ppqpb1/bn2pnp1/1N1PN3/1p2P3/5Q2/PPPB1PpP/R3KB1R b KQkq - 0 1",
-		moves:     "a8b8 a8c8 a8d8 h8h2 h8h3 h8h4 h8h5 h8h6 h8h7 h8f8 h8g8 a6b5 a6b7 a6c8 g7h6 g7f8 e7c5 e7d6 e7d8 e7f8 b6a4 b6c4 b6d5 b6c8 f6e4 f6g4 f6d5 f6h5 f6h7 f6g8 e8d8 e8f8 g2g1n g2g1b g2g1r g2g1q g2f1n g2f1b g2f1r g2f1q g2h1n g2h1b g2h1r g2h1q b4b3 e6d5 g6g5 c7c5 c7c6 d7d6 e8g8 e8c8",
+		moves:     "a8b8 a8c8 a8d8 h8h2 h8h3 h8h4 h8h5 h8h6 h8h7 h8f8 h8g8 a6b5 a6b7 a6c8 g7h6 g7f8 e7c5 e7d6 e7d8 e7f8 b6a4 b6c4 b6d5 b6c8 f6e4 f6g4 f6d5 f6h5 f6h7 f6g8 g2g1n g2g1b g2g1r g2g1q g2f1n g2f1b g2f1r g2f1q g2h1n g2h1b g2h1r g2h1q b4b3 e6d5 g6g5 c7c5 c7c6 d7d6 e8g8 e8c8 e8d8 e8f8",
 	},
 	}
 	for _, tt := range tests {

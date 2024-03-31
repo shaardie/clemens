@@ -54,15 +54,6 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 			return knight.AttacksBySquare(square)
 		},
 	)
-	generateMovesHelper(
-		moves,
-		pos.PiecesBitboard[pos.SideToMove][types.KING],
-		bitboard.Empty,
-		destinations,
-		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
-			return king.AttacksBySquare(square)
-		},
-	)
 
 	// Pawns
 	pawnSquares := pos.PiecesBitboard[pos.SideToMove][types.PAWN]
@@ -93,6 +84,17 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 			}
 		}
 	}
+
+	// King last, to have them below everything else in the move order
+	generateMovesHelper(
+		moves,
+		pos.PiecesBitboard[pos.SideToMove][types.KING],
+		bitboard.Empty,
+		destinations,
+		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+			return king.AttacksBySquare(square)
+		},
+	)
 }
 
 // GeneratePseudoLegalMoves generates all pseudo legal moves
@@ -132,15 +134,6 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		destinations,
 		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
 			return knight.AttacksBySquare(square)
-		},
-	)
-	generateMovesHelper(
-		moves,
-		pos.PiecesBitboard[pos.SideToMove][types.KING],
-		bitboard.Empty,
-		destinations,
-		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
-			return king.AttacksBySquare(square)
 		},
 	)
 
@@ -207,6 +200,17 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		m.SetTargetSquare(targetSquare)
 		moves.Append(m)
 	}
+
+	// King last, to have them below everything else in the move order
+	generateMovesHelper(
+		moves,
+		pos.PiecesBitboard[pos.SideToMove][types.KING],
+		bitboard.Empty,
+		destinations,
+		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+			return king.AttacksBySquare(square)
+		},
+	)
 }
 
 func (pos *Position) MakeMove(m move.Move) {
