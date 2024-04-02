@@ -18,6 +18,86 @@ func (pos *Position) IsCapture(m move.Move) bool {
 	return m.GetMoveType() == move.EN_PASSANT || pos.PiecesBoard[m.GetTargetSquare()] != types.NO_PIECE
 }
 
+type State struct {
+	ZobristHash   uint64
+	move          move.Move
+	castling      Castling
+	enPassant     uint8
+	capture       types.Piece
+	halfMoveClock uint8
+}
+
+func (pos *Position) UnMakeMove(s *State) {
+	// decrease ply
+	pos.Ply--
+
+	// Reset half move clock
+	pos.HalfMoveClock = s.halfMoveClock
+
+	// Reset zobrist hash
+	pos.ZobristHash = s.ZobristHash
+
+	// Reset castling rights
+	pos.Castling = s.castling
+
+	// Reset en passant square
+	if pos.EnPassant != types.SQUARE_NONE {
+		pos.zobristUpdateEnPassant(pos.EnPassant)
+		pos.EnPassant = types.SQUARE_NONE
+	}
+	pos.EnPassant = s.enPassant
+
+	// Reset side to move
+	them := pos.SideToMove
+	pos.SideToMove = types.SwitchColor(pos.SideToMove)
+	we := pos.SideToMove
+
+	// Get infos from move
+	from := s.move.GetSourceSquare()
+	to := s.move.GetTargetSquare()
+	moveType := s.move.GetMoveType()
+
+	// Reset piece
+	piece := pos.deletePieceWithoutZobrist(to)
+	switch moveType {
+	case move.PROMOTION:
+		piece = types.NewPiece(piece.Color(), types.PAWN)
+	case move.EN_PASSANT:
+		var pawnToAddSquare uint8 = 0
+		switch we {
+		case types.WHITE:
+			pawnToAddSquare = to - types.FILE_NUMBER
+
+		case types.BLACK:
+			pawnToAddSquare = to + types.FILE_NUMBER
+		}
+		pos.SetPiece(types.NewPiece(them, types.PAWN), pawnToAddSquare)
+	case move.CASTLING:
+		switch to {
+		case types.SQUARE_C1:
+			pos.movePieceWithoutZobrist(types.SQUARE_D1, types.SQUARE_A1)
+		case types.SQUARE_G1:
+			pos.movePieceWithoutZobrist(types.SQUARE_F1, types.SQUARE_H1)
+		case types.SQUARE_C8:
+			pos.movePieceWithoutZobrist(types.SQUARE_D8, types.SQUARE_A8)
+		case types.SQUARE_G8:
+			pos.movePieceWithoutZobrist(types.SQUARE_F8, types.SQUARE_H8)
+		default:
+			panic("wrong source square for castling")
+		}
+	}
+
+	pos.setPieceWithoutZobrist(piece, from)
+
+	// Reset capture
+	if s.capture != types.NO_PIECE {
+		pos.setPieceWithoutZobrist(s.capture, to)
+	}
+
+	// Generate Helper Bitboards
+	pos.generateHelperBitboards()
+}
+
 func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 	occupied := pos.AllPieces
 	destinations := pos.AllPiecesByColor[types.SwitchColor(pos.SideToMove)]
@@ -213,7 +293,14 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	)
 }
 
-func (pos *Position) MakeMove(m move.Move) {
+func (pos *Position) MakeMove(m move.Move, state *State) {
+	state.ZobristHash = pos.ZobristHash
+	state.castling = pos.Castling
+	state.enPassant = pos.EnPassant
+	state.move = m
+	state.halfMoveClock = pos.HalfMoveClock
+	state.capture = types.NO_PIECE
+
 	resetHalfmoveClock := false
 
 	if pos.EnPassant != types.SQUARE_NONE {
@@ -229,6 +316,7 @@ func (pos *Position) MakeMove(m move.Move) {
 	if targetPiece != types.NO_PIECE {
 		pos.DeletePiece(targetSquare)
 		resetHalfmoveClock = true
+		state.capture = targetPiece
 	}
 
 	for _, s := range []uint8{sourceSquare, targetSquare} {
@@ -365,7 +453,7 @@ func generateMovesHelper(moves *move.MoveList, sources, occupied, destinations b
 	}
 }
 
-func (pos *Position) MakeMoveFromString(s string) error {
+func (pos *Position) MakeMoveFromString(s string, state *State) error {
 	var m move.Move
 	if len(s) < 4 {
 		return errors.New("input to small")
@@ -399,7 +487,7 @@ func (pos *Position) MakeMoveFromString(s string) error {
 		}
 	}
 
-	pos.MakeMove(m)
+	pos.MakeMove(m, state)
 	return nil
 }
 

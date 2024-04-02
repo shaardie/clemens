@@ -22,7 +22,7 @@ func (s *Search) isRepetition(pos *position.Position) bool {
 }
 
 func (s *Search) MakeMoveFromString(m string) error {
-	err := s.Pos.MakeMoveFromString(m)
+	err := s.Pos.MakeMoveFromString(m, &position.State{})
 	if err != nil {
 		return err
 	}

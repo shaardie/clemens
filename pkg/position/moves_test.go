@@ -22,7 +22,7 @@ func TestPosition_MakeAndUnMakeNullMove(t *testing.T) {
 	assert.NotEqual(t, newPos, oldPos)
 }
 
-func TestPosition_MakeMove(t *testing.T) {
+func TestPosition_MakeAndUnmakeMove(t *testing.T) {
 	tests := []struct {
 		name      string
 		beforeFen string
@@ -110,10 +110,13 @@ func TestPosition_MakeMove(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			s := &State{}
 			pos, err := NewFromFen(tt.beforeFen)
 			assert.NoError(t, err)
-			pos.MakeMove(tt.m)
+			pos.MakeMove(tt.m, s)
 			assert.Equal(t, tt.afterFen, pos.ToFen())
+			pos.UnMakeMove(s)
+			assert.Equal(t, tt.beforeFen, pos.ToFen())
 		})
 	}
 }

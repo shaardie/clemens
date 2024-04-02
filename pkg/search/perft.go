@@ -16,18 +16,17 @@ func Perft(pos *position.Position, depth int) int {
 		return 1
 	}
 	var nodes int
-	var prevPos position.Position
+	var s position.State
 	// Generate all moves
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves)
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
-		prevPos = *pos
-		pos.MakeMove(*m)
+		pos.MakeMove(*m, &s)
 		if pos.IsLegal() {
 			nodes += Perft(pos, depth-1)
 		}
-		*pos = prevPos
+		pos.UnMakeMove(&s)
 	}
 	return nodes
 }
@@ -37,14 +36,15 @@ func Divided(pos *position.Position, depth int) []PerftResults {
 		panic("depth should be bigger than 0")
 	}
 
+	var s position.State
+
 	// Generate all moves
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves)
 	results := make([]PerftResults, 0, moves.Length())
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
-		prevPos := *pos
-		pos.MakeMove(*m)
+		pos.MakeMove(*m, &s)
 		if pos.IsLegal() {
 			results = append(results,
 				PerftResults{
@@ -54,7 +54,7 @@ func Divided(pos *position.Position, depth int) []PerftResults {
 				},
 			)
 		}
-		pos = &prevPos
+		pos.UnMakeMove(&s)
 	}
 	return results
 }

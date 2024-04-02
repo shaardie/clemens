@@ -13,9 +13,10 @@ func TestPosition_ZobristHash(t *testing.T) {
 	assert.NotZero(t, pos.ZobristHash)
 
 	var m move.Move
+	state := &State{}
 	m.SetSourceSquare(types.SQUARE_E2)
 	m.SetTargetSquare(types.SQUARE_E4)
-	pos.MakeMove(m)
+	pos.MakeMove(m, state)
 	afterMoveHash := pos.ZobristHash
 	pos.initZobristHash()
 	reinitHash := pos.ZobristHash

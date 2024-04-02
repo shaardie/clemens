@@ -191,11 +191,11 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 		evaluation.Evaluation(pos)+futility_pruning_margin[depth] <= alpha
 
 	potentialPVLine := pvline.PVLine{}
-	var prevPos position.Position
 	var bestMove move.Move
 	var bestScore int16 = -evaluation.INF
 	var legalMoves uint8
 	nodeType := transpositiontable.AlphaNode
+	var state position.State
 
 	// Generate all moves and order them
 	moves := move.NewMoveList()
@@ -204,17 +204,19 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 
 	for i := uint8(0); i < moves.Length(); i++ {
 		m := moves.Get(i)
-		prevPos = *pos
-		pos.MakeMove(*m)
+
+		isCapture := pos.IsCapture(*m)
+
+		pos.MakeMove(*m, &state)
 		if !pos.IsLegal() {
-			*pos = prevPos
+			pos.UnMakeMove(&state)
 			continue
 		}
 		legalMoves++
 
 		// Fulility Pruning
-		if fPrune && legalMoves > 0 && !prevPos.IsCapture(*m) && !pos.IsInCheck(pos.SideToMove) {
-			*pos = prevPos
+		if fPrune && legalMoves > 0 && !isCapture && !pos.IsInCheck(pos.SideToMove) {
+			pos.UnMakeMove(&state)
 			continue
 		}
 
@@ -222,7 +224,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 		if err != nil {
 			return 0, err
 		}
-		*pos = prevPos
+		pos.UnMakeMove(&state)
 
 		if score > bestScore {
 			bestScore = score
@@ -292,7 +294,8 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8
 		return alpha, nil
 	}
 
-	var prevPos position.Position
+	// var prev position.Position
+	var state position.State
 
 	// Generate all captures and order them
 	moves := move.NewMoveList()
@@ -323,14 +326,13 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8
 			continue
 		}
 
-		prevPos = *pos
-		pos.MakeMove(*m)
+		pos.MakeMove(*m, &state)
 		if !pos.IsLegal() {
-			*pos = prevPos
+			pos.UnMakeMove(&state)
 			continue
 		}
 		score, err := s.quiescence(pos, -beta, -alpha, ply+1)
-		*pos = prevPos
+		pos.UnMakeMove(&state)
 		if err != nil {
 			return 0, err
 		}
@@ -343,7 +345,6 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8
 			alpha = score
 		}
 	}
-
 	return alpha, nil
 }
 
