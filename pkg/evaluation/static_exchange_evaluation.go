@@ -69,7 +69,7 @@ func StaticExchangeEvaluation(pos *position.Position, m *move.Move) int16 {
 	return gain[0]
 }
 
-func considerXrays(pos *position.Position, square int, occupied, alreadyAttacked bitboard.Bitboard) bitboard.Bitboard {
+func considerXrays(pos *position.Position, square uint8, occupied, alreadyAttacked bitboard.Bitboard) bitboard.Bitboard {
 	attacks := bitboard.Empty
 
 	// Diagonal attacks

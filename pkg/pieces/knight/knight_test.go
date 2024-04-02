@@ -10,7 +10,7 @@ import (
 
 func TestAttacksBySquare(t *testing.T) {
 	type args struct {
-		square int
+		square uint8
 	}
 	tests := []struct {
 		name string

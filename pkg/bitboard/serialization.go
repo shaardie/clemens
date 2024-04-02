@@ -22,8 +22,8 @@ func IsolatingSubsets(b Bitboard) []Bitboard {
 	return bs
 }
 
-func SquareIndexSerialization(b Bitboard) []int {
-	idxs := [64]int{}
+func SquareIndexSerialization(b Bitboard) []uint8 {
+	idxs := [64]uint8{}
 	length := 0
 	for b != Empty {
 		idxs[length] = LeastSignificantOneBit(b)
@@ -33,7 +33,7 @@ func SquareIndexSerialization(b Bitboard) []int {
 	return idxs[0:length]
 }
 
-func SquareIndexSerializationNextSquare(b *Bitboard) int {
+func SquareIndexSerializationNextSquare(b *Bitboard) uint8 {
 	r := LeastSignificantOneBit(*b)
 	*b &= *b - 1
 	return r

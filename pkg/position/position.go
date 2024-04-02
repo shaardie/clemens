@@ -11,22 +11,21 @@ import (
 )
 
 type Position struct {
+	// Array of bitboards for all pieces
+	PiecesBitboard   [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
+	ZobristHash      uint64
+	AllPieces        bitboard.Bitboard
+	AllPiecesByColor [types.COLOR_NUMBER]bitboard.Bitboard
 	// Array of Pieces on the Board
 	PiecesBoard [types.SQUARE_NUMBER]types.Piece
-	// Array of bitboards for all pieces
-	PiecesBitboard [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]bitboard.Bitboard
 	// Color of the side to move
 	SideToMove types.Color
 	// Castling possibilities
 	Castling Castling
 	// En passant square
-	EnPassant     int
+	EnPassant     uint8
 	HalfMoveClock uint8
-	Ply           int
-
-	ZobristHash      uint64
-	AllPieces        bitboard.Bitboard
-	AllPiecesByColor [types.COLOR_NUMBER]bitboard.Bitboard
+	Ply           uint8
 }
 
 func New() *Position {
@@ -58,7 +57,7 @@ func New() *Position {
 // SquareAttackedBy returns a bitboard with all pieces attacking the specified square.
 // The main idea behind the implementation is to use a piece on the specified square and let it attack all other pieces with all attack pattern,
 // then intercept this attacks with the pieces capable of this attack pattern.
-func (pos *Position) SquareAttackedBy(square int) bitboard.Bitboard {
+func (pos *Position) SquareAttackedBy(square uint8) bitboard.Bitboard {
 	occupied := pos.AllPieces
 
 	// Knight attacks
@@ -84,7 +83,7 @@ func (pos *Position) SquareAttackedBy(square int) bitboard.Bitboard {
 }
 
 // Empty return true, if there is no piece on the square
-func (pos *Position) Empty(square int) bool {
+func (pos *Position) Empty(square uint8) bool {
 	return pos.GetPiece(square) == types.NO_PIECE
 }
 
@@ -93,7 +92,7 @@ func (pos *Position) boardToBitBoard() {
 		if piece == types.NO_PIECE {
 			continue
 		}
-		pos.PiecesBitboard[piece.Color()][piece.Type()] |= bitboard.BitBySquares(square)
+		pos.PiecesBitboard[piece.Color()][piece.Type()] |= bitboard.BitBySquares(uint8(square))
 	}
 }
 

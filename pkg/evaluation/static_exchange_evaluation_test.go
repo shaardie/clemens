@@ -13,8 +13,8 @@ func TestStaticExchangeEvaluation(t *testing.T) {
 	tests := []struct {
 		name         string
 		fen          string
-		sourceSquare int
-		targetSquare int
+		sourceSquare uint8
+		targetSquare uint8
 		value        int16
 	}{
 		{

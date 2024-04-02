@@ -14,7 +14,7 @@ func TestPosition_SquareAttackedBy(t *testing.T) {
 		SideToMove types.Color
 	}
 	type args struct {
-		square int
+		square uint8
 	}
 	tests := []struct {
 		name   string

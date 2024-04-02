@@ -17,7 +17,7 @@ func (m Magic) Index(occupied bitboard.Bitboard) uint {
 	return uint(((occupied & m.Mask) * m.Magic) >> m.Shift)
 }
 
-func Init(attacksFunc func(square int, occupied bitboard.Bitboard) bitboard.Bitboard, rand func() uint64) (magics [types.SQUARE_NUMBER]Magic) {
+func Init(attacksFunc func(square uint8, occupied bitboard.Bitboard) bitboard.Bitboard, rand func() uint64) (magics [types.SQUARE_NUMBER]Magic) {
 	// array of all attacks, splittet in slices per square.
 	// this is faster than having separate arrays.
 	table := []bitboard.Bitboard{}

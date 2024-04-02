@@ -43,14 +43,14 @@ func TestSquareIndexSerialization(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []int
+		want []uint8
 	}{
 		{
 			name: "default",
 			args: args{
 				0b1001101,
 			},
-			want: []int{
+			want: []uint8{
 				0, 2, 3, 6,
 			},
 		},
@@ -59,7 +59,7 @@ func TestSquareIndexSerialization(t *testing.T) {
 			args: args{
 				Empty,
 			},
-			want: []int{},
+			want: []uint8{},
 		},
 	}
 	for _, tt := range tests {

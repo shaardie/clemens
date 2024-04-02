@@ -6,12 +6,12 @@ import (
 )
 
 // GetPiece returns the Piece from the square
-func (pos *Position) GetPiece(square int) types.Piece {
+func (pos *Position) GetPiece(square uint8) types.Piece {
 	return pos.PiecesBoard[square]
 }
 
 // SetPiece adds a pieces to the given square
-func (pos *Position) SetPiece(p types.Piece, square int) {
+func (pos *Position) SetPiece(p types.Piece, square uint8) {
 	pos.PiecesBoard[square] = p
 	c := p.Color()
 	t := p.Type()
@@ -22,7 +22,7 @@ func (pos *Position) SetPiece(p types.Piece, square int) {
 }
 
 // DeletePiece deletes the piece on the given square
-func (pos *Position) DeletePiece(square int) types.Piece {
+func (pos *Position) DeletePiece(square uint8) types.Piece {
 	// Get Piece from pieceBoard
 	p := pos.PiecesBoard[square]
 	c := p.Color()
@@ -39,7 +39,7 @@ func (pos *Position) DeletePiece(square int) types.Piece {
 	return p
 }
 
-func (pos *Position) MovePiece(fromSquare, toSquare int) types.Piece {
+func (pos *Position) MovePiece(fromSquare, toSquare uint8) types.Piece {
 	p := pos.DeletePiece(fromSquare)
 	pos.SetPiece(p, toSquare)
 	return p

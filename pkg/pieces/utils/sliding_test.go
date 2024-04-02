@@ -10,7 +10,7 @@ import (
 
 func TestSlidingAttacks(t *testing.T) {
 	type args struct {
-		square     int
+		square     uint8
 		directions []func(bitboard.Bitboard) bitboard.Bitboard
 		occupied   bitboard.Bitboard
 	}

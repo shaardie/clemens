@@ -50,7 +50,7 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 		pos.PiecesBitboard[pos.SideToMove][types.KNIGHT],
 		bitboard.Empty,
 		destinations,
-		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+		func(square uint8, _ bitboard.Bitboard) bitboard.Bitboard {
 			return knight.AttacksBySquare(square)
 		},
 	)
@@ -91,7 +91,7 @@ func (pos *Position) GeneratePseudoLegalCaptures(moves *move.MoveList) {
 		pos.PiecesBitboard[pos.SideToMove][types.KING],
 		bitboard.Empty,
 		destinations,
-		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+		func(square uint8, _ bitboard.Bitboard) bitboard.Bitboard {
 			return king.AttacksBySquare(square)
 		},
 	)
@@ -132,7 +132,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		pos.PiecesBitboard[pos.SideToMove][types.KNIGHT],
 		bitboard.Empty,
 		destinations,
-		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+		func(square uint8, _ bitboard.Bitboard) bitboard.Bitboard {
 			return knight.AttacksBySquare(square)
 		},
 	)
@@ -189,7 +189,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		var m move.Move
 		m.SetMoveType(move.CASTLING)
 		sourceSquare := bitboard.LeastSignificantOneBit(pos.PiecesBitboard[pos.SideToMove][types.KING])
-		var targetSquare int
+		var targetSquare uint8
 		switch c.Side() {
 		case CASTLING_KING:
 			targetSquare = sourceSquare + 2
@@ -207,7 +207,7 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 		pos.PiecesBitboard[pos.SideToMove][types.KING],
 		bitboard.Empty,
 		destinations,
-		func(square int, _ bitboard.Bitboard) bitboard.Bitboard {
+		func(square uint8, _ bitboard.Bitboard) bitboard.Bitboard {
 			return king.AttacksBySquare(square)
 		},
 	)
@@ -231,7 +231,7 @@ func (pos *Position) MakeMove(m move.Move) {
 		resetHalfmoveClock = true
 	}
 
-	for _, s := range []int{sourceSquare, targetSquare} {
+	for _, s := range []uint8{sourceSquare, targetSquare} {
 		switch s {
 		case types.SQUARE_A1:
 			pos.Castling = pos.Castling &^ WHITE_CASTLING_QUEEN
@@ -261,7 +261,7 @@ func (pos *Position) MakeMove(m move.Move) {
 	// Set en passant
 	case types.PAWN:
 		resetHalfmoveClock = true
-		if abs(sourceSquare-targetSquare) == 2*types.FILE_NUMBER {
+		if uint8(abs(int(sourceSquare)-int(targetSquare))) == 2*types.FILE_NUMBER {
 			pos.EnPassant = targetSquare
 			pos.zobristUpdateEnPassant(pos.EnPassant)
 			switch pos.SideToMove {
@@ -292,7 +292,7 @@ func (pos *Position) MakeMove(m move.Move) {
 		}
 	case move.EN_PASSANT:
 		// Remove pawn behind moved pawn
-		var pawnToRemoveSquare = 0
+		var pawnToRemoveSquare uint8 = 0
 		switch pos.SideToMove {
 		case types.WHITE:
 			pawnToRemoveSquare = targetSquare - types.FILE_NUMBER
@@ -321,7 +321,7 @@ func (pos *Position) MakeMove(m move.Move) {
 	pos.generateHelperBitboards()
 }
 
-func (pos *Position) MakeNullMove() int {
+func (pos *Position) MakeNullMove() uint8 {
 	pos.Ply++
 	ep := pos.EnPassant
 	if pos.EnPassant != types.SQUARE_NONE {
@@ -336,7 +336,7 @@ func (pos *Position) MakeNullMove() int {
 	return ep
 }
 
-func (pos *Position) UnMakeNullMove(enPassantSquare int) {
+func (pos *Position) UnMakeNullMove(enPassantSquare uint8) {
 	pos.Ply--
 
 	if enPassantSquare != types.SQUARE_NONE {
@@ -350,8 +350,8 @@ func (pos *Position) UnMakeNullMove(enPassantSquare int) {
 }
 
 // generateMovesHelper generates a list of moves from a given list of paramters
-func generateMovesHelper(moves *move.MoveList, sources, occupied, destinations bitboard.Bitboard, attacks func(square int, occupied bitboard.Bitboard) bitboard.Bitboard) {
-	var sourceSquare, targetSquare int
+func generateMovesHelper(moves *move.MoveList, sources, occupied, destinations bitboard.Bitboard, attacks func(square uint8, occupied bitboard.Bitboard) bitboard.Bitboard) {
+	var sourceSquare, targetSquare uint8
 	for sources != bitboard.Empty {
 		sourceSquare = bitboard.SquareIndexSerializationNextSquare(&sources)
 		targets := attacks(sourceSquare, occupied) & destinations
@@ -384,7 +384,7 @@ func (pos *Position) MakeMoveFromString(s string) error {
 	m.SetTargetSquare(destinationSquare)
 
 	pt := pos.GetPiece(sourceSquare).Type()
-	if pt == types.KING && abs(sourceSquare-destinationSquare) == 2 {
+	if pt == types.KING && abs(int(sourceSquare)-int(destinationSquare)) == 2 {
 		m.SetMoveType(move.CASTLING)
 	} else if pt == types.PAWN {
 		if types.FileOfSquare(sourceSquare) != types.FileOfSquare(destinationSquare) && pos.GetPiece(destinationSquare) == types.NO_PIECE {
@@ -403,7 +403,7 @@ func (pos *Position) MakeMoveFromString(s string) error {
 	return nil
 }
 
-func pawnMoveWithPromotion(moves *move.MoveList, sideToMove types.Color, sourceSquare, targetSquare int) {
+func pawnMoveWithPromotion(moves *move.MoveList, sideToMove types.Color, sourceSquare, targetSquare uint8) {
 	var m move.Move
 	m.SetSourceSquare(sourceSquare)
 	m.SetTargetSquare(targetSquare)

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	SQUARE_A1 int = iota
+	SQUARE_A1 uint8 = iota
 	SQUARE_B1
 	SQUARE_C1
 	SQUARE_D1
@@ -80,26 +80,26 @@ const (
 	fileToChar string = "abcdefgh"
 )
 
-func RankOfSquare(square int) int {
+func RankOfSquare(square uint8) uint8 {
 	return square >> 3
 }
 
-func FileOfSquare(square int) int {
+func FileOfSquare(square uint8) uint8 {
 	return square & 7
 }
 
-func SquareFromRankAndFile(rank int, file int) int {
+func SquareFromRankAndFile(rank uint8, file uint8) uint8 {
 	return (rank << 3) + file
 }
 
-func SquareToString(square int) string {
+func SquareToString(square uint8) string {
 	return fmt.Sprintf(
 		"%s%d",
 		string(fileToChar[FileOfSquare(square)]),
 		RankOfSquare(square)+1)
 }
 
-func SquareFromString(square string) (int, error) {
+func SquareFromString(square string) (uint8, error) {
 	var file, rank int
 	for i, r := range square {
 		switch i {
@@ -117,11 +117,11 @@ func SquareFromString(square string) (int, error) {
 			return 0, fmt.Errorf("token to long")
 		}
 	}
-	return SquareFromRankAndFile(rank, file), nil
+	return SquareFromRankAndFile(uint8(rank), uint8(file)), nil
 }
 
 const (
-	RANK_1 int = iota
+	RANK_1 uint8 = iota
 	RANK_2
 	RANK_3
 	RANK_4
@@ -133,7 +133,7 @@ const (
 )
 
 const (
-	FILE_A int = iota
+	FILE_A uint8 = iota
 	FILE_B
 	FILE_C
 	FILE_D
@@ -144,7 +144,7 @@ const (
 	FILE_NUMBER
 )
 
-type PieceType int
+type PieceType uint8
 
 const (
 	PAWN PieceType = iota
@@ -187,7 +187,7 @@ func PieceTypeFromString(s string) (PieceType, error) {
 	}
 }
 
-type Color int
+type Color int8
 
 const (
 	WHITE Color = iota
@@ -202,7 +202,7 @@ func SwitchColor(c Color) Color {
 	return BLACK
 }
 
-type Piece int
+type Piece uint8
 
 const (
 	NO_PIECE Piece = iota

@@ -4,7 +4,7 @@ import (
 	"github.com/shaardie/clemens/pkg/bitboard"
 )
 
-func SlidingAttacks(square int, directions []func(bitboard.Bitboard) bitboard.Bitboard, occupied bitboard.Bitboard) bitboard.Bitboard {
+func SlidingAttacks(square uint8, directions []func(bitboard.Bitboard) bitboard.Bitboard, occupied bitboard.Bitboard) bitboard.Bitboard {
 	attacks := bitboard.Empty
 
 	for _, direction := range directions {

@@ -5,7 +5,7 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-type Castling int
+type Castling int8
 
 const (
 	NO_CASTLING          Castling = 0

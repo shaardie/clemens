@@ -18,12 +18,17 @@ func init() {
 	// Init the MVV-LVA Values
 	// For the values to be disjunct, the victim is multiplied by 10
 	// To make a difference for PAWNs (value 0) victim a increased by 1
-	for victim := types.QUEEN; victim >= types.PAWN; victim-- {
+	victim := types.QUEEN
+	for {
 		for aggressor := types.PAWN; aggressor < types.PIECE_TYPE_NUMBER; aggressor++ {
 			MVV_LVA_SCORES[victim][aggressor] = uint16(
 				(10*(victim+1) - (aggressor)) + killerMoveScore,
 			)
 		}
+		if victim == types.PAWN {
+			break
+		}
+		victim--
 	}
 }
 

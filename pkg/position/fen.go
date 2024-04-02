@@ -51,7 +51,7 @@ func NewFromFen(fen string) (*Position, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to set number of full moves fen token, %w", err)
 	}
-	pos.Ply = 2*numberOfFullMoves - 1
+	pos.Ply = uint8(2*numberOfFullMoves - 1)
 	if pos.SideToMove == types.WHITE {
 		pos.Ply--
 	}
@@ -68,7 +68,8 @@ func NewFromFen(fen string) (*Position, error) {
 // ToFen creates FEN string from position, see https://www.chessprogramming.org/Forsyth-Edwards_Notation
 func (pos *Position) ToFen() string {
 	sb := strings.Builder{}
-	for rank := types.RANK_8; rank >= types.RANK_1; rank = rank - 1 {
+	rank := types.RANK_8
+	for {
 		for file := types.FILE_A; file <= types.FILE_H; file++ {
 			emptyCount := 0
 			for file <= types.FILE_H && pos.Empty(types.SquareFromRankAndFile(rank, file)) {
@@ -88,6 +89,10 @@ func (pos *Position) ToFen() string {
 		if rank > types.RANK_1 {
 			sb.WriteRune('/')
 		}
+		if rank == types.RANK_1 {
+			break
+		}
+		rank--
 	}
 	if pos.SideToMove == types.WHITE {
 		sb.WriteString(" w ")
@@ -123,7 +128,7 @@ func (pos *Position) ToFen() string {
 	sb.WriteString(strconv.Itoa(int(pos.HalfMoveClock)))
 	sb.WriteRune(' ')
 
-	numberOfFullMoves := pos.Ply/2 + 1
+	numberOfFullMoves := int(pos.Ply/2 + 1)
 	sb.WriteString(strconv.Itoa(numberOfFullMoves))
 	return sb.String()
 }
@@ -142,7 +147,7 @@ func (pos *Position) fenSetPieces(token string) error {
 		}
 		if unicode.IsDigit(r) {
 			// Jump forward in file
-			square += int(r - '0')
+			square += uint8(r - '0')
 			continue
 		} else if r == '/' {
 			// Jump to the beginning of the previous rank

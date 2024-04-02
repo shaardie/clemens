@@ -24,7 +24,7 @@ func (e *eval) evalMobilityAndKingAttackValue(pos *position.Position) {
 func evalMobilityAndKingAttackValueByColor(pos *position.Position, we types.Color) int16 {
 	var pieces bitboard.Bitboard
 	var mobility bitboard.Bitboard
-	var square int
+	var square uint8
 	var val int16
 	destination := ^pos.AllPiecesByColor[we]
 	kingSquares := king.AttacksBySquare(bitboard.LeastSignificantOneBit(pos.PiecesBitboard[we][types.KING]))

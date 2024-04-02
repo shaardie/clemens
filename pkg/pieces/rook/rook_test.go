@@ -10,7 +10,7 @@ import (
 
 func TestAttacksBySquare(t *testing.T) {
 	type args struct {
-		square   int
+		square   uint8
 		occupied bitboard.Bitboard
 	}
 	tests := []struct {
@@ -64,7 +64,7 @@ func TestAttacksBySquare(t *testing.T) {
 
 func TestAttacks(t *testing.T) {
 	type args struct {
-		square   int
+		square   uint8
 		occupied bitboard.Bitboard
 	}
 	tests := []struct {

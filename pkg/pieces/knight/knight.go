@@ -17,7 +17,7 @@ func init() {
 
 // AttacksBySquare returns the attacks for a given square.
 // This is done by lookup.
-func AttacksBySquare(square int) bitboard.Bitboard {
+func AttacksBySquare(square uint8) bitboard.Bitboard {
 	return attackTable[square]
 }
 

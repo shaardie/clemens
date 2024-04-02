@@ -23,7 +23,7 @@ func init() {
 
 // AttacksBySquare returns the attacks for a given square.
 // This is done by lookup.
-func AttacksBySquare(c types.Color, square int) bitboard.Bitboard {
+func AttacksBySquare(c types.Color, square uint8) bitboard.Bitboard {
 	return attackTable[c][square]
 }
 
@@ -38,7 +38,7 @@ func attacks(c types.Color, pawns bitboard.Bitboard) bitboard.Bitboard {
 	panic("unknown color")
 }
 
-func PushesBySquare(c types.Color, square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+func PushesBySquare(c types.Color, square uint8, occupied bitboard.Bitboard) bitboard.Bitboard {
 	pawn := bitboard.BitBySquares(square)
 	return singlePushTargets(c, pawn, occupied) | doublePushTargets(c, pawn, occupied)
 }

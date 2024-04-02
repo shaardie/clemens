@@ -40,21 +40,21 @@ func (m Move) String() string {
 	return r
 }
 
-func (m *Move) GetSourceSquare() int {
-	return int(*m & 0b111111)
+func (m *Move) GetSourceSquare() uint8 {
+	return uint8(*m & 0b111111)
 }
 
-func (m *Move) SetSourceSquare(square int) *Move {
+func (m *Move) SetSourceSquare(square uint8) *Move {
 	*m |= Move(square)
 	return m
 }
 
-func (m *Move) GetTargetSquare() int {
-	return int(*m >> 6 & 0b111111)
+func (m *Move) GetTargetSquare() uint8 {
+	return uint8(*m >> 6 & 0b111111)
 }
 
-func (m *Move) SetTargetSquare(square int) *Move {
-	*m |= Move(square << 6)
+func (m *Move) SetTargetSquare(square uint8) *Move {
+	*m |= Move(square) << 6
 	return m
 }
 
@@ -73,7 +73,7 @@ func (m *Move) GetPromitionPieceType() types.PieceType {
 
 func (m *Move) SetPromitionPieceType(pt types.PieceType) *Move {
 	*m |= Move(0 << 14)
-	*m |= Move((pt - 1) << 14)
+	*m |= (Move(pt) - 1) << 14
 	return m
 }
 

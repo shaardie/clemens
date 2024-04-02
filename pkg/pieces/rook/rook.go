@@ -20,7 +20,7 @@ func init() {
 
 // AttacksBySquare returns the attacks for a given square.
 // This is done by magic lookup.
-func AttacksBySquare(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+func AttacksBySquare(square uint8, occupied bitboard.Bitboard) bitboard.Bitboard {
 	// Get magic for square
 	m := magics[square]
 
@@ -32,7 +32,7 @@ func AttacksBySquare(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
 }
 
 // attacks calculates the attacks of the rook for the given square and occupation
-func attacks(square int, occupied bitboard.Bitboard) bitboard.Bitboard {
+func attacks(square uint8, occupied bitboard.Bitboard) bitboard.Bitboard {
 	return utils.SlidingAttacks(
 		square,
 		[]func(bitboard.Bitboard) bitboard.Bitboard{
