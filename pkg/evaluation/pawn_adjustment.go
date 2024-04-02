@@ -15,8 +15,8 @@ var (
 func (e *eval) evalPawnAdjustment(pos *position.Position) {
 	numberOfWhitePawns := pos.PiecesBitboard[types.WHITE][types.PAWN].PopulationCount()
 	numberOfBlackPawns := pos.PiecesBitboard[types.BLACK][types.PAWN].PopulationCount()
-	e.baseScore += knight_pawn_adjustment[numberOfWhitePawns] * pos.PiecesBitboard[types.WHITE][types.KNIGHT].PopulationCount()
-	e.baseScore -= knight_pawn_adjustment[numberOfBlackPawns] * pos.PiecesBitboard[types.BLACK][types.KNIGHT].PopulationCount()
-	e.baseScore += rook_pawn_adjustment[numberOfWhitePawns] * pos.PiecesBitboard[types.WHITE][types.ROOK].PopulationCount()
-	e.baseScore -= rook_pawn_adjustment[numberOfBlackPawns] * pos.PiecesBitboard[types.BLACK][types.ROOK].PopulationCount()
+	e.baseScore += int16(knight_pawn_adjustment[numberOfWhitePawns] * pos.PiecesBitboard[types.WHITE][types.KNIGHT].PopulationCount())
+	e.baseScore -= int16(knight_pawn_adjustment[numberOfBlackPawns] * pos.PiecesBitboard[types.BLACK][types.KNIGHT].PopulationCount())
+	e.baseScore += int16(rook_pawn_adjustment[numberOfWhitePawns] * pos.PiecesBitboard[types.WHITE][types.ROOK].PopulationCount())
+	e.baseScore -= int16(rook_pawn_adjustment[numberOfBlackPawns] * pos.PiecesBitboard[types.BLACK][types.ROOK].PopulationCount())
 }

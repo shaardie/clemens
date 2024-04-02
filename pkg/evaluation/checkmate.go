@@ -1,11 +1,13 @@
 package evaluation
 
+import "math"
+
 const (
-	INF      = 100000
-	maxPlies = 100
+	INF      int16 = math.MaxInt16
+	maxPlies       = 100
 )
 
-func IsCheckmateValue(value int) bool {
+func IsCheckmateValue(value int16) bool {
 	if value < -INF+maxPlies || value > INF-maxPlies {
 		return true
 	}

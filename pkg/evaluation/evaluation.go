@@ -22,13 +22,13 @@ const (
 )
 
 // Evaluation evaluates the position.
-func Evaluation(pos *position.Position) int {
+func Evaluation(pos *position.Position) int16 {
 	return evalWithCache(pos)
 }
 
 // evalWithCache uses a transposition table to lookup, if a position was already evaluted.
 // If so, it returns the cached value other calls the actual evaluation and safe the result in the cache.
-func evalWithCache(pos *position.Position) int {
+func evalWithCache(pos *position.Position) int16 {
 	score, found := tTable.get(pos.ZobristHash)
 	if found {
 		return score
@@ -45,12 +45,12 @@ func evalWithCache(pos *position.Position) int {
 }
 
 type eval struct {
-	phaseScores [game_number]int
-	baseScore   int
+	phaseScores [game_number]int16
+	baseScore   int16
 }
 
 // do is the actual evaluation function
-func (e *eval) do(pos *position.Position) int {
+func (e *eval) do(pos *position.Position) int16 {
 	if e.isDraw(pos) {
 		return Contempt(pos)
 	}
@@ -66,7 +66,7 @@ func (e *eval) do(pos *position.Position) int {
 }
 
 // evalscore calculates the actual score based on the base score and the scores for the different game phases.
-func (e *eval) calculateScore(pos *position.Position) int {
+func (e *eval) calculateScore(pos *position.Position) int16 {
 	gamePhase := gamePhase(pos)
 
 	// Merge midgame and endgame value proportionally and add base score
@@ -80,14 +80,14 @@ func (e *eval) calculateScore(pos *position.Position) int {
 	return score
 }
 
-func gamePhase(pos *position.Position) int {
+func gamePhase(pos *position.Position) int16 {
 	// Calculate the game phase based on the number of specific PieceTypes maxed by maxGamePhase.
-	var gamePhase int
+	var gamePhase int16
 	for color := types.WHITE; color < types.COLOR_NUMBER; color++ {
-		gamePhase += bishopGamePhaseValue * pos.PiecesBitboard[color][types.BISHOP].PopulationCount()
-		gamePhase += knightGamePhaseValue * pos.PiecesBitboard[color][types.KNIGHT].PopulationCount()
-		gamePhase += rookGamePhaseValue * pos.PiecesBitboard[color][types.ROOK].PopulationCount()
-		gamePhase += queenGamePhaseValue * pos.PiecesBitboard[color][types.QUEEN].PopulationCount()
+		gamePhase += int16(bishopGamePhaseValue * pos.PiecesBitboard[color][types.BISHOP].PopulationCount())
+		gamePhase += int16(knightGamePhaseValue * pos.PiecesBitboard[color][types.KNIGHT].PopulationCount())
+		gamePhase += int16(rookGamePhaseValue * pos.PiecesBitboard[color][types.ROOK].PopulationCount())
+		gamePhase += int16(queenGamePhaseValue * pos.PiecesBitboard[color][types.QUEEN].PopulationCount())
 	}
 	if gamePhase > maxGamePhase {
 		gamePhase = maxGamePhase

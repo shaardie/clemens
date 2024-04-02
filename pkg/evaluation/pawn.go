@@ -22,16 +22,16 @@ func (e *eval) evalPawns(pos *position.Position) {
 
 	// Isolanis
 	isolaniDiff := pawn.NumberOfIsolanis(whitePawns) - pawn.NumberOfIsolanis(blackPawns)
-	e.phaseScores[midgame] += midgameIsolanis * isolaniDiff
-	e.phaseScores[endgame] += endgameIsolanis * isolaniDiff
+	e.phaseScores[midgame] += int16(midgameIsolanis * isolaniDiff)
+	e.phaseScores[endgame] += int16(endgameIsolanis * isolaniDiff)
 
 	// Double Pawns
 	doublePawnDiff := pawn.NumberOfDoubledPawns(whitePawns) - pawn.NumberOfDoubledPawns(blackPawns)
-	e.phaseScores[midgame] += midgameDoubledPawn * doublePawnDiff
-	e.phaseScores[endgame] += endgameDoubledPawn * doublePawnDiff
+	e.phaseScores[midgame] += int16(midgameDoubledPawn * doublePawnDiff)
+	e.phaseScores[endgame] += int16(endgameDoubledPawn * doublePawnDiff)
 
 	// passed Pawns
 	passedPawnDiff := pawn.PassedPawns(types.WHITE, whitePawns, blackPawns).PopulationCount() - pawn.PassedPawns(types.BLACK, whitePawns, blackPawns).PopulationCount()
-	e.phaseScores[midgame] += midgamePassedPawn * passedPawnDiff
-	e.phaseScores[endgame] += endgamePassedPawn * passedPawnDiff
+	e.phaseScores[midgame] += int16(midgamePassedPawn * passedPawnDiff)
+	e.phaseScores[endgame] += int16(endgamePassedPawn * passedPawnDiff)
 }

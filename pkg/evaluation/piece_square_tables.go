@@ -8,7 +8,7 @@ import (
 
 var (
 	// These tables are from https://github.com/nescitus/cpw-engine/blob/master/eval_init.cpp
-	pieceTables = [types.PIECE_TYPE_NUMBER][game_number][types.SQUARE_NUMBER]int{
+	pieceTables = [types.PIECE_TYPE_NUMBER][game_number][types.SQUARE_NUMBER]int16{
 		/******************************************************************************
 		 *                           PAWN PCSQ                                         *
 		 *                                                                             *
@@ -185,8 +185,8 @@ var (
 			},
 		},
 	}
-	midgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
-	endgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int
+	midgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int16
+	endgamePieceSquareTables [types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER][types.SQUARE_NUMBER]int16
 )
 
 func init() {

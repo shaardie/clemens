@@ -5,7 +5,7 @@ import (
 )
 
 // Calculates the Contempt Factor for drawish positions, see https://www.chessprogramming.org/Contempt_Factor
-func Contempt(pos *position.Position) int {
+func Contempt(pos *position.Position) int16 {
 	if IsEndgame(pos) {
 		return 0
 	}

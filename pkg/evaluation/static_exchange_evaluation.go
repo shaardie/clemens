@@ -22,7 +22,7 @@ func getLeastValuablePiece(pos *position.Position, attacks bitboard.Bitboard, co
 }
 
 // Static Exchange Evaluation, https://www.chessprogramming.org/Static_Exchange_Evaluation
-func StaticExchangeEvaluation(pos *position.Position, m *move.Move) int {
+func StaticExchangeEvaluation(pos *position.Position, m *move.Move) int16 {
 	targetSquare := m.GetTargetSquare()
 	sourceSquare := m.GetSourceSquare()
 	sourceSquareBB := bitboard.BitBySquares(sourceSquare)
@@ -30,7 +30,7 @@ func StaticExchangeEvaluation(pos *position.Position, m *move.Move) int {
 	attackerType := pos.PiecesBoard[sourceSquare].Type()
 	occupied := pos.AllPieces
 	sideToMove := pos.SideToMove
-	gain := [32]int{}
+	gain := [32]int16{}
 	d := 0
 	maxXray := pos.PiecesBitboard[types.WHITE][types.PAWN] | pos.PiecesBitboard[types.BLACK][types.PAWN] |
 		pos.PiecesBitboard[types.WHITE][types.BISHOP] | pos.PiecesBitboard[types.BLACK][types.BISHOP] |

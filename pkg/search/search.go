@@ -22,7 +22,7 @@ const (
 
 const futility_pruning_depth uint8 = 5
 
-var futility_pruning_margin = [futility_pruning_depth]int{0, 100, 150, 200, 250}
+var futility_pruning_margin = [futility_pruning_depth]int16{0, 100, 150, 200, 250}
 
 type Search struct {
 	ctx              context.Context
@@ -48,7 +48,7 @@ type SearchParameter struct {
 type Info struct {
 	Depth uint8
 	PV    pvline.PVLine
-	Score int
+	Score int16
 }
 
 func (s *Search) bestMove() move.Move {
@@ -123,7 +123,7 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 	}
 }
 
-func (s *Search) SearchRoot(depth uint8, alpha, beta int) (Info, error) {
+func (s *Search) SearchRoot(depth uint8, alpha, beta int16) (Info, error) {
 
 	s.KillerMoves = [1024][2]move.Move{}
 	pos := s.Pos
@@ -139,7 +139,7 @@ func (s *Search) SearchRoot(depth uint8, alpha, beta int) (Info, error) {
 	}, nil
 }
 
-func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvl *pvline.PVLine, canNull bool) (int, error) {
+func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, ply uint8, pvl *pvline.PVLine, canNull bool) (int16, error) {
 	// value to info channel and check if we are done
 	select {
 	case <-s.ctx.Done():
@@ -149,7 +149,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 
 	isRoot := ply == 0
 	depth := maxDepth - ply
-	mateValue := -evaluation.INF + int(ply)
+	mateValue := -evaluation.INF + int16(ply)
 	pvNode := beta-alpha != 1
 
 	// Increase Depth, if in Check.
@@ -193,7 +193,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
-	var bestScore int = -evaluation.INF
+	var bestScore int16 = -evaluation.INF
 	var legalMoves uint8
 	nodeType := transpositiontable.AlphaNode
 
@@ -270,7 +270,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int, maxDepth, ply 
 	return bestScore, nil
 }
 
-func (s *Search) quiescence(pos *position.Position, alpha, beta int, ply uint8) (int, error) {
+func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8) (int16, error) {
 	s.nodes++
 	// value to info channel and check if we are done
 	select {

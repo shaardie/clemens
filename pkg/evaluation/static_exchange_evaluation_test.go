@@ -15,7 +15,7 @@ func TestStaticExchangeEvaluation(t *testing.T) {
 		fen          string
 		sourceSquare int
 		targetSquare int
-		value        int
+		value        int16
 	}{
 		{
 			name:         "position 1",

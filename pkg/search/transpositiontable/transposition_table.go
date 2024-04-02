@@ -18,10 +18,25 @@ const (
 type TranspositionEntry struct {
 	zobristHash uint64
 	bestMove    move.Move
+	score       int16
 	depth       uint8
-	score       int
-	nodeType    nodeType
-	age         uint8
+
+	// 0-1 for the Node Type
+	// 2-7 for the Age
+	ageAndNodeType uint8
+}
+
+func (te *TranspositionEntry) getNodeType() nodeType {
+	return nodeType(te.ageAndNodeType & 0b11)
+}
+func (te *TranspositionEntry) setNodeType(nt nodeType) {
+	te.ageAndNodeType = te.ageAndNodeType&0b11111100 | uint8(nt)
+}
+func (te *TranspositionEntry) getAge() uint8 {
+	return te.ageAndNodeType >> 2
+}
+func (te *TranspositionEntry) setAge(age uint8) {
+	te.ageAndNodeType = te.ageAndNodeType&0b11 | (age << 2)
 }
 
 // 64MB
@@ -47,7 +62,7 @@ func Reset() {
 	tt = make([]TranspositionEntry, transpositionTableSize)
 }
 
-func Get(zobristHash uint64, alpha, beta int, depth, ply uint8) (score int, use bool, m move.Move) {
+func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, use bool, m move.Move) {
 	key := zobristHash % transpositionTableSize
 	te := &tt[key]
 
@@ -66,12 +81,12 @@ func Get(zobristHash uint64, alpha, beta int, depth, ply uint8) (score int, use 
 
 	// // Adjust if mate value
 	if score > evaluation.INF-100 {
-		score -= int(ply)
+		score -= int16(ply)
 	} else if score < -evaluation.INF+100 {
-		score += int(ply)
+		score += int16(ply)
 	}
 
-	switch te.nodeType {
+	switch te.getNodeType() {
 	case AlphaNode:
 		if score <= alpha {
 			return alpha, true, te.bestMove
@@ -87,12 +102,12 @@ func Get(zobristHash uint64, alpha, beta int, depth, ply uint8) (score int, use 
 
 // PotentiallySave save the new transposition entry, if it is a better fit.
 // Note, that we use single values as parameter for the case, so we not create the struct, if we do not have to
-func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int, nt nodeType, age uint8) {
+func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int16, nt nodeType, age uint8) {
 	key := zobristHash % transpositionTableSize
 	te := &tt[key]
 
 	// Ignore the new entry, if there is an entry with a higher depth.
-	if te.depth > depth || te.age < age {
+	if te.depth > depth || te.getAge() < age {
 		return
 	}
 
@@ -105,6 +120,6 @@ func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score 
 	te.bestMove = bestMove
 	te.depth = depth
 	te.score = score
-	te.nodeType = nt
-	te.age = age
+	te.setNodeType(nt)
+	te.setAge(age)
 }

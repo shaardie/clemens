@@ -6,7 +6,7 @@ import (
 
 type transpositionEntry struct {
 	zobristHash uint64
-	score       int
+	score       int16
 }
 
 // 32MB
@@ -26,7 +26,7 @@ func reset() {
 	tTable = make([]transpositionEntry, transpositionTableSize)
 }
 
-func (tt transpositionTable) get(zobristHash uint64) (int, bool) {
+func (tt transpositionTable) get(zobristHash uint64) (int16, bool) {
 	key := zobristHash % transpositionTableSize
 	te := tt[key]
 	if tt[key].zobristHash != zobristHash {
@@ -36,7 +36,7 @@ func (tt transpositionTable) get(zobristHash uint64) (int, bool) {
 }
 
 // save save the new transposition entry.
-func (tt transpositionTable) save(zobristHash uint64, score int) {
+func (tt transpositionTable) save(zobristHash uint64, score int16) {
 	key := zobristHash % transpositionTableSize
 	tt[key].zobristHash = zobristHash
 	tt[key].score = score

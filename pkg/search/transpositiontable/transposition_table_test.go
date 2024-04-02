@@ -9,9 +9,10 @@ import (
 )
 
 func TestTT(t *testing.T) {
+
 	PotentiallySave(1, 1, 2, 1, PVNode, 0)
 	score, use, m := Get(1, -evaluation.INF, evaluation.INF, 1, 0)
-	assert.Equal(t, 1, score)
+	assert.Equal(t, int16(1), score)
 	assert.Equal(t, true, use)
 	assert.Equal(t, move.Move(1), m)
 
@@ -23,28 +24,28 @@ func TestTT(t *testing.T) {
 	// Deeper
 	PotentiallySave(1, 2, 3, 2, PVNode, 0)
 	score, use, m = Get(1, -evaluation.INF, evaluation.INF, 1, 0)
-	assert.Equal(t, 2, score)
+	assert.Equal(t, int16(2), score)
 	assert.Equal(t, true, use)
 	assert.Equal(t, move.Move(2), m)
 
 	// Not so deep, so ignored
 	PotentiallySave(1, 3, 2, 3, PVNode, 0)
 	score, use, m = Get(1, -evaluation.INF, evaluation.INF, 1, 0)
-	assert.Equal(t, 2, score)
+	assert.Equal(t, int16(2), score)
 	assert.Equal(t, true, use)
 	assert.Equal(t, move.Move(2), m)
 
 	// Return alpha
 	PotentiallySave(1, 2, 3, 2, AlphaNode, 0)
 	score, use, m = Get(1, 10, evaluation.INF, 1, 0)
-	assert.Equal(t, 10, score)
+	assert.Equal(t, int16(10), score)
 	assert.Equal(t, true, use)
 	assert.Equal(t, move.Move(2), m)
 
 	// Return beta
 	PotentiallySave(1, 2, 3, 2, BetaNode, 0)
 	score, use, m = Get(1, -evaluation.INF, -1, 1, 0)
-	assert.Equal(t, -1, score)
+	assert.Equal(t, int16(-1), score)
 	assert.Equal(t, true, use)
 	assert.Equal(t, move.Move(2), m)
 

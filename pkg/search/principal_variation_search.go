@@ -5,8 +5,8 @@ import (
 	"github.com/shaardie/clemens/pkg/search/pvline"
 )
 
-func (s *Search) PrincipalVariationSearch(pos *position.Position, alpha, beta int, maxDepth, ply uint8, pvl *pvline.PVLine, canNull bool, alphaWasUpdated bool) (int, error) {
-	var score int
+func (s *Search) PrincipalVariationSearch(pos *position.Position, alpha, beta int16, maxDepth, ply uint8, pvl *pvline.PVLine, canNull bool, alphaWasUpdated bool) (int16, error) {
+	var score int16
 	var err error
 	if !alphaWasUpdated {
 		score, err = s.negamax(pos, -beta, -alpha, maxDepth, ply+1, pvl, true)

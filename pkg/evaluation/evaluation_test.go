@@ -13,7 +13,7 @@ func TestPosition_Evaluation(t *testing.T) {
 		fen                 string
 		evalutationOverZero bool
 		useExactValue       bool
-		exactValue          int
+		exactValue          int16
 	}{
 		{
 			name:                "from white",
