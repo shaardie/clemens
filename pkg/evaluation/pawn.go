@@ -11,8 +11,6 @@ const (
 	endgameIsolanis    = -5
 	midgameDoubledPawn = -5
 	endgameDoubledPawn = -15
-	midgamePassedPawn  = 20
-	endgamePassedPawn  = 80
 )
 
 // evalPawns evaluates the pawn structure
@@ -29,9 +27,4 @@ func (e *eval) evalPawns(pos *position.Position) {
 	doublePawnDiff := pawn.NumberOfDoubledPawns(whitePawns) - pawn.NumberOfDoubledPawns(blackPawns)
 	e.phaseScores[midgame] += int16(midgameDoubledPawn * doublePawnDiff)
 	e.phaseScores[endgame] += int16(endgameDoubledPawn * doublePawnDiff)
-
-	// passed Pawns
-	passedPawnDiff := pawn.PassedPawns(types.WHITE, whitePawns, blackPawns).PopulationCount() - pawn.PassedPawns(types.BLACK, whitePawns, blackPawns).PopulationCount()
-	e.phaseScores[midgame] += int16(midgamePassedPawn * passedPawnDiff)
-	e.phaseScores[endgame] += int16(endgamePassedPawn * passedPawnDiff)
 }

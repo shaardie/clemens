@@ -316,9 +316,6 @@ func (pos *Position) MakeMove(m move.Move) {
 	} else {
 		pos.HalfMoveClock++
 	}
-
-	// Generate Helper Bitboards
-	pos.generateHelperBitboards()
 }
 
 func (pos *Position) MakeNullMove() uint8 {

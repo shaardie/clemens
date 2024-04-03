@@ -83,17 +83,3 @@ func NumberOfIsolanis(pawns bitboard.Bitboard) int {
 func NumberOfDoubledPawns(pawns bitboard.Bitboard) int {
 	return (bitboard.NorthOne(bitboard.NorthFill(pawns)) & pawns).PopulationCount()
 }
-
-func PassedPawns(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bitboard.Bitboard {
-	// White
-	if color == types.WHITE {
-		allFrontSpans := bitboard.SouthFill(blackPawns)
-		allFrontSpans |= bitboard.EastOne(allFrontSpans) | bitboard.WestOne(allFrontSpans)
-		return whitePawns & ^allFrontSpans
-	}
-
-	// Black
-	allFrontSpans := bitboard.NorthFill(whitePawns)
-	allFrontSpans |= bitboard.EastOne(allFrontSpans) | bitboard.WestOne(allFrontSpans)
-	return blackPawns & ^allFrontSpans
-}

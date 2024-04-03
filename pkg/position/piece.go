@@ -17,6 +17,10 @@ func (pos *Position) SetPiece(p types.Piece, square uint8) {
 	t := p.Type()
 	pos.PiecesBitboard[c][t] |= bitboard.BitBySquares(square)
 
+	// Add Piece from helper bitboards
+	pos.AllPieces |= bitboard.BitBySquares(square)
+	pos.AllPiecesByColor[c] |= bitboard.BitBySquares(square)
+
 	// Update zobrist Hash
 	pos.zobristUpdatePiece(square, c, t)
 }
@@ -33,6 +37,10 @@ func (pos *Position) DeletePiece(square uint8) types.Piece {
 
 	// Remove Piece from Bitboard by generating the difference
 	pos.PiecesBitboard[p.Color()][p.Type()] &= ^bitboard.BitBySquares(square)
+
+	// Remove Piece from helper bitboards
+	pos.AllPieces &= ^bitboard.BitBySquares(square)
+	pos.AllPiecesByColor[c] &= ^bitboard.BitBySquares(square)
 
 	// Update zobrist Hash
 	pos.zobristUpdatePiece(square, c, t)
