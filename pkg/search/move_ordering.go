@@ -1,14 +1,18 @@
 package search
 
 import (
-	"math"
-
 	"github.com/shaardie/clemens/pkg/move"
 	"github.com/shaardie/clemens/pkg/position"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-const killerMoveScore = 100
+const (
+	pvMoveScore     = 1000
+	ttMoveScore     = 900
+	killerMoveScore = 100
+	promotionScore  = 200
+	castlingScore   = 10
+)
 
 // Static Values for MVV-LVA Ordering
 // See https://www.chessprogramming.org/MVV-LVA
@@ -32,63 +36,51 @@ func init() {
 	}
 }
 
-func MVVLVASort(pos *position.Position, moves *move.MoveList, principalVariationMove, transpositionTableMove move.Move) {
-	for idx := uint8(0); idx < moves.Length(); idx++ {
-		m := moves.Get(idx)
-		if *m == principalVariationMove {
-			m.SetScore(math.MaxUint16)
-			continue
-		}
-		if *m == transpositionTableMove {
-			m.SetScore(math.MaxUint16 - 1)
-			continue
-		}
-
-		// Score captures
-		target := pos.GetPiece(m.GetTargetSquare())
-		// No capture no score
-		if target == types.NO_PIECE {
-			m.SetScore(0)
-			continue
-		}
-		source := pos.GetPiece(m.GetSourceSquare())
-		m.SetScore(MVV_LVA_SCORES[target.Type()][source.Type()])
-	}
-
-	moves.Sort()
-}
-
-func (s *Search) orderMoves(pos *position.Position, moves *move.MoveList, principalVariationMove, transpositionTableMove move.Move, ply uint8) {
+func (s *Search) orderMoves(pos *position.Position, moves *move.MoveList, pvMove, ttMove move.Move, ply uint8) {
 	for idx := uint8(0); idx < moves.Length(); idx++ {
 		m := moves.Get(idx)
 
 		// Use the Move from the principal variation first
-		if *m == principalVariationMove {
-			m.SetScore(math.MaxUint16)
+		if *m == pvMove {
+			m.SetScore(pvMoveScore)
 			continue
 		}
 
 		// Use the Move from the transposition second
-		if *m == transpositionTableMove {
-			m.SetScore(math.MaxUint16 - 1)
+		if *m == ttMove {
+			m.SetScore(ttMoveScore)
 			continue
 		}
 
 		// No capture
 		target := pos.GetPiece(m.GetTargetSquare())
 		if target == types.NO_PIECE {
-			// Killer moves
+			if m.GetMoveType() == move.PROMOTION {
+				m.SetScore(promotionScore)
+				continue
+			}
+
+			// // Killer moves
 			if *m == s.KillerMoves[ply][0] {
 				m.SetScore(killerMoveScore)
-			} else if *m == s.KillerMoves[ply][1] {
+				continue
+			}
+			if *m == s.KillerMoves[ply][1] {
 				m.SetScore(killerMoveScore - 1)
+				continue
+			}
+
+			// Castling is a little bit good
+			if m.GetMoveType() == move.CASTLING {
+				m.SetScore(castlingScore)
+				continue
 			}
 			continue
 		}
 
 		// Captures are placed above the killer moves. So add the killer move score to all of them.
 		source := pos.GetPiece(m.GetSourceSquare())
-		m.SetScore(MVV_LVA_SCORES[target.Type()][source.Type()] + killerMoveScore)
+		m.SetScore(MVV_LVA_SCORES[target.Type()][source.Type()] + promotionScore)
 	}
 	moves.Sort()
 }

@@ -182,6 +182,16 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 		return score, nil
 	}
 
+	// https://www.chessprogramming.org/Internal_Iterative_Deepening
+	if depth > 3 && pvMove == move.NullMove && ttMove == move.NullMove && pvNode {
+		pvline := &pvline.PVLine{}
+		_, err := s.negamax(pos, alpha, beta, maxDepth-3, ply, pvline, true)
+		if err != nil {
+			return 0, err
+		}
+		pvMove = pvline.GetBestMove()
+	}
+
 	// Check if we can use Futility Pruning
 	fPrune := !pvNode &&
 		depth < futility_pruning_depth &&

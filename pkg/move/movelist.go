@@ -56,7 +56,7 @@ func (ml *MoveList) Sort() {
 	slices.SortFunc(ml.
 		moves[:ml.size],
 		func(a, b Move) int {
-			return int(int(b.GetScore()) - int(a.GetScore()))
+			return int(b.GetScore()) - int(a.GetScore())
 		},
 	)
 }
