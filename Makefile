@@ -13,8 +13,12 @@ perft: test
 	GOOS=linux go build $(LD_FLAGS) -o perft ./cmd/perft
 	GOOS=windows go build $(LD_FLAGS) -o perft.exe ./cmd/perft
 
-benchmark:
-	go test ./pkg/search -run=^$$ -bench ^BenchmarkSearch -cpuprofile profile.out
+benchmark: benchmark_perft benchmark_search
+
+benchmark_search:
+	go test ./pkg/search -run=^$$ -bench ^BenchmarkSearch -cpuprofile profile_search.out
+benchmark_perft:
+	go test ./cmd/perft -run=^$$ -bench ^BenchmarkPerft -cpuprofile profile_perft.out
 
 elo:
 	docker build . -t elo && docker run --rm elo:latest

@@ -1,4 +1,4 @@
-package search
+package main
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPerft(t *testing.T) {
+func BenchmarkPerft(t *testing.B) {
 
 	tests := []struct {
 		name     string
@@ -151,7 +151,7 @@ func TestPerft(t *testing.T) {
 	}
 	for _, tt := range tests {
 		name := fmt.Sprintf("%v-%v", tt.name, tt.depth)
-		t.Run(name, func(t *testing.T) {
+		t.Run(name, func(t *testing.B) {
 			pos, err := position.NewFromFen(tt.fen)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, Perft(pos, tt.depth))
