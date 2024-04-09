@@ -6,6 +6,7 @@
 *.dylib
 clemens
 perft
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -22,5 +23,5 @@ go.work
 search.test
 profile.out
 
-# Rating
-output_pgn_file.pgn
+# Rating, etc
+save/*

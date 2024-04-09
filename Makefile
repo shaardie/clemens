@@ -21,7 +21,7 @@ benchmark_perft:
 	go test ./cmd/perft -run=^$$ -bench ^BenchmarkPerft -cpuprofile profile_perft.out
 
 elo:
-	docker build . -t elo && docker run --rm elo:latest
+	docker build . -t elo && docker run --rm -v $(PWD)/save:/save elo:latest
 
 test:
 	go test ./... -cover
