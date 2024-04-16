@@ -1,4 +1,4 @@
-FROM golang:1.21.6-bookworm
+FROM golang:1.22.0-bookworm
 
 RUN apt-get update && apt-get install -y curl libqt5core5a unzip meson wget zlib1g-dev
 
