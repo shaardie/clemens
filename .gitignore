@@ -25,3 +25,7 @@ profile.out
 
 # Rating, etc
 save/*
+tuning/*
+
+# Python
+venv/
