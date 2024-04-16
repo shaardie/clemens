@@ -25,7 +25,7 @@ const futility_pruning_depth uint8 = 5
 var futility_pruning_margin = [futility_pruning_depth]int16{0, 100, 150, 200, 250}
 
 type Search struct {
-	ctx              context.Context
+	Ctx              context.Context
 	Pos              position.Position
 	nodes            uint64
 	PV               pvline.PVLine
@@ -68,13 +68,13 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 	if sp.Depth > 0 {
 		depth = sp.Depth
 	}
-	s.ctx = ctx
+	s.Ctx = ctx
 	s.SearchIterative(depth)
 	cancel()
 
 	// We need at least a valid move
 	if s.bestMove() == move.NullMove {
-		s.ctx = context.TODO()
+		s.Ctx = context.TODO()
 		s.SearchIterative(1)
 	}
 	return s.bestMove()
@@ -142,8 +142,8 @@ func (s *Search) SearchRoot(depth uint8, alpha, beta int16) (Info, error) {
 func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, ply uint8, pvl *pvline.PVLine, canNull bool) (int16, error) {
 	// value to info channel and check if we are done
 	select {
-	case <-s.ctx.Done():
-		return 0, s.ctx.Err()
+	case <-s.Ctx.Done():
+		return 0, s.Ctx.Err()
 	default:
 	}
 
@@ -161,7 +161,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 
 	// Evaluate the leaf node
 	if ply == maxDepth {
-		return s.quiescence(pos, alpha, beta, ply)
+		return s.Quiescence(pos, alpha, beta, ply)
 	}
 	s.nodes++
 
@@ -262,20 +262,20 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 	}
 
 	select {
-	case <-s.ctx.Done():
-		return 0, s.ctx.Err()
+	case <-s.Ctx.Done():
+		return 0, s.Ctx.Err()
 	default:
 		transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, bestScore, nodeType, s.Pos.HalfMoveClock)
 	}
 	return bestScore, nil
 }
 
-func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8) (int16, error) {
+func (s *Search) Quiescence(pos *position.Position, alpha, beta int16, ply uint8) (int16, error) {
 	s.nodes++
 	// value to info channel and check if we are done
 	select {
-	case <-s.ctx.Done():
-		return 0, s.ctx.Err()
+	case <-s.Ctx.Done():
+		return 0, s.Ctx.Err()
 	default:
 	}
 
@@ -329,7 +329,7 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8
 			*pos = prevPos
 			continue
 		}
-		score, err := s.quiescence(pos, -beta, -alpha, ply+1)
+		score, err := s.Quiescence(pos, -beta, -alpha, ply+1)
 		*pos = prevPos
 		if err != nil {
 			return 0, err

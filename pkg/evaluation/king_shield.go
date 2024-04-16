@@ -6,9 +6,9 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-const (
-	shield2Value = 10
-	shield3Value = 5
+var (
+	shield2Value int16 = 10
+	shield3Value int16 = 5
 )
 
 func (e *eval) evalKingShield(pos *position.Position) {

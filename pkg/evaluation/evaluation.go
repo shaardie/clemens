@@ -11,6 +11,17 @@ const (
 	game_number
 )
 
+func gamePhaseString(phase int) string {
+	if phase == midgame {
+		return "midgame"
+	}
+	if phase == endgame {
+		return "endgame"
+	}
+	return "unknown"
+
+}
+
 const (
 	knightGamePhaseValue = 1
 	bishopGamePhaseValue = 1
@@ -21,9 +32,15 @@ const (
 	endgameBorder = maxGamePhase / 2
 )
 
+var Cache bool = true
+
 // Evaluation evaluates the position.
 func Evaluation(pos *position.Position) int16 {
-	return evalWithCache(pos)
+	if Cache {
+		return evalWithCache(pos)
+	}
+	e := eval{}
+	return e.do(pos)
 }
 
 // evalWithCache uses a transposition table to lookup, if a position was already evaluted.

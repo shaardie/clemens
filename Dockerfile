@@ -42,10 +42,7 @@ COPY cmd cmd
 RUN make && install clemens /usr/bin
 
 # Copy Openings
-COPY openings.pgn scripts/elo.sh /
+COPY openings.pgn scripts/elo.sh scripts/generate-games.sh /
 
 RUN mkdir -p /save
 WORKDIR /save
-
-# Set tournement script
-CMD [ "/elo.sh" ]

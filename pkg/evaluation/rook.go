@@ -6,11 +6,11 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-const (
-	rookSeventhMidgame = 20
-	rookSeventhEndgame = 30
-	rookOpenFile       = 10
-	rookHalfOpenFile   = 5
+var (
+	rookSeventhMidgame int16 = 20
+	rookSeventhEndgame int16 = 30
+	rookOpenFile       int16 = 10
+	rookHalfOpenFile   int16 = 5
 )
 
 func (e *eval) evalRooks(pos *position.Position) {

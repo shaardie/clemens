@@ -190,6 +190,10 @@ var (
 )
 
 func init() {
+	initPieceSquareTables()
+}
+
+func initPieceSquareTables() {
 	// Set Piece Square Tables
 	for square := types.SQUARE_A1; square < types.SQUARE_NUMBER; square++ {
 		for _, color := range []types.Color{types.WHITE, types.BLACK} {

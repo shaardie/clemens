@@ -158,6 +158,8 @@ const (
 
 func (p PieceType) String() string {
 	switch p {
+	case PAWN:
+		return "p"
 	case KNIGHT:
 		return "n"
 	case BISHOP:
@@ -166,6 +168,8 @@ func (p PieceType) String() string {
 		return "r"
 	case QUEEN:
 		return "q"
+	case KING:
+		return "k"
 	}
 	return ""
 }

@@ -18,10 +18,6 @@ var tTable transpositionTable
 type transpositionTable []transpositionEntry
 
 func init() {
-	reset()
-}
-
-func reset() {
 	transpositionTableSize = uint64(transpositionTableSizeinMB / unsafe.Sizeof(transpositionEntry{}))
 	tTable = make([]transpositionEntry, transpositionTableSize)
 }

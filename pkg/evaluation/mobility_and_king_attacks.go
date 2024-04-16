@@ -14,7 +14,7 @@ import (
 
 var (
 	// scalar adjustments for attacking squares near the king
-	kingAttValue = [types.PIECE_TYPE_NUMBER]int{1, 2, 2, 3, 4, 1}
+	kingAttValue = [types.PIECE_TYPE_NUMBER]int16{1, 2, 2, 3, 4, 1}
 )
 
 func (e *eval) evalMobilityAndKingAttackValue(pos *position.Position) {
@@ -53,7 +53,7 @@ func evalMobilityAndKingAttackValueByColor(pos *position.Position, we types.Colo
 			val += int16(mobility.PopulationCount())
 
 			// Bonus for pieces attacking the squares next to the king
-			val += int16(kingAttValue[pt] * (mobility & kingSquares).PopulationCount())
+			val += kingAttValue[pt] * int16((mobility & kingSquares).PopulationCount())
 		}
 	}
 	return val

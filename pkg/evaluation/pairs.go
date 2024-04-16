@@ -5,10 +5,10 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-const (
-	rookPair   = -16
-	knightPair = -8
-	bishopPair = 30
+var (
+	rookPair   int16 = -16
+	knightPair int16 = -8
+	bishopPair int16 = 30
 )
 
 func (e *eval) evalPairs(pos *position.Position) {
