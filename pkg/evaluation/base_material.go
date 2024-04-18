@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	PieceValue = [types.PIECE_TYPE_NUMBER]int16{100, 300, 300, 500, 800, 2000}
+	PieceValue = [types.PIECE_TYPE_NUMBER]int16{100, 300, 300, 500, 800, 0}
 )
 
 func (e *eval) evalBaseMaterial(pos *position.Position) {
