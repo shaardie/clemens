@@ -3,6 +3,7 @@ package bitboard
 import (
 	"fmt"
 
+	"github.com/shaardie/clemens/pkg/types"
 	. "github.com/shaardie/clemens/pkg/types"
 )
 
@@ -14,7 +15,8 @@ func (b Bitboard) SimpleString() string {
 
 func (b Bitboard) String() string {
 	s := "\n+---+---+---+---+---+---+---+---+\n"
-	for rank := RANK_8; rank >= RANK_1; rank-- {
+	rank := RANK_8
+	for {
 		for file := FILE_A; file <= FILE_H; file++ {
 			if (b & BitboardFromRankAndFile(rank, file)) != Empty {
 				s += "| X "
@@ -23,6 +25,10 @@ func (b Bitboard) String() string {
 			}
 		}
 		s += fmt.Sprintf("| %d\n+---+---+---+---+---+---+---+---+\n", rank+1)
+		if rank == types.RANK_1 {
+			break
+		}
+		rank--
 	}
 	s += "  a   b   c   d   e   f   g   h\n"
 	return s
