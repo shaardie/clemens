@@ -29,6 +29,8 @@ RUN curl -LO https://github.com/algerbrex/blunder/releases/download/v8.5.5/blund
     unzip blunder-8.5.5.zip && \
     install -T blunder-8.5.5/linux/blunder-8.5.5-default /usr/bin/blunder && \
     which blunder
+RUN curl -L https://github.com/official-stockfish/Stockfish/releases/download/sf_16.1/stockfish-ubuntu-x86-64.tar | tar x && \
+    install -T stockfish/stockfish-ubuntu-x86-64 /usr/bin/stockfish
 
 # Install current clemens engine
 RUN mkdir /go/clemens
