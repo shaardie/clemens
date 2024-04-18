@@ -85,7 +85,7 @@ func TestNumberOfIsolanis(t *testing.T) {
 	}
 }
 
-func TestNumberDoublePawns(t *testing.T) {
+func TestNumberDouble(t *testing.T) {
 	tests := []struct {
 		pawns bitboard.Bitboard
 		want  int
@@ -101,5 +101,56 @@ func TestNumberDoublePawns(t *testing.T) {
 	}
 	for _, tt := range tests {
 		assert.Equal(t, tt.want, NumberOfIsolanis(tt.pawns))
+	}
+}
+
+func TestBackwards(t *testing.T) {
+	tests := []struct {
+		color  types.Color
+		wPawns bitboard.Bitboard
+		bPawns bitboard.Bitboard
+		want   bitboard.Bitboard
+	}{
+		{
+			color:  types.WHITE,
+			wPawns: bitboard.BitBySquares(types.SQUARE_C3),
+			bPawns: bitboard.BitBySquares(types.SQUARE_D5),
+			want:   bitboard.BitBySquares(types.SQUARE_C3),
+		}, {
+			color:  types.BLACK,
+			wPawns: bitboard.BitBySquares(types.SQUARE_C3),
+			bPawns: bitboard.BitBySquares(types.SQUARE_D5),
+			want:   bitboard.BitBySquares(types.SQUARE_D5),
+		},
+	}
+	for _, tt := range tests {
+		assert.Equal(t, tt.want, Backwards(tt.color, tt.wPawns, tt.bPawns))
+	}
+}
+
+func TestBackwardsPawns(t *testing.T) {
+	tests := []struct {
+		color types.Color
+		pawns bitboard.Bitboard
+		want  bitboard.Bitboard
+	}{
+		{
+			color: types.WHITE,
+			pawns: bitboard.BitBySquares(types.SQUARE_B2, types.SQUARE_C2),
+			want:  bitboard.BitBySquares(types.SQUARE_B2, types.SQUARE_C2),
+		},
+		{
+			color: types.WHITE,
+			pawns: bitboard.BitBySquares(types.SQUARE_B2),
+			want:  bitboard.Empty,
+		},
+		{
+			color: types.WHITE,
+			pawns: bitboard.BitBySquares(types.SQUARE_B2, types.SQUARE_C2, types.SQUARE_D2, types.SQUARE_F2, types.SQUARE_H2),
+			want:  bitboard.BitBySquares(types.SQUARE_B2, types.SQUARE_C2, types.SQUARE_D2),
+		},
+	}
+	for _, tt := range tests {
+		assert.Equal(t, tt.want, Phalanx(tt.pawns))
 	}
 }

@@ -6,32 +6,42 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-const (
-	midgameIsolanis    = -20
-	endgameIsolanis    = -5
-	midgameDoubledPawn = -5
-	endgameDoubledPawn = -15
-	midgamePassedPawn  = 20
-	endgamePassedPawn  = 80
+var (
+	isolanis  = [game_number]int16{-20, -5}
+	doubled   = [game_number]int16{-5, -15}
+	passPawns = [game_number]int16{20, 80}
+	backwards = [game_number]int16{0, 0}
+	supported = [game_number]int16{0, 0}
+	phalanx   = [game_number]int16{0, 0}
+	opposed   = [game_number]int16{0, 0}
 )
 
 // evalPawns evaluates the pawn structure
 func (e *eval) evalPawns(pos *position.Position) {
 	whitePawns := pos.PiecesBitboard[types.WHITE][types.PAWN]
 	blackPawns := pos.PiecesBitboard[types.BLACK][types.PAWN]
+	opposedWhite := pawn.Opposed(types.WHITE, whitePawns, blackPawns)
+	opposedBlack := pawn.Opposed(types.BLACK, whitePawns, blackPawns)
+	phalanxWhite := pawn.Phalanx(whitePawns)
+	phalanxBlack := pawn.Phalanx(blackPawns)
+	supportedWhite := pawn.Supported(types.WHITE, whitePawns)
+	supportedBlack := pawn.Supported(types.WHITE, whitePawns)
 
-	// Isolanis
-	isolaniDiff := pawn.NumberOfIsolanis(whitePawns) - pawn.NumberOfIsolanis(blackPawns)
-	e.phaseScores[midgame] += int16(midgameIsolanis * isolaniDiff)
-	e.phaseScores[endgame] += int16(endgameIsolanis * isolaniDiff)
+	isolaniDiff := int16(pawn.NumberOfIsolanis(whitePawns) - pawn.NumberOfIsolanis(blackPawns))
+	doublePawnDiff := int16(pawn.NumberOfDoubled(whitePawns) - pawn.NumberOfDoubled(blackPawns))
+	passedPawnDiff := int16(pawn.NumberOfPassed(types.WHITE, whitePawns, blackPawns) - pawn.NumberOfPassed(types.BLACK, whitePawns, blackPawns))
+	backwardsPawnDiff := int16(pawn.NumberOfBackwards(types.WHITE, whitePawns, blackPawns) - pawn.NumberOfBackwards(types.BLACK, whitePawns, blackPawns))
+	opposedDiff := int16(opposedWhite.PopulationCount() - opposedBlack.PopulationCount())
+	phalanxDiff := int16(phalanxWhite.PopulationCount() - phalanxBlack.PopulationCount())
+	supportedDiff := int16(supportedWhite.PopulationCount() - supportedBlack.PopulationCount())
 
-	// Double Pawns
-	doublePawnDiff := pawn.NumberOfDoubledPawns(whitePawns) - pawn.NumberOfDoubledPawns(blackPawns)
-	e.phaseScores[midgame] += int16(midgameDoubledPawn * doublePawnDiff)
-	e.phaseScores[endgame] += int16(endgameDoubledPawn * doublePawnDiff)
-
-	// passed Pawns
-	passedPawnDiff := pawn.PassedPawns(types.WHITE, whitePawns, blackPawns).PopulationCount() - pawn.PassedPawns(types.BLACK, whitePawns, blackPawns).PopulationCount()
-	e.phaseScores[midgame] += int16(midgamePassedPawn * passedPawnDiff)
-	e.phaseScores[endgame] += int16(endgamePassedPawn * passedPawnDiff)
+	for phase := range game_number {
+		e.phaseScores[phase] += isolanis[phase]*isolaniDiff +
+			doubled[phase]*doublePawnDiff +
+			passPawns[phase]*passedPawnDiff +
+			backwards[phase]*backwardsPawnDiff +
+			opposed[phase]*opposedDiff +
+			phalanx[phase]*phalanxDiff +
+			supported[phase]*supportedDiff
+	}
 }

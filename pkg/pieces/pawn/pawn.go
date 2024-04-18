@@ -69,22 +69,32 @@ func doublePushTargets(c types.Color, pawns, occupied bitboard.Bitboard) bitboar
 	panic("unknown color")
 }
 
-// NumberOfIsolanis returns tthe number of isolanis from a bitboard of pawns.
+// NumberOfIsolanis returns the number of isolanis from a bitboard of pawns.
 func NumberOfIsolanis(pawns bitboard.Bitboard) int {
+	return Isolanis(pawns).PopulationCount()
+}
+
+// Isolanis returns the isolanis from a bitboard of pawns.
+func Isolanis(pawns bitboard.Bitboard) bitboard.Bitboard {
 	fileFill := bitboard.FileFill(pawns)
 	westAttackFileFill := bitboard.WestOne(fileFill)
 	eastAttackFileFill := bitboard.EastOne(fileFill)
-	r := pawns & ^westAttackFileFill & ^eastAttackFileFill
-	return r.PopulationCount()
+	return pawns & ^westAttackFileFill & ^eastAttackFileFill
 }
 
-// NumberOfDoubledPawns calculates the number of doubled pawns,
+// NumberOfDoubled calculates the number of doubled pawns,
 // we do not care that tripple pawns a counted twice, etc.
-func NumberOfDoubledPawns(pawns bitboard.Bitboard) int {
-	return (bitboard.NorthOne(bitboard.NorthFill(pawns)) & pawns).PopulationCount()
+func NumberOfDoubled(pawns bitboard.Bitboard) int {
+	return Doubled(pawns).PopulationCount()
 }
 
-func PassedPawns(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bitboard.Bitboard {
+// Doubled returns a bitboard with the doubled pawns
+// we do not care that tripple pawns a counted twice, etc.
+func Doubled(pawns bitboard.Bitboard) bitboard.Bitboard {
+	return bitboard.NorthOne(bitboard.NorthFill(pawns)) & pawns
+}
+
+func Passed(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bitboard.Bitboard {
 	// White
 	if color == types.WHITE {
 		allFrontSpans := bitboard.SouthFill(blackPawns)
@@ -96,4 +106,47 @@ func PassedPawns(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bi
 	allFrontSpans := bitboard.NorthFill(whitePawns)
 	allFrontSpans |= bitboard.EastOne(allFrontSpans) | bitboard.WestOne(allFrontSpans)
 	return blackPawns & ^allFrontSpans
+}
+
+func NumberOfPassed(color types.Color, whitePawns, blackPawns bitboard.Bitboard) int {
+	return Passed(color, whitePawns, blackPawns).PopulationCount()
+}
+
+func Backwards(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bitboard.Bitboard {
+	if color == types.WHITE {
+		stops := bitboard.NorthOne(whitePawns)
+		wAttackSpans := bitboard.NorthWestOne(bitboard.NorthFill(whitePawns)) |
+			bitboard.NorthEastOne(bitboard.NorthFill(whitePawns))
+		bAttacks := attacks(types.BLACK, blackPawns)
+		return bitboard.SouthOne(stops & bAttacks & ^wAttackSpans)
+	}
+
+	stops := bitboard.SouthOne(blackPawns)
+	bAttackSpans := bitboard.SouthWestOne(bitboard.SouthFill(blackPawns)) |
+		bitboard.SouthEastOne(bitboard.SouthFill(blackPawns))
+	wAttacks := attacks(types.WHITE, whitePawns)
+	return bitboard.NorthOne(stops & wAttacks & ^bAttackSpans)
+}
+
+func NumberOfBackwards(color types.Color, whitePawns, blackPawns bitboard.Bitboard) int {
+	return Backwards(color, whitePawns, blackPawns).PopulationCount()
+}
+
+func Supported(color types.Color, pawns bitboard.Bitboard) bitboard.Bitboard {
+	return attacks(color, pawns) & pawns
+}
+
+func NumberOfSupported(color types.Color, pawns bitboard.Bitboard) int {
+	return Supported(color, pawns).PopulationCount()
+}
+
+func Phalanx(pawns bitboard.Bitboard) bitboard.Bitboard {
+	return pawns & (bitboard.WestOne(pawns) | bitboard.EastOne(pawns))
+}
+
+func Opposed(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bitboard.Bitboard {
+	if color == types.WHITE {
+		return whitePawns & bitboard.SouthFill(blackPawns)
+	}
+	return blackPawns & bitboard.NorthFill(whitePawns)
 }
