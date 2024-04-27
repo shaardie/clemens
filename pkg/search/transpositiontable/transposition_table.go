@@ -95,9 +95,11 @@ func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, 
 		if score >= beta {
 			return beta, true, te.bestMove
 		}
+	case PVNode:
+		return score, true, te.bestMove
 	}
 
-	return score, true, te.bestMove
+	return score, false, te.bestMove
 }
 
 // PotentiallySave save the new transposition entry, if it is a better fit.
