@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -eux
-ELO="2000"
+ELO="2100"
 
 cutechess-cli -tournament gauntlet -concurrency 3 -pgnout output_pgn_file.pgn \
     -engine cmd=clemens st=0.1 \
