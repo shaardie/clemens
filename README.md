@@ -24,25 +24,25 @@ The chess engine is the binary named `clemens`.
 
 * Evaluate [Isolanis](https://www.chessprogramming.org/Isolated_Pawn).
 * Evaluate [Doubled Pawns](https://www.chessprogramming.org/Doubled_Pawn).
-* Evaluate [Passed Pawns](???).
+* Evaluate [Passed Pawns](https://www.chessprogramming.org/Passed_Pawn).
 * [Transposition Table](https://www.chessprogramming.org/Transposition_Table) for Evaluations.
 * [Repetition](https://www.chessprogramming.org/Repetitions)
-* [Firty-Move Rule](https://www.chessprogramming.org/Fifty-move_Rule) in Evalutions.
-* Updated King Shield Evaluation
-* Fixed Piece Square Table Evaluation
-* Inplace Zobrist Hash Updates
-* Fixed Mobiliby and King Attacks
-* Draw Evaluation and Contempt Value
-* Static Exchange Evaluation in Quiesence
-* Fixed Transposition Tables
-* Age in Transposition Tables
-* Killer Moves
+* [Firty-Move Rule](https://www.chessprogramming.org/Fifty-move_Rule) in Evaluations.
+* Bug Fix King Shield Evaluation.
+* Bug Fix Piece Square Tables.
+* Inplace Zobrist Hash Updates while making the move.
+* Bug Fix Mobility and King Attacks.
+* [Draw Evaluation](https://www.chessprogramming.org/Draw_Evaluation) and [Contempt Value](https://www.chessprogramming.org/Contempt_Factor).
+* [Static Exchange Evaluation](https://www.chessprogramming.org/Static_Exchange_Evaluation) in Quiesence Search.
+* Major Bug Fix in Transposition Tables.
+* [Aging](https://www.chessprogramming.org/Transposition_Table#Aging) in Transposition Tables.
+* [Killer Moves](https://www.chessprogramming.org/Killer_Move) in move order.
 * Remove [Mate Distance Pruning](https://www.chessprogramming.org/Mate_Distance_Pruning).
 * Remove [Null Move Pruning](https://www.chessprogramming.org/Null_Move_Pruning).
-* futility pruning
-* Delta Pruning
-* Squares as int8
-* Principal Search Variation
+* [Futility Pruning](https://www.chessprogramming.org/Futility_Pruning)
+* [Delta Pruning](https://www.chessprogramming.org/Delta_Pruning)
+* Squares as uint8.
+* [Principal Variation Search](https://www.chessprogramming.org/Principal_Variation_Search)
 
 ### v0.3.0
 
