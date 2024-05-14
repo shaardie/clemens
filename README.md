@@ -22,10 +22,27 @@ The chess engine is the binary named `clemens`.
 
 ### Dev
 
-* Evaluate [Isolanis](https://www.chessprogramming.org/Isolated_Pawn) and [Doubled Pawns](https://www.chessprogramming.org/Doubled_Pawn).
+* Evaluate [Isolanis](https://www.chessprogramming.org/Isolated_Pawn).
+* Evaluate [Doubled Pawns](https://www.chessprogramming.org/Doubled_Pawn).
+* Evaluate [Passed Pawns](???).
 * [Transposition Table](https://www.chessprogramming.org/Transposition_Table) for Evaluations.
 * [Repetition](https://www.chessprogramming.org/Repetitions)
 * [Firty-Move Rule](https://www.chessprogramming.org/Fifty-move_Rule) in Evalutions.
+* Updated King Shield Evaluation
+* Fixed Piece Square Table Evaluation
+* Inplace Zobrist Hash Updates
+* Fixed Mobiliby and King Attacks
+* Draw Evaluation and Contempt Value
+* Static Exchange Evaluation in Quiesence
+* Fixed Transposition Tables
+* Age in Transposition Tables
+* Killer Moves
+* Remove [Mate Distance Pruning](https://www.chessprogramming.org/Mate_Distance_Pruning).
+* Remove [Null Move Pruning](https://www.chessprogramming.org/Null_Move_Pruning).
+* futility pruning
+* Delta Pruning
+* Squares as int8
+* Principal Search Variation
 
 ### v0.3.0
 
