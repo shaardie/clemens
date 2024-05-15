@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/shaardie/clemens/pkg/position"
+	"github.com/shaardie/clemens/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -73,6 +74,41 @@ func TestSearch(t *testing.T) {
 			}
 			if tt.expected != "" {
 				assert.Equal(t, tt.expected, s.bestMove().String())
+			}
+		})
+	}
+}
+
+func Test_calculateTime(t *testing.T) {
+	type args struct {
+		sideToMove types.Color
+		plys       int
+		sp         SearchParameter
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "error case found on lichess",
+			args: args{
+				sideToMove: types.WHITE,
+				plys:       0,
+				sp: SearchParameter{
+					WTime: 60000,
+					BTime: 60000,
+					WInc:  2000,
+					BInc:  2000,
+				},
+			},
+			want: 2700,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := calculateTime(tt.args.sideToMove, tt.args.plys, tt.args.sp); got != tt.want {
+				t.Errorf("calculateTime() = %v, want %v", got, tt.want)
 			}
 		})
 	}

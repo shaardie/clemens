@@ -352,9 +352,14 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 	if sp.Infinite {
 		return ctx, func() {}
 	}
+	movetime := calculateTime(s.Pos.SideToMove, s.searchHistoryPly, sp)
+	fmt.Printf("info string calculated timeout %v\n", movetime)
+	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
+}
 
+func calculateTime(sideToMove types.Color, plys int, sp SearchParameter) int {
 	var t, inc int
-	if s.Pos.SideToMove == types.BLACK {
+	if sideToMove == types.BLACK {
 		t = sp.BTime
 		inc = sp.BInc
 	} else {
@@ -362,21 +367,21 @@ func (s *Search) contextFromSearchParameter(ctx context.Context, sp SearchParame
 		inc = sp.WInc
 	}
 
+	// calculate for 60 moves or at least 20 remaining
+	var remainingMoves = max(60-plys/2, 20)
+
 	var movetime int
 	if sp.MoveTime > 0 {
 		movetime = sp.MoveTime
-	} else if t > 0 && sp.MovesToGo > 0 {
+	} else if t > 0 {
 		// calculate reasonable time, there is possibly a better way
-		movetime = (t + inc*sp.MovesToGo) / sp.MovesToGo
+		movetime = (t + inc*remainingMoves) / remainingMoves
 		// do not calculate too long
 		movetime = min(movetime, maxTimeInMs)
-	} else {
-		movetime = maxTimeInMs
+	} else { // I do not know, calcuate a second
+		movetime = 1000
 	}
 
 	// Current puffer of 10% for teardown process, but at least 50milliseconds
-	movetime = movetime - max(movetime/10, 50)
-
-	fmt.Printf("info string calculated timeout %v\n", movetime)
-	return context.WithTimeout(ctx, time.Duration(movetime)*time.Millisecond)
+	return movetime - max(movetime/10, 50)
 }

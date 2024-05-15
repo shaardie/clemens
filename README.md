@@ -43,6 +43,7 @@ The chess engine is the binary named `clemens`.
 * [Delta Pruning](https://www.chessprogramming.org/Delta_Pruning)
 * Squares as uint8.
 * [Principal Variation Search](https://www.chessprogramming.org/Principal_Variation_Search)
+* Slightly better time control.
 
 ### v0.3.0
 
