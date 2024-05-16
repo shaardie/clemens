@@ -107,6 +107,10 @@ func (g *gameImpl) NewPosition(tokens []string) {
 func parseGo(tokens []string) (sp search.SearchParameter) {
 	var err error
 
+	if len(tokens) == 0 {
+		sp.Infinite = true
+	}
+
 	for len(tokens) > 0 {
 		t := tokens[0]
 		tokens = tokens[1:]
