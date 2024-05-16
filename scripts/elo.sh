@@ -4,7 +4,7 @@ set -eux
 ELO="2100"
 
 cutechess-cli -tournament gauntlet -concurrency 3 -pgnout output_pgn_file.pgn \
-    -engine cmd=clemens st=0.1 \
+    -engine cmd=clemens tc=40/1+0.05 \
     -engine name=stockfish cmd=stockfish option.UCI_LimitStrength=true "option.UCI_Elo=$ELO" tc=40/1+0.05 \
     -each proto=uci -draw movenumber=40 movecount=4 score=8 \
     -resign movecount=4 score=500 \
