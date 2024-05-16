@@ -38,6 +38,10 @@ func attacks(c types.Color, pawns bitboard.Bitboard) bitboard.Bitboard {
 	panic("unknown color")
 }
 
+func Pushes(c types.Color, pawns, occupied bitboard.Bitboard) bitboard.Bitboard {
+	return singlePushTargets(c, pawns, occupied) | doublePushTargets(c, pawns, occupied)
+}
+
 func PushesBySquare(c types.Color, square uint8, occupied bitboard.Bitboard) bitboard.Bitboard {
 	pawn := bitboard.BitBySquares(square)
 	return singlePushTargets(c, pawn, occupied) | doublePushTargets(c, pawn, occupied)
