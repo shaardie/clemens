@@ -9,19 +9,7 @@ import (
 var (
 	// These tables are from https://github.com/nescitus/cpw-engine/blob/master/eval_init.cpp
 	pieceTables = [types.PIECE_TYPE_NUMBER][game_number][types.SQUARE_NUMBER]int16{
-		/******************************************************************************
-		 *                           PAWN PCSQ                                         *
-		 *                                                                             *
-		 *  Unlike TSCP, CPW generally doesn't want to advance its pawns. Its piece/   *
-		 *  square table for pawns takes into account the following factors:           *
-		 *                                                                             *
-		 *  - file-dependent component, encouraging program to capture                 *
-		 *    towards the center                                                       *
-		 *  - small bonus for staying on the 2nd rank                                  *
-		 *  - small bonus for standing on a3/h3                                        *
-		 *  - penalty for d/e pawns on their initial squares                           *
-		 *  - bonus for occupying the center                                           *
-		 ******************************************************************************/
+		// Pawn
 		{
 			{
 				0, 0, 0, 0, 0, 0, 0, 0,
@@ -44,12 +32,7 @@ var (
 				0, 0, 0, 0, 0, 0, 0, 0,
 			},
 		},
-		/******************************************************************************
-		 *    KNIGHT PCSQ                                                              *
-		 *                                                                             *
-		 *   - centralization bonus                                                    *
-		 *   - rim and back rank penalty, including penalty for not being developed    *
-		 ******************************************************************************/
+		// Knight
 		{
 			{
 				-50, -40, -30, -30, -30, -30, -40, -50,
@@ -72,13 +55,7 @@ var (
 				-50, -40, -30, -30, -30, -30, -40, -50,
 			},
 		},
-		/******************************************************************************
-		 *                BISHOP PCSQ                                                  *
-		 *                                                                             *
-		 *   - centralization bonus, smaller than for knight                           *
-		 *   - penalty for not being developed                                         *
-		 *   - good squares on the own half of the board                               *
-		 ******************************************************************************/
+		// Bishop
 		{
 			{
 				-20, -10, -10, -10, -10, -10, -10, -20,
@@ -101,13 +78,7 @@ var (
 				-20, -10, -10, -10, -10, -10, -10, -20,
 			},
 		},
-		/******************************************************************************
-		*                        ROOK PCSQ                                            *
-		*                                                                             *
-		*    - bonus for 7th and 8th ranks                                            *
-		*    - penalty for a/h columns                                                *
-		*    - small centralization bonus                                             *
-		******************************************************************************/
+		// Rook
 		{
 			{
 				0, 0, 0, 0, 0, 0, 0, 0,
@@ -130,12 +101,7 @@ var (
 				0, 0, 0, 5, 5, 0, 0, 0,
 			},
 		},
-		/******************************************************************************
-		*                     QUEEN PCSQ                                              *
-		*                                                                             *
-		* - small bonus for centralization in the endgame                             *
-		* - penalty for staying on the 1st rank, between rooks in the midgame         *
-		******************************************************************************/
+		// Queen
 		{
 			{
 				-20, -10, -10, -5, -5, -10, -10, -20,
@@ -158,10 +124,7 @@ var (
 				-20, -10, -10, -5, -5, -10, -10, -20,
 			},
 		},
-		/******************************************************************************
-			*                     King PCSQ                                               *
-		 	*                                                                             *
-		 	******************************************************************************/
+		// King
 		{
 			{
 				-30, -40, -40, -50, -50, -40, -40, -30,
