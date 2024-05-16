@@ -316,12 +316,12 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8
 			}
 		}
 
-		// If the static exchange of pieces on the target square does not gain any positive material value,
-		// we can ignore this move completely.
-		// En Passants are excluded because the target square of the pawn is not the square of the capture.
-		if m.GetMoveType() != move.EN_PASSANT && evaluation.StaticExchangeEvaluation(pos, m) < 0 {
-			continue
-		}
+		// // If the static exchange of pieces on the target square does not gain any positive material value,
+		// // we can ignore this move completely.
+		// // En Passants are excluded because the target square of the pawn is not the square of the capture.
+		// if m.GetMoveType() != move.EN_PASSANT && evaluation.StaticExchangeEvaluation(pos, m) < 0 {
+		// 	continue
+		// }
 
 		prevPos = *pos
 		pos.MakeMove(*m)

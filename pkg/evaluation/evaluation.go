@@ -21,6 +21,10 @@ const (
 	endgameBorder = maxGamePhase / 2
 )
 
+var (
+	speedBonus int16 = 20
+)
+
 // Evaluation evaluates the position.
 func Evaluation(pos *position.Position) int16 {
 	return evalWithCache(pos)
@@ -62,6 +66,13 @@ func (e *eval) do(pos *position.Position) int16 {
 	e.evalBaseMaterial(pos)
 	e.evalPawnAdjustment(pos)
 	e.evalMobilityAndKingAttackValue(pos)
+
+	if pos.SideToMove == types.WHITE {
+		e.phaseScores[midgame] += speedBonus
+	} else {
+		e.phaseScores[midgame] -= speedBonus
+	}
+
 	return e.calculateScore(pos)
 }
 

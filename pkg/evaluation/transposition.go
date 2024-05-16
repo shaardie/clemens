@@ -9,8 +9,8 @@ type transpositionEntry struct {
 	score       int16
 }
 
-// 32MB
-const transpositionTableSizeinMB = 1024 * 1024 * 64
+// 16MB
+const transpositionTableSizeinMB = 1024 * 1024 * 16
 
 var transpositionTableSize uint64
 var tTable transpositionTable
