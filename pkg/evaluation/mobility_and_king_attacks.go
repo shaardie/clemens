@@ -29,13 +29,15 @@ func evalMobilityAndKingAttackValueByColor(pos *position.Position, we types.Colo
 	var them = types.SwitchColor(we)
 	destination := ^pos.AllPiecesByColor[we]
 	kingSquares := king.AttacksBySquare(bitboard.LeastSignificantOneBit(pos.PiecesBitboard[them][types.KING]))
+
+	val += int16((pawn.Pushes(we, pos.PiecesBitboard[we][types.PAWN], pos.AllPieces) & destination).PopulationCount())
+
 	for pt := types.PAWN; pt < types.PIECE_TYPE_NUMBER; pt++ {
 		pieces = pos.PiecesBitboard[we][pt]
 		for pieces != 0 {
 			square = bitboard.SquareIndexSerializationNextSquare(&pieces)
 			switch pt {
 			case types.PAWN:
-				val += int16((pawn.PushesBySquare(we, square, pos.AllPieces) & destination).PopulationCount())
 				mobility = pawn.AttacksBySquare(we, square)
 			case types.BISHOP:
 				mobility = bishop.AttacksBySquare(square, pos.AllPieces)
