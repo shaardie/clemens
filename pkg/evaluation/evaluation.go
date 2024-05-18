@@ -63,6 +63,7 @@ func (e *eval) do(pos *position.Position) int16 {
 	e.evalBaseMaterial(pos)
 	e.evalPawnAdjustment(pos)
 	e.evalMobilityAndKingAttackValue(pos)
+	e.evalTempoBonus(pos)
 	return e.calculateScore(pos)
 }
 
