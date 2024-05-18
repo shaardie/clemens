@@ -42,7 +42,7 @@ COPY cmd cmd
 RUN make && install clemens /usr/bin
 
 # Copy Openings
-COPY openings.pgn scripts/elo.sh /
+COPY openings.pgn scripts/elo.sh scripts/compare-to.sh /
 
 RUN mkdir -p /save
 WORKDIR /save

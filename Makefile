@@ -1,5 +1,6 @@
 VERSION ?= dev
 LD_FLAGS = -ldflags="-X 'github.com/shaardie/clemens/pkg/metadata.Version=$(VERSION)'"
+COMPARE_TO ?= $(PWD)/clemens
 
 .PHONY: clemens perft benchmark test clean
 
@@ -22,6 +23,9 @@ benchmark_perft:
 
 elo:
 	docker build . -t elo && mkdir -p $(PWD)/save && docker run --rm -v $(PWD)/save:/save elo:latest
+
+compare-to:
+	docker build . -t elo && docker run --rm -v $(COMPARE_TO):/compare-to elo:latest /compare-to.sh /compare-to
 
 test:
 	go test ./... -cover
