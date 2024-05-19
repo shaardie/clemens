@@ -44,6 +44,7 @@ The chess engine is the binary named `clemens`.
 * Squares as uint8.
 * [Principal Variation Search](https://www.chessprogramming.org/Principal_Variation_Search)
 * Slightly better time control.
+* [Static Null Move Pruning](https://www.chessprogramming.org/Reverse_Futility_Pruning).
 
 ### v0.3.0
 

@@ -24,6 +24,8 @@ const futility_pruning_depth uint8 = 5
 
 var futility_pruning_margin = [futility_pruning_depth]int16{0, 100, 150, 200, 250}
 
+const staticNullMovePruningMarging int16 = 75
+
 type Search struct {
 	ctx              context.Context
 	Pos              position.Position
@@ -180,6 +182,15 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 	score, use, ttMove := transpositiontable.Get(pos.ZobristHash, alpha, beta, depth, ply)
 	if !isRoot && !pvNode && use {
 		return score, nil
+	}
+
+	// Static Null Move Pruning
+	if !isInCheck && !pvNode && !evaluation.IsCheckmateValue(beta) {
+		// score - margin as potential new beta
+		b := evaluation.Evaluation(pos) - staticNullMovePruningMarging*int16(depth)
+		if b >= beta {
+			return b, nil
+		}
 	}
 
 	// Check if we can use Futility Pruning
