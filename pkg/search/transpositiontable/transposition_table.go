@@ -40,7 +40,7 @@ func (te *TranspositionEntry) setAge(age uint8) {
 }
 
 // 64MB
-const transpositionTableSizeinMB = 1024 * 1024 * 128
+const transpositionTableSizeinMB = 1024 * 1024 * 64
 
 var transpositionTableSize uint64
 var (
