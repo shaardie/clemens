@@ -15,42 +15,21 @@ const (
 	BetaNode
 )
 
-type TranspositionEntry struct {
-	zobristHash uint64
-	bestMove    move.Move
-	score       int16
-	depth       uint8
-
-	// 0-1 for the Node Type
-	// 2-7 for the Age
-	ageAndNodeType uint8
-}
-
-func (te *TranspositionEntry) getNodeType() nodeType {
-	return nodeType(te.ageAndNodeType & 0b11)
-}
-func (te *TranspositionEntry) setNodeType(nt nodeType) {
-	te.ageAndNodeType = te.ageAndNodeType&0b11111100 | uint8(nt)
-}
-func (te *TranspositionEntry) getAge() uint8 {
-	return te.ageAndNodeType >> 2
-}
-func (te *TranspositionEntry) setAge(age uint8) {
-	te.ageAndNodeType = te.ageAndNodeType&0b11 | (age << 2)
-}
-
 // 64MB
-const transpositionTableSizeinMB = 1024 * 1024 * 64
+const ttSizeInMB = 1024 * 1024 * 64
 
-var transpositionTableSize uint64
-var (
-	tt []TranspositionEntry
-)
+type bucket [bucketSize]ttEntry
+
+const bucketSize = 4
+
+const numberOfBuckets uint64 = ttSizeInMB / uint64(unsafe.Sizeof(bucket{}))
+
+var tt = [numberOfBuckets]bucket{}
 
 var hashEntries uint64
 
 func HashFull() uint64 {
-	return 1000 * hashEntries / transpositionTableSize
+	return 1000 * hashEntries / (numberOfBuckets * bucketSize)
 }
 
 func init() {
@@ -58,15 +37,23 @@ func init() {
 }
 
 func Reset() {
-	transpositionTableSize = uint64(transpositionTableSizeinMB / unsafe.Sizeof(TranspositionEntry{}))
-	tt = make([]TranspositionEntry, transpositionTableSize)
+	clear(tt[:])
 }
 
 func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, use bool, m move.Move) {
-	key := zobristHash % transpositionTableSize
-	te := &tt[key]
+	key := zobristHash % numberOfBuckets
+	var te *ttEntry
+	var found bool
+	for i := range tt[key] {
+		te = &tt[key][i]
+		if te.zobristHash == zobristHash {
+			found = true
+			break
+		}
+	}
 
-	if te.zobristHash != zobristHash {
+	// No entry found
+	if !found {
 		return 0, false, move.NullMove
 	}
 
@@ -105,17 +92,23 @@ func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, 
 // PotentiallySave save the new transposition entry, if it is a better fit.
 // Note, that we use single values as parameter for the case, so we not create the struct, if we do not have to
 func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int16, nt nodeType, age uint8) {
-	key := zobristHash % transpositionTableSize
-	te := &tt[key]
+	var te *ttEntry
+	key := zobristHash % numberOfBuckets
+	for i := range tt[key] {
+		te = &tt[key][i]
 
-	// Ignore the new entry, if there is an entry with a higher depth.
-	if te.depth > depth || te.getAge() < age {
-		return
-	}
+		// Empty Entries should always be overriden
+		if te.zobristHash == 0 {
+			hashEntries++
+			break
+		}
 
-	// New Entry
-	if te.zobristHash == 0 {
-		hashEntries++
+		// Found a worse one, replace
+		if te.depth <= depth && te.getAge() >= age {
+			break
+		}
+
+		// If none is found, we replace the last one
 	}
 
 	te.zobristHash = zobristHash
