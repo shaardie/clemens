@@ -44,7 +44,8 @@ const transpositionTableSizeinMB = 1024 * 1024 * 64
 
 var transpositionTableSize uint64
 var (
-	tt []TranspositionEntry
+	tt1 []TranspositionEntry
+	tt2 []TranspositionEntry
 )
 
 var hashEntries uint64
@@ -59,12 +60,27 @@ func init() {
 
 func Reset() {
 	transpositionTableSize = uint64(transpositionTableSizeinMB / unsafe.Sizeof(TranspositionEntry{}))
-	tt = make([]TranspositionEntry, transpositionTableSize)
+	if tt1 == nil {
+		tt1 = make([]TranspositionEntry, transpositionTableSize)
+	} else {
+		clear(tt1)
+	}
+
+	if tt2 == nil {
+		tt2 = make([]TranspositionEntry, transpositionTableSize)
+	} else {
+		clear(tt2)
+	}
 }
 
 func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, use bool, m move.Move) {
 	key := zobristHash % transpositionTableSize
-	te := &tt[key]
+	te := &tt1[key]
+
+	// Check in save always list, if it is not in the regular tt.
+	if te.zobristHash != zobristHash {
+		te = &tt2[key]
+	}
 
 	if te.zobristHash != zobristHash {
 		return 0, false, move.NullMove
@@ -106,11 +122,11 @@ func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, 
 // Note, that we use single values as parameter for the case, so we not create the struct, if we do not have to
 func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int16, nt nodeType, age uint8) {
 	key := zobristHash % transpositionTableSize
-	te := &tt[key]
+	te := &tt1[key]
 
-	// Ignore the new entry, if there is an entry with a higher depth.
+	// Save new entry in save always tt, if, if there is an entry with a higher depth.
 	if te.depth > depth || te.getAge() < age {
-		return
+		te = &tt1[key]
 	}
 
 	// New Entry
