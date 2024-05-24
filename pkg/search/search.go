@@ -141,7 +141,7 @@ func (s *Search) SearchRoot(depth uint8, alpha, beta int16) (Info, error) {
 	}, nil
 }
 
-func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, ply uint8, pvl *pvline.PVLine, canNull bool) (int16, error) {
+func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply uint8, pvl *pvline.PVLine, canNull bool) (int16, error) {
 	// value to info channel and check if we are done
 	select {
 	case <-s.ctx.Done():
@@ -150,7 +150,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 	}
 
 	isRoot := ply == 0
-	depth := maxDepth - ply
 	mateValue := -evaluation.INF + int16(ply)
 	pvNode := beta-alpha != 1
 
@@ -158,11 +157,11 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 	// This also means that we do not enter quiescence, if in check.
 	isInCheck := pos.IsInCheck(pos.SideToMove)
 	if isInCheck {
-		maxDepth++
+		depth++
 	}
 
 	// Evaluate the leaf node
-	if ply == maxDepth {
+	if depth <= 0 {
 		return s.quiescence(pos, alpha, beta, ply)
 	}
 	s.nodes++
@@ -190,6 +189,21 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 		b := evaluation.Evaluation(pos) - staticNullMovePruningMarging*int16(depth)
 		if b >= beta {
 			return b, nil
+		}
+	}
+
+	// Null Move Pruning
+	// https://www.chessprogramming.org/Null_Move_Pruning
+	if depth > 2 && canNull && !isInCheck && !pvNode && !evaluation.IsEndgame(pos) {
+		ep := pos.MakeNullMove()
+		v, err := s.negamax(pos, -beta, -beta+1, min(depth-3, 1), ply+1, &pvline.PVLine{}, false)
+		pos.UnMakeNullMove(ep)
+		if err != nil {
+			return 0, err
+		}
+		v *= -1
+		if v >= beta && !evaluation.IsCheckmateValue(v) {
+			return beta, nil
 		}
 	}
 
@@ -229,7 +243,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, maxDepth, pl
 			continue
 		}
 
-		score, err := s.PrincipalVariationSearch(pos, alpha, beta, maxDepth, ply, &potentialPVLine, canNull, nodeType == transpositiontable.PVNode)
+		score, err := s.PrincipalVariationSearch(pos, alpha, beta, depth, ply, &potentialPVLine, nodeType == transpositiontable.PVNode)
 		if err != nil {
 			return 0, err
 		}
