@@ -1,6 +1,7 @@
 package evaluation
 
 import (
+	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/position"
 	"github.com/shaardie/clemens/pkg/types"
 )
@@ -97,4 +98,15 @@ func gamePhase(pos *position.Position) int16 {
 
 func IsEndgame(pos *position.Position) bool {
 	return gamePhase(pos) < endgameBorder
+}
+
+func IsPawnEndgame(pos *position.Position) bool {
+	for c := range types.COLOR_NUMBER {
+		for t := range types.PIECE_TYPE_NUMBER {
+			if pos.PiecesBitboard[c][t] != bitboard.Empty {
+				return false
+			}
+		}
+	}
+	return true
 }

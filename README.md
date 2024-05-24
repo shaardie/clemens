@@ -46,6 +46,7 @@ The chess engine is the binary named `clemens`.
 * Slightly better time control.
 * [Static Null Move Pruning](https://www.chessprogramming.org/Reverse_Futility_Pruning).
 * [Bucket based Transposition Table](https://www.chessprogramming.org/Transposition_Table#Bucket_Systems).
+* [Null Move Pruning](https://www.chessprogramming.org/Null_Move_Pruning).
 
 ### v0.3.0
 
