@@ -11,7 +11,7 @@ const (
 	ttMoveScore     = 900
 	killerMoveScore = 100
 	promotionScore  = 500
-	castlingScore   = 10000
+	castlingScore   = 10
 )
 
 // Static Values for MVV-LVA Ordering
