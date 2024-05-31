@@ -229,9 +229,11 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 	// Generate all moves and order them
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves)
-	s.orderMoves(pos, moves, pvMove, ttMove, ply)
+	s.scoreMoves(pos, moves, pvMove, ttMove, ply)
+	// s.orderMoves(pos, moves, pvMove, ttMove, ply)
 
-	for i := uint8(0); i < moves.Length(); i++ {
+	for i := range moves.Length() {
+		moves.SortIndex(i)
 		m := moves.Get(i)
 		prevPos = *pos
 		pos.MakeMove(*m)
@@ -266,6 +268,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 					s.KillerMoves[ply][1] = s.KillerMoves[ply][0]
 				}
 				s.KillerMoves[ply][0] = bestMove
+
 			}
 			break
 		}
@@ -329,8 +332,10 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8
 	// Generate all captures and order them
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalCaptures(moves)
-	s.orderMoves(pos, moves, move.NullMove, move.NullMove, ply)
-	for i := uint8(0); i < moves.Length(); i++ {
+	// s.orderMoves(pos, moves, move.NullMove, move.NullMove, ply)
+	s.scoreMoves(pos, moves, move.NullMove, move.NullMove, ply)
+	for i := range moves.Length() {
+		moves.SortIndex(i)
 		m := moves.Get(i)
 
 		// Delta Pruning, https://www.chessprogramming.org/Delta_Pruning

@@ -51,6 +51,28 @@ func (ml *MoveList) String() string {
 	return strings.Join(ss, " ")
 }
 
+func (ml *MoveList) SortIndex(currIdx uint8) {
+	// Get current Move
+	currMove := ml.moves[currIdx]
+
+	// Initialize with baseline
+	score := currMove.GetScore()
+	idx := currIdx
+
+	// Search all candidates for a better move
+	for candidateIdx := currIdx + 1; candidateIdx < ml.Length(); candidateIdx++ {
+		candidateScore := ml.Get(candidateIdx).GetScore()
+		if candidateScore > score {
+			idx = candidateIdx
+			score = candidateScore
+		}
+	}
+
+	// Swap moves
+	ml.moves[currIdx] = ml.moves[idx]
+	ml.moves[idx] = currMove
+}
+
 // Sort moves, highest score first
 func (ml *MoveList) Sort() {
 	slices.SortFunc(ml.

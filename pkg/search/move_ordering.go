@@ -36,7 +36,7 @@ func init() {
 	}
 }
 
-func (s *Search) orderMoves(pos *position.Position, moves *move.MoveList, pvMove, ttMove move.Move, ply uint8) {
+func (s *Search) scoreMoves(pos *position.Position, moves *move.MoveList, pvMove, ttMove move.Move, ply uint8) {
 	for idx := uint8(0); idx < moves.Length(); idx++ {
 		m := moves.Get(idx)
 
@@ -82,5 +82,9 @@ func (s *Search) orderMoves(pos *position.Position, moves *move.MoveList, pvMove
 		source := pos.GetPiece(m.GetSourceSquare())
 		m.SetScore(MVV_LVA_SCORES[target.Type()][source.Type()] + promotionScore)
 	}
+}
+
+func (s *Search) orderMoves(pos *position.Position, moves *move.MoveList, pvMove, ttMove move.Move, ply uint8) {
+	s.scoreMoves(pos, moves, pvMove, ttMove, ply)
 	moves.Sort()
 }
