@@ -50,6 +50,7 @@ The chess engine is the binary named `clemens`.
 * [Selection Sort](https://en.wikipedia.org/wiki/Selection_sort) on Move Order.
 * [History Heuristic](https://www.chessprogramming.org/History_Heuristic).
 * [Countermove Heuristic](https://www.chessprogramming.org/Countermove_Heuristic).
+* [Internal Iterative Deepening](https://www.chessprogramming.org/Internal_Iterative_Deepening).
 
 ### v0.3.0
 

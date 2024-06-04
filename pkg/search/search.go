@@ -224,6 +224,17 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 		!evaluation.IsCheckmateValue(beta) &&
 		evaluation.Evaluation(pos)+futility_pruning_margin[depth] <= alpha
 
+	// Internal Iterative Deepening
+	// https://www.chessprogramming.org/Internal_Iterative_Deepening
+	if depth > 4 && pvNode && ttMove == move.NullMove && pvMove == move.NullMove {
+		tmpPV := pvline.PVLine{}
+		_, err := s.negamax(pos, alpha, beta, depth-3, 0, &tmpPV, true, move.NullMove)
+		if err != nil {
+			return 0, err
+		}
+		pvMove = tmpPV.GetBestMove()
+	}
+
 	var prevPos position.Position
 	var bestMove move.Move
 	var bestScore int16 = -evaluation.INF
