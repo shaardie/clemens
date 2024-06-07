@@ -55,9 +55,9 @@ func (e *eval) do(pos *position.Position) int16 {
 		return Contempt(pos)
 	}
 	e.evalPieceSquareTables(pos)
-	e.evalKingShield(pos)
-	e.evalRooks(pos)
-	e.evalPawns(pos)
+	// e.evalKingShield(pos)
+	// e.evalRooks(pos)
+	// e.evalPawns(pos)
 	e.evalPairs(pos)
 	e.evalBaseMaterial(pos)
 	e.evalPawnAdjustment(pos)
