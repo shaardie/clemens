@@ -11,7 +11,7 @@ const (
 	ttMoveScore     = 900
 	killerMoveScore = 100
 	promotionScore  = 500
-	castlingScore   = 10
+	couterMoveBonus = 10
 )
 
 // Static Values for MVV-LVA Ordering
@@ -53,14 +53,26 @@ func (s *Search) scoreMoves(pos *position.Position, moves *move.MoveList, pvMove
 		}
 
 		// No capture
-		target := pos.GetPiece(m.GetTargetSquare())
+		targetSquare := m.GetTargetSquare()
+		sourceSquare := m.GetSourceSquare()
+		var target types.Piece
+		if m.GetMoveType() == move.EN_PASSANT {
+			if pos.SideToMove == types.BLACK {
+				target = types.WHITE_PAWN
+			} else {
+				target = types.BLACK_PAWN
+			}
+		} else {
+			target = pos.GetPiece(targetSquare)
+		}
+
 		if target == types.NO_PIECE {
 			if m.GetMoveType() == move.PROMOTION {
 				m.SetScore(promotionScore)
 				continue
 			}
 
-			// // Killer moves
+			// Killer moves
 			if *m == s.KillerMoves[ply][0] {
 				m.SetScore(killerMoveScore)
 				continue
@@ -70,16 +82,19 @@ func (s *Search) scoreMoves(pos *position.Position, moves *move.MoveList, pvMove
 				continue
 			}
 
-			// Castling is a little bit good
-			if m.GetMoveType() == move.CASTLING {
-				m.SetScore(castlingScore)
-				continue
+			score := s.history[pos.SideToMove][sourceSquare][targetSquare]
+			counterMove := s.counter[pos.SideToMove][sourceSquare][targetSquare]
+			if counterMove == *m {
+				score += couterMoveBonus
 			}
+
+			m.SetScore(score)
 			continue
+
 		}
 
 		// Captures are placed above the killer moves. So add the killer move score to all of them.
-		source := pos.GetPiece(m.GetSourceSquare())
+		source := pos.GetPiece(sourceSquare)
 		m.SetScore(MVV_LVA_SCORES[target.Type()][source.Type()] + promotionScore)
 	}
 }

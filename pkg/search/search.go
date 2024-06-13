@@ -33,6 +33,8 @@ type Search struct {
 	PV               pvline.PVLine
 	KillerMoves      [1024][2]move.Move
 	searchHistory    [1024]uint64
+	history          [types.COLOR_NUMBER][types.SQUARE_NUMBER][types.SQUARE_NUMBER]uint16
+	counter          [types.COLOR_NUMBER][types.SQUARE_NUMBER][types.SQUARE_NUMBER]move.Move
 	searchHistoryPly int
 }
 
@@ -130,7 +132,7 @@ func (s *Search) SearchRoot(depth uint8, alpha, beta int16) (Info, error) {
 	s.KillerMoves = [1024][2]move.Move{}
 	pos := s.Pos
 	pvl := pvline.PVLine{}
-	score, err := s.negamax(&pos, alpha, beta, depth, 0, &pvl, true)
+	score, err := s.negamax(&pos, alpha, beta, depth, 0, &pvl, true, move.NullMove)
 	if err != nil {
 		return Info{}, err
 	}
@@ -141,7 +143,7 @@ func (s *Search) SearchRoot(depth uint8, alpha, beta int16) (Info, error) {
 	}, nil
 }
 
-func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply uint8, pvl *pvline.PVLine, canNull bool) (int16, error) {
+func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply uint8, pvl *pvline.PVLine, canNull bool, previousMove move.Move) (int16, error) {
 	// value to info channel and check if we are done
 	select {
 	case <-s.ctx.Done():
@@ -200,7 +202,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 		if depth > 6 {
 			R = 3
 		}
-		v, err := s.negamax(pos, -beta, -beta+1, depth-R-1, ply+1, nil, false)
+		v, err := s.negamax(pos, -beta, -beta+1, depth-R-1, ply+1, nil, false, move.NullMove)
 		pos.UnMakeNullMove(ep)
 		if err != nil {
 			return 0, err
@@ -249,7 +251,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 			continue
 		}
 
-		score, err := s.PrincipalVariationSearch(pos, alpha, beta, depth, ply, &potentialPVLine, nodeType == transpositiontable.PVNode)
+		score, err := s.PrincipalVariationSearch(pos, alpha, beta, depth, ply, &potentialPVLine, nodeType == transpositiontable.PVNode, previousMove)
 		if err != nil {
 			return 0, err
 		}
@@ -262,13 +264,29 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 
 		if score >= beta {
 			nodeType = transpositiontable.BetaNode
-			// Update Killer Move, if quiet move
-			if pos.GetPiece(m.GetTargetSquare()) == types.NO_PIECE {
+			if pos.GetPiece(m.GetTargetSquare()) == types.NO_PIECE && m.GetMoveType() != move.EN_PASSANT {
+				// Update Killer Move, if quiet move
 				if s.KillerMoves[ply][0] != bestMove {
 					s.KillerMoves[ply][1] = s.KillerMoves[ply][0]
 				}
 				s.KillerMoves[ply][0] = bestMove
 
+				// Remember move for history heuristic
+				sourceSquare := m.GetSourceSquare()
+				targetSquare := m.GetTargetSquare()
+				s.history[pos.SideToMove][sourceSquare][targetSquare] += uint16(depth) * uint16(depth)
+				if s.history[pos.SideToMove][m.GetSourceSquare()][m.GetTargetSquare()] > killerMoveScore-2 {
+					for i := range types.SQUARE_NUMBER {
+						for j := range types.SQUARE_NUMBER {
+							s.history[pos.SideToMove][i][j] /= 2
+						}
+					}
+				}
+
+				// Update counter moves
+				if previousMove != move.NullMove {
+					s.counter[pos.SideToMove][previousMove.GetSourceSquare()][previousMove.GetTargetSquare()] = *m
+				}
 			}
 			break
 		}
