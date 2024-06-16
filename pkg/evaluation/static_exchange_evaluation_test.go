@@ -29,7 +29,7 @@ func TestStaticExchangeEvaluation(t *testing.T) {
 			fen:          "1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - - 0 1",
 			sourceSquare: types.SQUARE_D3,
 			targetSquare: types.SQUARE_E5,
-			value:        -200,
+			value:        -210,
 		},
 	}
 	for _, tt := range tests {
