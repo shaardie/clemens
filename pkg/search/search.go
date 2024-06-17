@@ -194,6 +194,8 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 		}
 	}
 
+	potentialPVLine := pvline.PVLine{}
+
 	// Null Move Pruning
 	// https://www.chessprogramming.org/Null_Move_Pruning
 	if depth > 2 && canNull && !isInCheck && !pvNode && !evaluation.IsPawnEndgame(pos) && evaluation.Evaluation(pos) > beta {
@@ -202,13 +204,14 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 		if depth > 6 {
 			R = 3
 		}
-		v, err := s.negamax(pos, -beta, -beta+1, depth-R-1, ply+1, nil, false, move.NullMove)
+		score, err := s.negamax(pos, -beta, -beta+1, depth-R-1, ply+1, &potentialPVLine, false, move.NullMove)
 		pos.UnMakeNullMove(ep)
+		potentialPVLine.Reset()
 		if err != nil {
 			return 0, err
 		}
-		v *= -1
-		if v >= beta {
+		score = -score
+		if score >= beta {
 			return beta, nil
 		}
 	}
@@ -221,7 +224,6 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 		!evaluation.IsCheckmateValue(beta) &&
 		evaluation.Evaluation(pos)+futility_pruning_margin[depth] <= alpha
 
-	potentialPVLine := pvline.PVLine{}
 	var prevPos position.Position
 	var bestMove move.Move
 	var bestScore int16 = -evaluation.INF
@@ -295,9 +297,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 			nodeType = transpositiontable.PVNode
 			alpha = score
 
-			if pvl != nil {
-				pvl.Update(bestMove, &potentialPVLine)
-			}
+			pvl.Update(bestMove, &potentialPVLine)
 
 		}
 		potentialPVLine.Reset()
