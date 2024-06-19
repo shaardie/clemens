@@ -248,7 +248,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 		legalMoves++
 
 		// Fulility Pruning
-		if fPrune && legalMoves > 0 && !prevPos.IsCapture(*m) && !pos.IsInCheck(pos.SideToMove) {
+		if fPrune && !prevPos.IsCapture(*m) && m.GetMoveType() != move.PROMOTION && !pos.IsInCheck(pos.SideToMove) {
 			*pos = prevPos
 			continue
 		}
