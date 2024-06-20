@@ -255,16 +255,13 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 		}
 
 		// Principal Variation Search
-		if nodeType != transpositiontable.PVNode {
-			// Alpha was not updated, we do not have a better move yet, so we search full
+		if legalMoves == 1 {
 			score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, previousMove)
 			if err != nil {
 				return 0, err
 			}
 			score = -score
 		} else {
-			// Alpha was already updated, so we found a better move already. So we are only doint a null windows search
-			// Although, if this raises alpha, we have do to full search.
 			score, err = s.negamax(pos, -alpha-1, -alpha, depth-1, ply+1, &pvline.PVLine{}, true, previousMove)
 			if err != nil {
 				return 0, err
