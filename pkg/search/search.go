@@ -228,6 +228,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 	var bestMove move.Move
 	var bestScore int16 = -evaluation.INF
 	var legalMoves uint8
+	var err error
 	nodeType := transpositiontable.AlphaNode
 
 	// Generate all moves and order them
@@ -253,10 +254,32 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 			continue
 		}
 
-		score, err := s.PrincipalVariationSearch(pos, alpha, beta, depth, ply, &potentialPVLine, nodeType == transpositiontable.PVNode, previousMove)
-		if err != nil {
-			return 0, err
+		// Principal Variation Search
+		if nodeType != transpositiontable.PVNode {
+			// Alpha was not updated, we do not have a better move yet, so we search full
+			score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, previousMove)
+			if err != nil {
+				return 0, err
+			}
+			score = -score
+		} else {
+			// Alpha was already updated, so we found a better move already. So we are only doint a null windows search
+			// Although, if this raises alpha, we have do to full search.
+			score, err = s.negamax(pos, -alpha-1, -alpha, depth-1, ply+1, &pvline.PVLine{}, true, previousMove)
+			if err != nil {
+				return 0, err
+			}
+			score = -score
+			// Rerun search
+			if score > alpha {
+				score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, previousMove)
+				if err != nil {
+					return 0, err
+				}
+				score = -score
+			}
 		}
+
 		*pos = prevPos
 
 		if score > bestScore {
