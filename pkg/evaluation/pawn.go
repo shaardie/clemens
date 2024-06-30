@@ -7,9 +7,8 @@ import (
 )
 
 var (
-	isolanis  = [game_number]int16{-20, -5}
-	doubled   = [game_number]int16{-5, -15}
-	passPawns = [game_number]int16{20, 80}
+	isolanis = [game_number]int16{-20, -5}
+	passed   = [game_number]int16{10, 25}
 )
 
 // evalPawns evaluates the pawn structure
@@ -18,12 +17,8 @@ func (e *eval) evalPawns(pos *position.Position) {
 	blackPawns := pos.PiecesBitboard[types.BLACK][types.PAWN]
 
 	isolaniDiff := int16(pawn.NumberOfIsolanis(whitePawns) - pawn.NumberOfIsolanis(blackPawns))
-	doublePawnDiff := int16(pawn.NumberOfDoubled(whitePawns) - pawn.NumberOfDoubled(blackPawns))
-	passedPawnDiff := int16(pawn.NumberOfPassed(types.WHITE, whitePawns, blackPawns) - pawn.NumberOfPassed(types.BLACK, whitePawns, blackPawns))
-
+	passedDiff := int16(pawn.NumberOfPassed(types.WHITE, whitePawns, blackPawns) - pawn.NumberOfPassed(types.BLACK, whitePawns, blackPawns))
 	for phase := range game_number {
-		e.phaseScores[phase] += isolanis[phase]*isolaniDiff +
-			doubled[phase]*doublePawnDiff +
-			passPawns[phase]*passedPawnDiff
+		e.phaseScores[phase] += isolanis[phase]*isolaniDiff + passed[phase]*passedDiff
 	}
 }
