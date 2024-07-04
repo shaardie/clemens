@@ -51,3 +51,36 @@ func Test_passed(t *testing.T) {
 		})
 	}
 }
+
+func Test_supported(t *testing.T) {
+	tests := []struct {
+		name string
+		fen  string
+		want int16
+	}{
+		{
+			name: "start posisition",
+			fen:  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+			want: 0,
+		},
+		{
+			name: "supported white pawn in the center",
+			fen:  "rnbqkbnr/pppppppp/8/3P4/4P3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 1",
+			want: 4 * supportedScalar,
+		},
+		{
+			name: "3 supported black pawns on 6th, 5th and 4th rank",
+			fen:  "rnbqkbnr/ppp3pp/5p2/4p3/3p4/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+			want: -9 * supportedScalar,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pos, err := position.NewFromFen(tt.fen)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, supported(
+				pos.PiecesBitboard[types.WHITE][types.PAWN],
+				pos.PiecesBitboard[types.BLACK][types.PAWN]))
+		})
+	}
+}

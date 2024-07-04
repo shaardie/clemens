@@ -10,7 +10,8 @@ import (
 var (
 	isolanis = [game_number]int16{-20, -5}
 
-	passedScalar int16 = 5
+	passedScalar    int16 = 5
+	supportedScalar int16 = 3
 )
 
 // evalPawns evaluates the pawn structure
@@ -23,6 +24,7 @@ func (e *eval) evalPawns(pos *position.Position) {
 		e.phaseScores[phase] += isolanis[phase] * isolaniDiff
 	}
 
+	e.baseScore += supported(whitePawns, blackPawns)
 	e.baseScore += passed(whitePawns, blackPawns)
 }
 
@@ -30,6 +32,12 @@ func passed(whitePawns, blackPawns bitboard.Bitboard) int16 {
 	passedWhite := pawn.Passed(types.WHITE, whitePawns, blackPawns)
 	passedBlack := pawn.Passed(types.BLACK, whitePawns, blackPawns)
 	return rankedPawnEval(passedScalar, passedWhite, passedBlack)
+}
+
+func supported(whitePawns, blackPawns bitboard.Bitboard) int16 {
+	supportedWhite := pawn.Supported(types.WHITE, whitePawns)
+	supportedBlack := pawn.Supported(types.BLACK, blackPawns)
+	return rankedPawnEval(supportedScalar, supportedWhite, supportedBlack)
 }
 
 func rankedPawnEval(scalar int16, selectedWhitePawns, selectedBlackPawns bitboard.Bitboard) int16 {
