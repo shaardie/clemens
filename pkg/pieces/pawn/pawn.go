@@ -103,17 +103,17 @@ func Passed(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bitboar
 	if color == types.WHITE {
 		allFrontSpans := bitboard.SouthFill(blackPawns)
 		allFrontSpans |= bitboard.EastOne(allFrontSpans) | bitboard.WestOne(allFrontSpans)
+		// Do not count the back twin of doubled pawns
+		allFrontSpans |= bitboard.SouthOne(bitboard.SouthFill(whitePawns))
 		return whitePawns & ^allFrontSpans
 	}
 
 	// Black
 	allFrontSpans := bitboard.NorthFill(whitePawns)
 	allFrontSpans |= bitboard.EastOne(allFrontSpans) | bitboard.WestOne(allFrontSpans)
+	// Do not count the back twin of doubled pawns
+	allFrontSpans |= bitboard.NorthOne(bitboard.NorthFill(blackPawns))
 	return blackPawns & ^allFrontSpans
-}
-
-func NumberOfPassed(color types.Color, whitePawns, blackPawns bitboard.Bitboard) int {
-	return Passed(color, whitePawns, blackPawns).PopulationCount()
 }
 
 func Backwards(color types.Color, whitePawns, blackPawns bitboard.Bitboard) bitboard.Bitboard {
