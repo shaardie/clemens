@@ -31,6 +31,9 @@ RUN curl -LO https://github.com/algerbrex/blunder/releases/download/v8.5.5/blund
     which blunder
 RUN curl -L https://github.com/official-stockfish/Stockfish/releases/download/sf_16.1/stockfish-ubuntu-x86-64.tar | tar x && \
     install -T stockfish/stockfish-ubuntu-x86-64 /usr/bin/stockfish
+RUN curl -L https://github.com/lucasart/c-chess-cli/releases/download/20210710/c-chess-cli_linux.gz | gunzip > /tmp/c-chess-cli && \
+    install c-chess-cli /usr/bin && \
+    which c-chess-cli
 
 # Install current clemens engine
 RUN mkdir /go/clemens
@@ -42,10 +45,10 @@ COPY cmd cmd
 RUN make && install clemens /usr/bin
 
 # Copy Openings
-COPY openings.pgn scripts/elo.sh scripts/compare-to.sh /
+COPY openings /openings
+
+# COPY Scripts
+COPY scripts /scripts
 
 RUN mkdir -p /save
 WORKDIR /save
-
-# Set tournement script
-CMD [ "/elo.sh" ]
