@@ -29,3 +29,9 @@ tuning/*
 
 # Python
 venv/
+runs/
+sample.bin
+training/model.json
+
+# vscode
+.vscode

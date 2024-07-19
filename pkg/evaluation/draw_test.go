@@ -58,8 +58,7 @@ func TestPosition_EvalDraw(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pos, err := position.NewFromFen(tt.fen)
 			assert.NoError(t, err)
-			e := eval{}
-			assert.Equal(t, tt.draw, e.isDraw(pos))
+			assert.Equal(t, tt.draw, isDraw(pos))
 		})
 	}
 }

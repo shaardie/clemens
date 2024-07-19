@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/shaardie/clemens/pkg/bitboard"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -61,6 +62,9 @@ func NewFromFen(fen string) (*Position, error) {
 
 	// Generate Helper Bitboards
 	pos.generateHelperBitboards()
+
+	// Init accumulator
+	pos.Accumulator.Refresh(pos.activeFeatures(), pos.SideToMove)
 
 	return pos, nil
 }
@@ -160,7 +164,10 @@ func (pos *Position) fenSetPieces(token string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get piece from rune, %w", err)
 		}
-		pos.SetPiece(p, square)
+		pos.PiecesBoard[square] = p
+		c := p.Color()
+		t := p.Type()
+		pos.PiecesBitboard[c][t] |= bitboard.BitBySquares(square)
 		square++
 	}
 }

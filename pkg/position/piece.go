@@ -2,6 +2,7 @@ package position
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
+	"github.com/shaardie/clemens/pkg/nnue"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -19,6 +20,16 @@ func (pos *Position) SetPiece(p types.Piece, square uint8) {
 
 	// Update zobrist Hash
 	pos.zobristUpdatePiece(square, c, t)
+
+	// Update features
+	if !pos.needsRefresh[c] {
+		if t == types.KING {
+			pos.needsRefresh[c] = true
+		} else {
+			kingSquare := bitboard.LeastSignificantOneBit(pos.PiecesBitboard[c][types.KING])
+			pos.removedFeatures = append(pos.addedFeatures, nnue.CalculateIdx(kingSquare, square, p))
+		}
+	}
 }
 
 // DeletePiece deletes the piece on the given square
@@ -36,6 +47,16 @@ func (pos *Position) DeletePiece(square uint8) types.Piece {
 
 	// Update zobrist Hash
 	pos.zobristUpdatePiece(square, c, t)
+
+	// Update features
+	if !pos.needsRefresh[c] {
+		if t == types.KING {
+			pos.needsRefresh[c] = true
+		} else {
+			kingSquare := bitboard.LeastSignificantOneBit(pos.PiecesBitboard[c][types.KING])
+			pos.removedFeatures = append(pos.removedFeatures, nnue.CalculateIdx(kingSquare, square, p))
+		}
+	}
 	return p
 }
 

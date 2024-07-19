@@ -27,6 +27,9 @@ elo:
 compare-to:
 	docker build . -t elo && docker run --rm -v $(COMPARE_TO):/compare-to elo:latest /scripts/compare-to.sh /compare-to
 
+samples:
+	docker build . -t elo && mkdir -p $(PWD)/save && docker run --rm -v $(PWD)/save:/save elo:latest /scripts/samples.sh
+
 test:
 	go test ./... -cover
 
