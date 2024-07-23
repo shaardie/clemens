@@ -2,6 +2,7 @@ package position
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
+	"github.com/shaardie/clemens/pkg/nnue"
 	"github.com/shaardie/clemens/pkg/pieces/bishop"
 	"github.com/shaardie/clemens/pkg/pieces/king"
 	"github.com/shaardie/clemens/pkg/pieces/knight"
@@ -26,6 +27,11 @@ type Position struct {
 	EnPassant     uint8
 	HalfMoveClock uint8
 	Ply           uint8
+
+	Accumulator     nnue.Accumulator
+	addedFeatures   []int
+	removedFeatures []int
+	needsRefresh    [types.COLOR_NUMBER]bool
 }
 
 func New() *Position {
@@ -50,6 +56,9 @@ func New() *Position {
 
 	// Create initial zobrist hash
 	pos.initZobristHash()
+
+	// Init accumulator
+	pos.Accumulator.Refresh(pos.activeFeatures(), pos.SideToMove)
 
 	return pos
 }
@@ -110,4 +119,19 @@ func (pos *Position) generateHelperBitboards() {
 
 func (pos *Position) IsLegal() bool {
 	return !pos.IsInCheck(types.SwitchColor(pos.SideToMove))
+}
+
+func (pos *Position) activeFeatures() []int {
+	features := make([]int, 0, pos.AllPieces.PopulationCount())
+	for c := range types.COLOR_NUMBER {
+		kingSquare := bitboard.LeastSignificantOneBit(pos.PiecesBitboard[c][types.KING])
+		for t := range types.KING {
+			bb := pos.PiecesBitboard[c][t]
+			for bb != 0 {
+				square := bitboard.SquareIndexSerializationNextSquare(&bb)
+				features = append(features, nnue.CalculateIdx(kingSquare, square, types.NewPiece(c, t)))
+			}
+		}
+	}
+	return features
 }

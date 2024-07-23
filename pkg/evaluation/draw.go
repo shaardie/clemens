@@ -6,7 +6,7 @@ import (
 )
 
 // Draw Evaluation, https://www.chessprogramming.org/Draw_Evaluation
-func (e *eval) isDraw(pos *position.Position) bool {
+func isDraw(pos *position.Position) bool {
 	if pos.HalfMoveClock >= 100 {
 		return true
 	}

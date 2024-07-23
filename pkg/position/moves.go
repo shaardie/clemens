@@ -319,6 +319,15 @@ func (pos *Position) MakeMove(m move.Move) {
 
 	// Generate Helper Bitboards
 	pos.generateHelperBitboards()
+
+	for c := range types.COLOR_NUMBER {
+		if pos.needsRefresh[c] {
+			pos.Accumulator.Refresh(pos.activeFeatures(), pos.SideToMove)
+		} else {
+			pos.Accumulator.Update(pos.addedFeatures, pos.removedFeatures, pos.SideToMove)
+		}
+	}
+
 }
 
 func (pos *Position) MakeNullMove() uint8 {
