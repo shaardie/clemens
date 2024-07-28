@@ -54,5 +54,5 @@ func (n *Accumulator) Evaluate(we types.Color) int16 {
 	var l2LinearOutput [_K]float64
 	linear(&m.L1, creluL1Output[:], l2LinearOutput[:])
 
-	return int16(10000 * l2LinearOutput[0])
+	return int16(100 * l2LinearOutput[0])
 }

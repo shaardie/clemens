@@ -5,8 +5,11 @@ import multiprocessing
 import queue
 import json
 
-
 import torch
+
+from torch.utils.tensorboard import SummaryWriter
+
+writer = SummaryWriter()
 
 
 logger = logging.getLogger(__name__)
@@ -154,6 +157,8 @@ class NNUE(torch.nn.Module):
         self.l1 = torch.nn.Linear(2 * M, N)
         self.l2 = torch.nn.Linear(N, K)
 
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=0.01, momentum=0.9)
+
     # The inputs are a whole batch!
     # `turn` indicates whether white is the side to move. 1 = true, 0 = false.
     def forward(self, white_features, black_features, turn, score, result):
@@ -169,12 +174,34 @@ class NNUE(torch.nn.Module):
         # Run the linear layers and use clamp_ as ClippedReLU
         l1_x = torch.clamp(accumulator, 0.0, 1.0)
         l2_x = torch.clamp(self.l1(l1_x), 0.0, 1.0)
-        model_result = self.l2(l2_x)
+
+        return self.l2(l2_x)
+
+    def training_step(self, batch, batch_number):
+        # Zero your gradients for every batch!
+        self.optimizer.zero_grad()
+
+        # Make predictions for this batch
+        output = self(*batch)
+
+        # Compute the loss and its gradients
+        loss = self.loss(batch, output)
+        loss = loss.sum()
+        loss.backward()
+
+        writer.add_scalar("Loss/train", loss, batch_number)
+
+        # Adjust learning weights
+        self.optimizer.step()
+
+
+    def loss(self, batch, output):
+        white_features, black_features, turn, score, result = batch
 
         # Loss function
         scaling_factor = 400  # TODO better value
-        lambda_ = 1  # TODO better value
-        wdl_eval_model = torch.sigmoid(model_result / scaling_factor)
+        lambda_ = 0.5  # TODO better value
+        wdl_eval_model = torch.sigmoid(output / scaling_factor)
         wdl_eval_target = torch.sigmoid(score / scaling_factor)
         loss_eval = (wdl_eval_model - wdl_eval_target) ** 2
         loss_result = (wdl_eval_model - result) ** 2
@@ -231,27 +258,30 @@ def init():
 
 def main():
     args = init()
-    nn = NNUE().to("cpu")
-
+    model = NNUE().to("cpu")
     epoch = args.epoch
+    batch_number = 0
     while epoch > 0:
         logger.info(f"epoch: {epoch}")
         dataloader = DataLoader(args.dataset, args.batch_size)
         dataloader.start()
-        batches_trained = 0
+
         while True:
             batch = dataloader.get_batch()
             if batch is None:
                 break
-            nn(*batch)
-            batches_trained += 1
-            if batches_trained % 100 == 0:
-                logger.debug(f"trained {batches_trained} batches")
+
+            model.training_step(batch, batch_number)
+            batch_number += 1
+            if batch_number % 100 == 0:
+                logger.debug(f"trained {batch_number} batches")
+                model.save(args.output)
+
         epoch -= 1
 
     logger.info("training finished")
 
-    nn.save(args.output)
+    model.save(args.output)
     logger.info(f"stored model in {args.output}")
 
 
