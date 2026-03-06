@@ -15,6 +15,9 @@ import (
 func NewFromFen(fen string) (*Position, error) {
 	pos := &Position{}
 
+	// Init Accumulator
+	pos.initAccumulator()
+
 	tokens := strings.Split(fen, " ")
 	if len(tokens) != 6 {
 		return nil, fmt.Errorf("wrong number of tokens %v", len(tokens))

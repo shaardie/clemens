@@ -2,6 +2,7 @@ package position
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
+	"github.com/shaardie/clemens/pkg/nnue"
 	"github.com/shaardie/clemens/pkg/pieces/bishop"
 	"github.com/shaardie/clemens/pkg/pieces/king"
 	"github.com/shaardie/clemens/pkg/pieces/knight"
@@ -26,6 +27,8 @@ type Position struct {
 	EnPassant     uint8
 	HalfMoveClock uint8
 	Ply           uint8
+
+	Accumulator nnue.Accumulator
 }
 
 func New() *Position {
@@ -50,6 +53,9 @@ func New() *Position {
 
 	// Create initial zobrist hash
 	pos.initZobristHash()
+
+	// Init Accumulator
+	pos.initAccumulator()
 
 	return pos
 }

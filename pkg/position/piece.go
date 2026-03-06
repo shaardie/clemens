@@ -2,6 +2,7 @@ package position
 
 import (
 	"github.com/shaardie/clemens/pkg/bitboard"
+	"github.com/shaardie/clemens/pkg/nnue"
 	"github.com/shaardie/clemens/pkg/types"
 )
 
@@ -12,6 +13,10 @@ func (pos *Position) GetPiece(square uint8) types.Piece {
 
 // SetPiece adds a pieces to the given square
 func (pos *Position) SetPiece(p types.Piece, square uint8) {
+	// Update Accumulator
+	whiteFeatureIndex, blackFeatureIndex := nnue.FeatureIndex(p, square)
+	pos.Accumulator.Activate(whiteFeatureIndex, blackFeatureIndex)
+
 	pos.PiecesBoard[square] = p
 	c := p.Color()
 	t := p.Type()
@@ -25,6 +30,11 @@ func (pos *Position) SetPiece(p types.Piece, square uint8) {
 func (pos *Position) DeletePiece(square uint8) types.Piece {
 	// Get Piece from pieceBoard
 	p := pos.PiecesBoard[square]
+
+	// Update Accumulator
+	whiteFeatureIndex, blackFeatureIndex := nnue.FeatureIndex(p, square)
+	pos.Accumulator.Deactivate(whiteFeatureIndex, blackFeatureIndex)
+
 	c := p.Color()
 	t := p.Type()
 
