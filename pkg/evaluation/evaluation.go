@@ -42,7 +42,6 @@ func evalWithCache(pos *position.Position) int16 {
 	tTable.save(pos.ZobristHash, score)
 
 	return score
-
 }
 
 type eval struct {
@@ -55,15 +54,8 @@ func (e *eval) do(pos *position.Position) int16 {
 	if e.isDraw(pos) {
 		return Contempt(pos)
 	}
-	e.evalPieceSquareTables(pos)
-	// e.evalKingShield(pos)
-	// e.evalRooks(pos)
-	e.evalPawns(pos)
-	e.evalPairs(pos)
-	e.evalBaseMaterial(pos)
-	e.evalPawnAdjustment(pos)
-	e.evalMobilityAndKingAttackValue(pos)
-	return e.calculateScore(pos)
+
+	return pos.Accumulator.Evaluate(pos.SideToMove)
 }
 
 // evalscore calculates the actual score based on the base score and the scores for the different game phases.
