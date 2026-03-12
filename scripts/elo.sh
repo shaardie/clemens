@@ -13,4 +13,4 @@ c-chess-cli \
   -sprt -pgn output_pgn_file.pgn \
   -games 400 -concurrency 3
 
-ordo -D -W -a "$ELO" -A maia-1600 -p output_pgn_file.pgn
+ordo -D -W -a "$ELO" -A maia-$ELO -p output_pgn_file.pgn

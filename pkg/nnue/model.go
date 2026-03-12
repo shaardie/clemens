@@ -11,8 +11,8 @@ import (
 
 const (
 	InputSize  = 768
-	HiddenSize = 256
-	L1Size     = 32
+	HiddenSize = 512
+	L1Size     = 64
 	L2Size     = 32
 	EvalScale  = 400.0
 )
