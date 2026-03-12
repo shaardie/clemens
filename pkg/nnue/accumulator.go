@@ -83,11 +83,11 @@ func (acc *Accumulator) Evaluate(c types.Color) int16 {
 		input[HiddenSize+i] = crelu(opp[i])
 	}
 
-	// layer 1: 512 → 32
+	// layer 1: 256 → 32
 	var l1 [L1Size]float32
 	for i := range L1Size {
 		sum := m.L1Bias[i]
-		for j := 0; j < HiddenSize*2; j++ {
+		for j := range HiddenSize * 2 {
 			sum += input[j] * m.L1Weight[i][j]
 		}
 		l1[i] = crelu(sum)
