@@ -1,4 +1,4 @@
-FROM golang:1.22.0-bookworm
+FROM golang:1.26.0-bookworm
 
 RUN apt-get update && apt-get install -y curl libqt5core5a unzip meson wget zlib1g-dev
 
@@ -20,20 +20,20 @@ WORKDIR /tmp
 RUN git clone -b release/0.30 --recurse-submodules https://github.com/LeelaChessZero/lc0.git
 RUN cd lc0 && ./build.sh && install /tmp/lc0/build/release/lc0 /usr/bin
 RUN curl -L https://github.com/cutechess/cutechess/releases/download/v1.3.1/cutechess-cli-1.3.1-linux64.tar.gz | tar xz && \
-    install cutechess-cli/cutechess-cli /usr/bin && \
-    cutechess-cli --version
+  install cutechess-cli/cutechess-cli /usr/bin && \
+  cutechess-cli --version
 RUN curl -L https://github.com/michiguel/Ordo/releases/download/v1.2.6/ordo-1.2.6.tar.gz | tar xz && \
-    install -T ordo-linux64 /usr/bin/ordo && \
-    ordo --version
+  install -T ordo-linux64 /usr/bin/ordo && \
+  ordo --version
 RUN curl -LO https://github.com/algerbrex/blunder/releases/download/v8.5.5/blunder-8.5.5.zip && \
-    unzip blunder-8.5.5.zip && \
-    install -T blunder-8.5.5/linux/blunder-8.5.5-default /usr/bin/blunder && \
-    which blunder
+  unzip blunder-8.5.5.zip && \
+  install -T blunder-8.5.5/linux/blunder-8.5.5-default /usr/bin/blunder && \
+  which blunder
 RUN curl -L https://github.com/official-stockfish/Stockfish/releases/download/sf_16.1/stockfish-ubuntu-x86-64.tar | tar x && \
-    install -T stockfish/stockfish-ubuntu-x86-64 /usr/bin/stockfish
+  install -T stockfish/stockfish-ubuntu-x86-64 /usr/bin/stockfish
 RUN curl -L https://github.com/lucasart/c-chess-cli/releases/download/20210710/c-chess-cli_linux.gz | gunzip > /tmp/c-chess-cli && \
-    install c-chess-cli /usr/bin && \
-    which c-chess-cli
+  install c-chess-cli /usr/bin && \
+  which c-chess-cli
 
 # Install current clemens engine
 RUN mkdir /go/clemens
@@ -43,6 +43,7 @@ RUN go mod download
 COPY pkg pkg
 COPY cmd cmd
 RUN make && install clemens /usr/bin
+RUN make SIMD=1 && install clemens-simd /usr/bin
 
 # Copy Openings
 COPY openings /openings
