@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/shaardie/clemens/pkg/evaluation"
@@ -19,6 +20,22 @@ const (
 	quiescence_max_depth uint8 = 100
 	maxTimeInMs                = 1000000
 )
+
+// Pre-calculated lmrTable
+var lmrTable [64][64]uint8
+
+func init() {
+	for depth := range 64 {
+		for moveNum := range 64 {
+			if depth > 0 && moveNum > 0 {
+				// Formel aus Stockfish/Ethereal
+				lmrTable[depth][moveNum] = uint8(
+					0.75 + math.Log(float64(depth))*math.Log(float64(moveNum))/2.25,
+				)
+			}
+		}
+	}
+}
 
 const futility_pruning_depth uint8 = 5
 
@@ -253,20 +270,63 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 			continue
 		}
 
-		// Principal Variation Search
+		// Principal Variation Search with LMR
 		if legalMoves == 1 {
+			// First Move
+			// always with full depth
 			score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, *m)
 			if err != nil {
 				return 0, err
 			}
 			score = -score
 		} else {
-			score, err = s.negamax(pos, -alpha-1, -alpha, depth-1, ply+1, &pvline.PVLine{}, true, *m)
+			// Late Move Reductions
+			reduction := uint8(0)
+
+			isCapture := prevPos.IsCapture(*m)
+			isPromotion := m.GetMoveType() == move.PROMOTION
+			givesCheck := pos.IsInCheck(pos.SideToMove)
+
+			// Reduce only quite moves
+			if depth >= 3 &&
+				legalMoves > 3 &&
+				!isCapture &&
+				!isPromotion &&
+				!givesCheck {
+
+				reduction = lmrTable[min(depth, 63)][min(legalMoves, 63)]
+
+				// Reduce less for killer moves
+				if *m == s.KillerMoves[ply][0] || *m == s.KillerMoves[ply][1] {
+					if reduction > 0 {
+						reduction--
+					}
+				}
+
+				// Do not reduce to depth below 1
+				if reduction >= depth-1 {
+					reduction = depth - 2
+				}
+			}
+
+			// Search with reduced depth (or with regular depth, if reduction==1)
+			score, err = s.negamax(pos, -alpha-1, -alpha,
+				depth-1-reduction, ply+1, &pvline.PVLine{}, true, *m)
 			if err != nil {
 				return 0, err
 			}
 			score = -score
-			// Rerun search
+
+			// If reduced and score > alpha, re-research with full depth and null window
+			if reduction > 0 && score > alpha {
+				score, err = s.negamax(pos, -alpha-1, -alpha, depth-1, ply+1, &pvline.PVLine{}, true, *m)
+				if err != nil {
+					return 0, err
+				}
+				score = -score
+			}
+
+			// If score > alpha search, re-research with full depth
 			if score > alpha {
 				score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, *m)
 				if err != nil {
