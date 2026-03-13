@@ -128,7 +128,6 @@ func (s *Search) SearchIterative(maxDepth uint8) {
 }
 
 func (s *Search) SearchRoot(depth uint8, alpha, beta int16) (Info, error) {
-
 	s.KillerMoves = [1024][2]move.Move{}
 	pos := s.Pos
 	pvl := pvline.PVLine{}
@@ -234,7 +233,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 	// Generate all moves and order them
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves)
-	s.scoreMoves(pos, moves, pvMove, ttMove, ply)
+	s.scoreMoves(pos, moves, pvMove, ttMove, previousMove, ply)
 	// s.orderMoves(pos, moves, pvMove, ttMove, ply)
 
 	for i := range moves.Length() {
@@ -256,20 +255,20 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 
 		// Principal Variation Search
 		if legalMoves == 1 {
-			score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, previousMove)
+			score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, *m)
 			if err != nil {
 				return 0, err
 			}
 			score = -score
 		} else {
-			score, err = s.negamax(pos, -alpha-1, -alpha, depth-1, ply+1, &pvline.PVLine{}, true, previousMove)
+			score, err = s.negamax(pos, -alpha-1, -alpha, depth-1, ply+1, &pvline.PVLine{}, true, *m)
 			if err != nil {
 				return 0, err
 			}
 			score = -score
 			// Rerun search
 			if score > alpha {
-				score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, previousMove)
+				score, err = s.negamax(pos, -beta, -alpha, depth-1, ply+1, &potentialPVLine, true, *m)
 				if err != nil {
 					return 0, err
 				}
@@ -371,7 +370,7 @@ func (s *Search) quiescence(pos *position.Position, alpha, beta int16, ply uint8
 	moves := move.NewMoveList()
 	pos.GeneratePseudoLegalCaptures(moves)
 	// s.orderMoves(pos, moves, move.NullMove, move.NullMove, ply)
-	s.scoreMoves(pos, moves, move.NullMove, move.NullMove, ply)
+	s.scoreMoves(pos, moves, move.NullMove, move.NullMove, move.NullMove, ply)
 	for i := range moves.Length() {
 		moves.SortIndex(i)
 		m := moves.Get(i)
@@ -443,7 +442,7 @@ func calculateTime(sideToMove types.Color, plys int, sp SearchParameter) int {
 	}
 
 	// calculate for 60 moves or at least 20 remaining
-	var remainingMoves = max(60-plys/2, 20)
+	remainingMoves := max(60-plys/2, 20)
 
 	var movetime int
 	if sp.MoveTime > 0 {

@@ -20,11 +20,11 @@ func TestSearch_orderMoves(t *testing.T) {
 
 	moves1 := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves1)
-	s.orderMoves(pos, moves1, s.PV.GetBestMove(), move.NullMove, 0)
+	s.orderMoves(pos, moves1, s.PV.GetBestMove(), move.NullMove, move.NullMove, 0)
 
 	moves2 := move.NewMoveList()
 	pos.GeneratePseudoLegalMoves(moves2)
-	s.scoreMoves(pos, moves2, s.PV.GetBestMove(), move.NullMove, 0)
+	s.scoreMoves(pos, moves2, s.PV.GetBestMove(), move.NullMove, move.NullMove, 0)
 	for i := range moves2.Length() {
 		moves2.SortIndex(i)
 	}
