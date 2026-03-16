@@ -30,7 +30,7 @@ func init() {
 			if depth > 0 && moveNum > 0 {
 				// Formel aus Stockfish/Ethereal
 				lmrTable[depth][moveNum] = uint8(
-					0.75 + math.Log(float64(depth))*math.Log(float64(moveNum))/2.25,
+					0.75 + math.Log(float64(depth))*math.Log(float64(moveNum))/1.75,
 				)
 			}
 		}
