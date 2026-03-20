@@ -19,7 +19,7 @@ func handleInput(input string) {
 	tokens = tokens[1:]
 	switch baseCmd {
 	case "uci":
-		fmt.Printf("id name %v %v\nid author %v\nuciok\n", metadata.Name, metadata.Version, metadata.Author)
+		fmt.Printf("id name %v %v %v\nid author %v\nuciok\n", metadata.Name, metadata.Version, metadata.Features, metadata.Author)
 		return
 	case "quit":
 		os.Exit(0)

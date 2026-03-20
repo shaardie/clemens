@@ -5,6 +5,7 @@
 *.so
 *.dylib
 clemens
+clemens-*
 perft
 
 # Test binary, built with `go test -c`
