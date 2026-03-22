@@ -42,7 +42,6 @@ func evalWithCache(pos *position.Position) int16 {
 	tTable.save(pos.ZobristHash, score)
 
 	return score
-
 }
 
 type eval struct {
@@ -102,10 +101,11 @@ func IsEndgame(pos *position.Position) bool {
 
 func IsPawnEndgame(pos *position.Position) bool {
 	for c := range types.COLOR_NUMBER {
-		for t := range types.PIECE_TYPE_NUMBER {
-			if pos.PiecesBitboard[c][t] != bitboard.Empty {
-				return false
-			}
+		if pos.PiecesBitboard[c][types.KNIGHT] != bitboard.Empty ||
+			pos.PiecesBitboard[c][types.BISHOP] != bitboard.Empty ||
+			pos.PiecesBitboard[c][types.ROOK] != bitboard.Empty ||
+			pos.PiecesBitboard[c][types.QUEEN] != bitboard.Empty {
+			return false
 		}
 	}
 	return true

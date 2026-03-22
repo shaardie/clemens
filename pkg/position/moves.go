@@ -327,7 +327,6 @@ func (pos *Position) MakeNullMove() uint8 {
 	if pos.EnPassant != types.SQUARE_NONE {
 		pos.zobristUpdateEnPassant(pos.EnPassant)
 		pos.EnPassant = types.SQUARE_NONE
-
 	}
 
 	// Update Side to Move
