@@ -11,5 +11,5 @@ func Contempt(pos *position.Position) int16 {
 	}
 
 	// We do not resign too early
-	return 400
+	return 15
 }
