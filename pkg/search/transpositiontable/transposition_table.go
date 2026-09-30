@@ -112,7 +112,7 @@ func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score 
 	}
 
 	te.zobristHash = zobristHash
-	te.bestMove = bestMove
+	te.bestMove = bestMove.Unscored()
 	te.depth = depth
 	te.score = score
 	te.setNodeType(nt)

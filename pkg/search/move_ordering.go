@@ -26,7 +26,7 @@ func init() {
 	for {
 		for aggressor := types.PAWN; aggressor < types.PIECE_TYPE_NUMBER; aggressor++ {
 			MVV_LVA_SCORES[victim][aggressor] = uint16(
-				(10*(victim+1) - (aggressor)) + killerMoveScore,
+				(10*(victim+1) - aggressor) + killerMoveScore,
 			)
 		}
 		if victim == types.PAWN {
@@ -46,13 +46,13 @@ func (s *Search) scoreMoves(pos *position.Position, moves *move.MoveList, pvMove
 		m := moves.Get(idx)
 
 		// Use the Move from the principal variation first
-		if *m == pvMove {
+		if m.Equal(pvMove) {
 			m.SetScore(pvMoveScore)
 			continue
 		}
 
 		// Use the Move from the transposition second
-		if *m == ttMove {
+		if m.Equal(ttMove) {
 			m.SetScore(ttMoveScore)
 			continue
 		}
@@ -78,17 +78,17 @@ func (s *Search) scoreMoves(pos *position.Position, moves *move.MoveList, pvMove
 			}
 
 			// Killer moves
-			if *m == s.KillerMoves[ply][0] {
+			if m.Equal(s.KillerMoves[ply][0]) {
 				m.SetScore(killerMoveScore)
 				continue
 			}
-			if *m == s.KillerMoves[ply][1] {
+			if m.Equal(s.KillerMoves[ply][1]) {
 				m.SetScore(killerMoveScore - 1)
 				continue
 			}
 
 			score := s.history[pos.SideToMove][sourceSquare][targetSquare]
-			if counterMove == *m {
+			if m.Equal(counterMove) {
 				score += couterMoveBonus
 			}
 

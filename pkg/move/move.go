@@ -81,6 +81,19 @@ func (m *Move) GetScore() uint16 {
 	return uint16(*m >> 16)
 }
 
+// Unscored returns the move without its ordering score (bits 16-31 cleared),
+// so it can be compared with or stored as a plain move.
+func (m Move) Unscored() Move {
+	return m & 0xFFFF
+}
+
+// SetScore sets the ordering score in the upper 16 bits of the move.
+// Existing score bits are cleared first, so calling it repeatedly is safe.
 func (m *Move) SetScore(s uint16) {
-	*m |= Move(s) << 16
+	*m = m.Unscored() | Move(s)<<16
+}
+
+// Equal reports whether two moves are the same, ignoring their ordering scores.
+func (m Move) Equal(c Move) bool {
+	return m.Unscored() == c.Unscored()
 }

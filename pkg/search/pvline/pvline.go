@@ -24,7 +24,7 @@ func (pvline *PVLine) GetBestMoveByPly(ply uint8) move.Move {
 
 func (pvline *PVLine) Update(bestMove move.Move, newLine *PVLine) {
 	new := make([]move.Move, len(newLine.moves)+1)
-	new[0] = bestMove
+	new[0] = bestMove.Unscored()
 	copy(new[1:], newLine.moves)
 	pvline.moves = new
 }

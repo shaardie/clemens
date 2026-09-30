@@ -94,7 +94,7 @@ func (s *Search) Search(ctx context.Context, sp SearchParameter) move.Move {
 	cancel()
 
 	// We need at least a valid move
-	if s.bestMove() == move.NullMove {
+	if s.bestMove().Equal(move.NullMove) {
 		s.ctx = context.TODO()
 		s.SearchIterative(1)
 	}
@@ -297,7 +297,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 				reduction = lmrTable[min(depth, 63)][min(legalMoves, 63)]
 
 				// Reduce less for killer moves
-				if *m == s.KillerMoves[ply][0] || *m == s.KillerMoves[ply][1] {
+				if m.Equal(s.KillerMoves[ply][0]) || m.Equal(s.KillerMoves[ply][1]) {
 					if reduction > 0 {
 						reduction--
 					}
@@ -347,10 +347,10 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 			nodeType = transpositiontable.BetaNode
 			if pos.GetPiece(m.GetTargetSquare()) == types.NO_PIECE && m.GetMoveType() != move.EN_PASSANT {
 				// Update Killer Move, if quiet move
-				if s.KillerMoves[ply][0] != bestMove {
+				if !s.KillerMoves[ply][0].Equal(bestMove) {
 					s.KillerMoves[ply][1] = s.KillerMoves[ply][0]
 				}
-				s.KillerMoves[ply][0] = bestMove
+				s.KillerMoves[ply][0] = bestMove.Unscored()
 
 				// Remember move for history heuristic
 				sourceSquare := m.GetSourceSquare()
@@ -366,7 +366,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 
 				// Update counter moves
 				if previousMove != move.NullMove {
-					s.counter[pos.SideToMove][previousMove.GetSourceSquare()][previousMove.GetTargetSquare()] = *m
+					s.counter[pos.SideToMove][previousMove.GetSourceSquare()][previousMove.GetTargetSquare()] = m.Unscored()
 				}
 			}
 			break
