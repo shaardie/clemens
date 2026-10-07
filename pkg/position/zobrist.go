@@ -7,9 +7,7 @@ import (
 	"github.com/shaardie/clemens/pkg/types"
 )
 
-var (
-	rnd rand.Source64 = rand.New(rand.NewSource(281954))
-)
+var rnd rand.Source64 = rand.New(rand.NewSource(281954))
 
 type zobrist struct {
 	piecesOnSquares   [types.SQUARE_NUMBER][types.COLOR_NUMBER][types.PIECE_TYPE_NUMBER]uint64
@@ -53,7 +51,7 @@ func (pos *Position) initZobristHash() {
 	}
 
 	for _, castling := range []Castling{WHITE_CASTLING_KING, WHITE_CASTLING_QUEEN, BLACK_CASTLING_KING, BLACK_CASTLING_QUEEN} {
-		if pos.Castling|castling != 0 {
+		if pos.Castling&castling != 0 {
 			pos.zobristUpdateCastling(castling)
 		}
 	}

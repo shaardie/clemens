@@ -161,3 +161,61 @@ func TestPosition_GeneratePseudoLegalCaptures(t *testing.T) {
 		})
 	}
 }
+
+// TestPosition_UpdateCastlingRights checks that the castling rights are removed
+// correctly, both regarding the Castling mask and the zobrist hash.
+func TestPosition_UpdateCastlingRights(t *testing.T) {
+	tests := []struct {
+		name           string
+		fen            string
+		source, target uint8
+		want           Castling
+	}{
+		{
+			name:   "white rook from a1 removes white queen castling",
+			fen:    "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1",
+			source: types.SQUARE_A1, target: types.SQUARE_A2,
+			want: WHITE_CASTLING_KING | BLACK_CASTLING_KING | BLACK_CASTLING_QUEEN,
+		},
+		{
+			name:   "black rook from a8 removes black queen castling",
+			fen:    "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1",
+			source: types.SQUARE_A8, target: types.SQUARE_A7,
+			want: WHITE_CASTLING_KING | WHITE_CASTLING_QUEEN | BLACK_CASTLING_KING,
+		},
+		{
+			name:   "white king from e1 removes both white castlings",
+			fen:    "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1",
+			source: types.SQUARE_E1, target: types.SQUARE_E2,
+			want: BLACK_CASTLING_KING | BLACK_CASTLING_QUEEN,
+		},
+		{
+			name:   "only one white right, king moves",
+			fen:    "r3k2r/8/8/8/8/8/8/R3K2R w Kkq - 0 1",
+			source: types.SQUARE_E1, target: types.SQUARE_E2,
+			want: BLACK_CASTLING_KING | BLACK_CASTLING_QUEEN,
+		},
+		{
+			name:   "white rights already gone, nothing toggles",
+			fen:    "r3k2r/8/8/8/8/8/4K3/R6R b kq - 0 1",
+			source: types.SQUARE_E1, target: types.SQUARE_E2,
+			want: BLACK_CASTLING_KING | BLACK_CASTLING_QUEEN,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pos, err := NewFromFen(tt.fen)
+			require.NoError(t, err)
+
+			pos.updateCastlingRights(tt.source, tt.target)
+
+			assert.Equal(t, tt.want, pos.Castling, "wrong castling mask")
+
+			// The incremental hash must stay consistent with a re-initialized one.
+			reinit, err := NewFromFen(pos.ToFen())
+			require.NoError(t, err)
+			assert.Equal(t, reinit.ZobristHash, pos.ZobristHash,
+				"zobrist hash differs from re-initialized hash")
+		})
+	}
+}

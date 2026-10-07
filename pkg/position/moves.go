@@ -213,6 +213,54 @@ func (pos *Position) GeneratePseudoLegalMoves(moves *move.MoveList) {
 	)
 }
 
+// updateCastlingRights update the castling rights of the position
+// Depending on the square different right have to be removed.
+// Also it is important to only update the zobrist hash, if the castling was allowed in the first place.
+func (pos *Position) updateCastlingRights(sourceSquare, targetSquare uint8) {
+	for _, s := range []uint8{sourceSquare, targetSquare} {
+		switch s {
+		case types.SQUARE_A1:
+			if pos.Castling&WHITE_CASTLING_QUEEN != 0 {
+				pos.Castling = pos.Castling &^ WHITE_CASTLING_QUEEN
+				pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
+			}
+		case types.SQUARE_H1:
+			if pos.Castling&WHITE_CASTLING_KING != 0 {
+				pos.Castling = pos.Castling &^ WHITE_CASTLING_KING
+				pos.zobristUpdateCastling(WHITE_CASTLING_KING)
+			}
+		case types.SQUARE_A8:
+			if pos.Castling&BLACK_CASTLING_QUEEN != 0 {
+				pos.Castling = pos.Castling &^ BLACK_CASTLING_QUEEN
+				pos.zobristUpdateCastling(BLACK_CASTLING_QUEEN)
+			}
+		case types.SQUARE_H8:
+			if pos.Castling&BLACK_CASTLING_KING != 0 {
+				pos.Castling = pos.Castling &^ BLACK_CASTLING_KING
+				pos.zobristUpdateCastling(BLACK_CASTLING_KING)
+			}
+		case types.SQUARE_E1:
+			if pos.Castling&WHITE_CASTLING_QUEEN != 0 {
+				pos.Castling = pos.Castling &^ WHITE_CASTLING_QUEEN
+				pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
+			}
+			if pos.Castling&WHITE_CASTLING_KING != 0 {
+				pos.Castling = pos.Castling &^ WHITE_CASTLING_KING
+				pos.zobristUpdateCastling(WHITE_CASTLING_KING)
+			}
+		case types.SQUARE_E8:
+			if pos.Castling&BLACK_CASTLING_QUEEN != 0 {
+				pos.Castling = pos.Castling &^ BLACK_CASTLING_QUEEN
+				pos.zobristUpdateCastling(BLACK_CASTLING_QUEEN)
+			}
+			if pos.Castling&BLACK_CASTLING_KING != 0 {
+				pos.Castling = pos.Castling &^ BLACK_CASTLING_KING
+				pos.zobristUpdateCastling(BLACK_CASTLING_KING)
+			}
+		}
+	}
+}
+
 func (pos *Position) MakeMove(m move.Move) {
 	resetHalfmoveClock := false
 
@@ -231,30 +279,7 @@ func (pos *Position) MakeMove(m move.Move) {
 		resetHalfmoveClock = true
 	}
 
-	for _, s := range []uint8{sourceSquare, targetSquare} {
-		switch s {
-		case types.SQUARE_A1:
-			pos.Castling = pos.Castling &^ WHITE_CASTLING_QUEEN
-			pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
-		case types.SQUARE_H1:
-			pos.Castling = pos.Castling &^ WHITE_CASTLING_KING
-			pos.zobristUpdateCastling(WHITE_CASTLING_KING)
-		case types.SQUARE_A8:
-			pos.Castling = pos.Castling &^ BLACK_CASTLING_QUEEN
-			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
-		case types.SQUARE_H8:
-			pos.Castling = pos.Castling &^ BLACK_CASTLING_KING
-			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
-		case types.SQUARE_E1:
-			pos.Castling = pos.Castling &^ (WHITE_CASTLING_QUEEN | WHITE_CASTLING_KING)
-			pos.zobristUpdateCastling(WHITE_CASTLING_QUEEN)
-			pos.zobristUpdateCastling(WHITE_CASTLING_KING)
-		case types.SQUARE_E8:
-			pos.Castling = pos.Castling &^ (BLACK_CASTLING_QUEEN | BLACK_CASTLING_KING)
-			pos.zobristUpdateCastling(BLACK_CASTLING_QUEEN)
-			pos.zobristUpdateCastling(BLACK_CASTLING_KING)
-		}
-	}
+	pos.updateCastlingRights(sourceSquare, targetSquare)
 
 	piece := pos.MovePiece(sourceSquare, targetSquare)
 	switch piece.Type() {
