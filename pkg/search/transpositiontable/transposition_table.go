@@ -66,11 +66,14 @@ func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, 
 
 	score = te.score
 
-	// // Adjust if mate value
-	if score > evaluation.INF-100 {
-		score -= int16(ply)
-	} else if score < -evaluation.INF+100 {
-		score += int16(ply)
+	// if the evaluation is a check mate value, we need to adjust the score by
+	// the currentl ply to have the proper value for the current search
+	if evaluation.IsCheckmateValue(score) {
+		if score < 0 {
+			score += int16(ply)
+		} else {
+			score -= int16(ply)
+		}
 	}
 
 	switch te.getNodeType() {
@@ -91,7 +94,7 @@ func Get(zobristHash uint64, alpha, beta int16, depth, ply uint8) (score int16, 
 
 // PotentiallySave save the new transposition entry, if it is a better fit.
 // Note, that we use single values as parameter for the case, so we not create the struct, if we do not have to
-func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score int16, nt nodeType, age uint8) {
+func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, ply uint8, score int16, nt nodeType, age uint8) {
 	var te *ttEntry
 	key := zobristHash % numberOfBuckets
 	for i := range tt[key] {
@@ -114,6 +117,16 @@ func PotentiallySave(zobristHash uint64, bestMove move.Move, depth uint8, score 
 	te.zobristHash = zobristHash
 	te.bestMove = bestMove.Unscored()
 	te.depth = depth
+	// if the evaluation is a check mate value, we need to revert the ply
+	// calculation to make the value independent from the fact, how deep it was
+	// found
+	if evaluation.IsCheckmateValue(score) {
+		if score < 0 {
+			score -= int16(ply)
+		} else {
+			score += int16(ply)
+		}
+	}
 	te.score = score
 	te.setNodeType(nt)
 	te.setAge(age)

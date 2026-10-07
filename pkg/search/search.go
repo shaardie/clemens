@@ -397,7 +397,7 @@ func (s *Search) negamax(pos *position.Position, alpha, beta int16, depth, ply u
 	case <-s.ctx.Done():
 		return 0, s.ctx.Err()
 	default:
-		transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, bestScore, nodeType, s.Pos.HalfMoveClock)
+		transpositiontable.PotentiallySave(pos.ZobristHash, bestMove, depth, ply, bestScore, nodeType, s.Pos.HalfMoveClock)
 	}
 	return bestScore, nil
 }
