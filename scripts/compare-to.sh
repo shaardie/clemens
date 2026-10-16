@@ -12,6 +12,6 @@ c-chess-cli \
   -resign count=4 score=1000 \
   -draw number=40 count=8 score=10 \
   -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
-  -rounds 10000 \
+  -games 10000 \
   -concurrency 3 \
   -pgn output_pgn_file.pgn
