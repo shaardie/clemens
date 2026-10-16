@@ -20,6 +20,13 @@ The chess engine is the binary named `clemens`.
 
 ## Changelog
 
+The rating is measured with `make elo` against Stockfish with limited strength (`UCI_Elo`).
+The error is the 95 % confidence interval computed by [Ordo](https://github.com/michiguel/Ordo).
+
+| Date | Version | Elo | Games | Anchor | Time Control | Openings |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-16 | 0587bb1 | 2232 ± 14 | 2200 | SF18 @ 2300 | 40/1+0.05 | UHO_XXL_2022_+120_+149 |
+
 ### Dev
 
 * Evaluate [Isolanis](https://www.chessprogramming.org/Isolated_Pawn).
