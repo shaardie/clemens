@@ -42,7 +42,8 @@ COPY go.mod go.sum Makefile ./
 RUN go mod download
 COPY pkg pkg
 COPY cmd cmd
-RUN make && install clemens-* /usr/bin
+ARG VERSION=dev
+RUN echo "VERSION=$VERSION" && make "VERSION=$VERSION" && install clemens-* /usr/bin
 
 # Copy Openings
 COPY openings /openings

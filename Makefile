@@ -1,4 +1,4 @@
-VERSION ?= dev
+VERSION ?= $(shell git describe --always --dirty 2>/dev/null || echo dev)
 COMPARE_TO ?= $(PWD)/clemens-avx2
 
 # GOAMD64 target level (v1=baseline, v2=SSE4.2, v3=AVX2, v4=AVX-512)
@@ -43,10 +43,10 @@ benchmark_perft:
 	GOAMD64=$(GOAMD64) go test ./cmd/perft -run=^$$ -bench ^BenchmarkPerft -cpuprofile profile_perft.out
 
 elo:
-	docker build . -t elo && mkdir -p $(PWD)/save && docker run --rm -v $(PWD)/save:/save elo:latest /scripts/elo.sh
+	docker build . -t elo --build-arg VERSION=$(VERSION) && mkdir -p $(PWD)/save && docker run --rm -v $(PWD)/save:/save elo:latest /scripts/elo.sh
 
 compare-to:
-	docker build . -t elo && docker run --rm -v $(COMPARE_TO):/compare-to elo:latest /scripts/compare-to.sh /compare-to
+	docker build . -t elo --build-arg VERSION=$(VERSION) && docker run --rm -v $(COMPARE_TO):/compare-to elo:latest /scripts/compare-to.sh /compare-to
 
 test:
 	GOAMD64=$(GOAMD64) go test ./... -cover
