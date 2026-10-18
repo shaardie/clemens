@@ -1,6 +1,6 @@
 module github.com/shaardie/clemens
 
-go 1.22.0
+go 1.27.2
 
 require github.com/stretchr/testify v1.8.4
 
