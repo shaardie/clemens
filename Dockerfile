@@ -31,9 +31,8 @@ RUN curl -LO https://github.com/algerbrex/blunder/releases/download/v8.5.5/blund
   which blunder
 RUN curl -L https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-ubuntu-x86-64.tar | tar x && \
   install -T stockfish/stockfish-ubuntu-x86-64 /usr/bin/stockfish
-RUN curl -L https://github.com/lucasart/c-chess-cli/releases/download/20210710/c-chess-cli_linux.gz | gunzip > /tmp/c-chess-cli && \
-  install c-chess-cli /usr/bin && \
-  which c-chess-cli
+RUN curl -L https://github.com/Disservin/fastchess/releases/download/v1.8.2-alpha/fastchess-linux-x86-64.tar | tar x && \
+  install fastchess-linux-x86-64/fastchess /usr/bin && rm -rf fastchess-linux-x86-64
 
 # Install current clemens engine
 RUN mkdir /go/clemens

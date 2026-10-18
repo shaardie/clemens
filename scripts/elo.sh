@@ -11,18 +11,20 @@ MAX="${MAX:-6000}"
 NAME="$("$ENGINE" <<<"uci" | awk '/^id name/ {sub(/^id name /, ""); print; exit}')"
 STAMP="$(date +%Y-%m-%dT%H%M)"
 PGN="/save/elo-${STAMP}.pgn"
+LOG="/save/elo-${STAMP}.log"
 
 games=0
 while ((games < MAX)); do
-  c-chess-cli \
+  fastchess \
+    -concurrency 4 \
+    -rounds "$((BATCH / 2))" \
     -each tc=40/1+0.05 \
     -engine cmd="$ENGINE" name="$NAME" \
-    -engine name=stockfish cmd=stockfish option.UCI_LimitStrength=true "option.UCI_Elo=$ANCHOR" \
-    -openings file=/openings/UHO_XXL_2022_+120_+149.epd order=random -repeat \
-    -resign count=4 score=1000 \
-    -draw number=40 count=8 score=10 \
-    -games "$BATCH" -concurrency 4 \
-    -pgn "$PGN"
+    -engine cmd=stockfish name="stockfish" option.UCI_LimitStrength=true "option.UCI_Elo=$ANCHOR" \
+    -draw movenumber=40 movecount=8 score=10 \
+    -resign movecount=4 score=1000 \
+    -openings file=/openings/UHO_XXL_2022_+120_+149.epd order=random \
+    -pgnout file="$PGN" 2>&1 | tee -a "$LOG" | grep --line-buffered -E '^(Finished game|Results of|Elo:)'
   games=$((games + BATCH))
 
   ordo -W -D -s 1000 -a "$ANCHOR" -A stockfish -p "$PGN" -c "/save/elo-${STAMP}.csv" >/dev/null
