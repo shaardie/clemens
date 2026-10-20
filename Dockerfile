@@ -22,9 +22,6 @@ RUN cd lc0 && ./build.sh && install /tmp/lc0/build/release/lc0 /usr/bin
 RUN curl -L https://github.com/cutechess/cutechess/releases/download/v1.3.1/cutechess-cli-1.3.1-linux64.tar.gz | tar xz && \
   install cutechess-cli/cutechess-cli /usr/bin && \
   cutechess-cli --version
-RUN curl -L https://github.com/michiguel/Ordo/releases/download/v1.2.6/ordo-1.2.6.tar.gz | tar xz && \
-  install -T ordo-linux64 /usr/bin/ordo && \
-  ordo --version
 RUN curl -LO https://github.com/algerbrex/blunder/releases/download/v8.5.5/blunder-8.5.5.zip && \
   unzip blunder-8.5.5.zip && \
   install -T blunder-8.5.5/linux/blunder-8.5.5-default /usr/bin/blunder && \
@@ -42,7 +39,8 @@ RUN go mod download
 COPY pkg pkg
 COPY cmd cmd
 ARG VERSION=dev
-RUN echo "VERSION=$VERSION" && make "VERSION=$VERSION" && install clemens-* /usr/bin
+RUN make "VERSION=$VERSION" && install clemens-* /usr/bin
+RUN make elo "VERSION=$VERSION" && install elo /usr/bin
 
 # Copy Openings
 COPY openings /openings

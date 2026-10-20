@@ -29,6 +29,9 @@ perft: test
 	GOOS=linux GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o perft-$(FEATURES) ./cmd/perft
 	GOOS=windows GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o perft-$(FEATURES).exe ./cmd/perft
 
+elo:
+	GOOS=linux GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o elo ./cmd/elo
+
 all-variants:
 	make clemens GOAMD64=v1
 	make clemens GOAMD64=v2
@@ -42,8 +45,8 @@ benchmark_search:
 benchmark_perft:
 	GOAMD64=$(GOAMD64) go test ./cmd/perft -run=^$$ -bench ^BenchmarkPerft -cpuprofile profile_perft.out
 
-elo:
-	docker build . -t elo --build-arg VERSION=$(VERSION) && mkdir -p $(PWD)/save && docker run --rm -v $(PWD)/save:/save elo:latest /scripts/elo.sh
+test-elo:
+	docker build . -t elo --build-arg VERSION=$(VERSION) && mkdir -p $(PWD)/save && docker run --rm -v $(PWD)/save:/save elo:latest elo
 
 compare-to:
 	docker build . -t elo --build-arg VERSION=$(VERSION) && docker run --rm -v $(COMPARE_TO):/compare-to elo:latest /scripts/compare-to.sh /compare-to

@@ -20,12 +20,14 @@ The chess engine is the binary named `clemens`.
 
 ## Changelog
 
-The rating is measured with `make elo` against Stockfish with limited strength (`UCI_Elo`).
-The error is the 95 % confidence interval computed by [Ordo](https://github.com/michiguel/Ordo).
+The rating is measured with `make test-elo` against Stockfish 18 with limited strength (`UCI_Elo`),
+using [fastchess](https://github.com/Disservin/fastchess) and openings from `UHO_XXL_2022_+120_+149`.
+Every opening is played with both colors.
+The games continue until the error, the 95 % confidence interval reported by fastchess, is at most ±15 Elo.
 
-| Date | Version | Elo | Games | Anchor | Time Control | Openings |
-| --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-16 | 0587bb1 | 2232 ± 14 | 2200 | SF18 @ 2300 | 40/1+0.05 | UHO_XXL_2022_+120_+149 |
+| Date | Engine | Elo | Games | Opponent | Time Control |
+| --- | --- | --- | --- | --- | --- |
+| 2026-10-16 | Clemens 0587bb1 avx2 | 2232 ± 14 | 2200 | stockfish 2300 | 40/1+0.05 |
 
 ### Dev
 
