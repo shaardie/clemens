@@ -34,13 +34,13 @@ RUN curl -L https://github.com/Disservin/fastchess/releases/download/v1.8.2-alph
 # Install current clemens engine
 RUN mkdir /go/clemens
 WORKDIR /go/clemens
-COPY go.mod go.sum Makefile ./
+COPY go.mod go.sum ./
 RUN go mod download
 COPY pkg pkg
 COPY cmd cmd
+COPY Makefile ./
 ARG VERSION=dev
-RUN make "VERSION=$VERSION" && install clemens-* /usr/bin
-RUN make elo "VERSION=$VERSION" && install elo /usr/bin
+RUN VERSION=${VERSION} make clemens elo && install bin/clemens-* /usr/bin && install bin/elo /usr/bin
 
 # Copy Openings
 COPY openings /openings

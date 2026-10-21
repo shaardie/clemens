@@ -13,10 +13,26 @@ Of course, this version is very limited.
 ## Building from Source
 
 You can also build the program from the source.
-The project includes a [Makefile](./Makefile) for this purpose.
-Executing `make` will build the binaries.
-The binaries with the `.exe` extension are for Windows, while the others are for Linux.
-The chess engine is the binary named `clemens`.
+The project includes a [Makefile](./Makefile) for this purpose; building needs [Go](https://go.dev/).
+
+Executing `make` builds the engine `bin/clemens-avx2` for Linux, together with the tools `bin/perft-avx2` and `bin/elo`.
+The build can be adjusted with two variables:
+
+* `FEATURES` selects the CPU features: `baseline`, `popcnt`, `avx2` (default) or `avx512`.
+  The default needs a CPU with AVX2, use `baseline` for older CPUs.
+* `GOOS` selects the operating system: `linux` (default) or `windows`. Windows binaries get the `.exe` extension.
+
+For example, `make clemens FEATURES=baseline GOOS=windows` builds `bin/clemens-baseline.exe`.
+`make release` runs the tests and builds the engine for all CPU features, for Linux and Windows.
+
+Further targets:
+
+* `make test` runs the tests, `make benchmark` the benchmarks with CPU profiles in `profile/`.
+* `make test-elo` measures the rating against Stockfish (see [Changelog](#changelog)).
+* `make compare-to COMPARE_TO=<binary>` runs an [SPRT](https://www.chessprogramming.org/Match_Statistics#SPRT) of the current version against another engine binary, e.g. an older build of Clemens.
+* `make clean` removes `bin/` and `profile/`. Measurement results in `save/` are kept.
+
+The measurements run in a Docker container, so they need [Docker](https://www.docker.com/).
 
 ## Changelog
 

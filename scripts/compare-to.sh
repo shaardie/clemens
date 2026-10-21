@@ -5,8 +5,6 @@ set -euo pipefail
 ENGINE="${ENGINE:-clemens-avx2}"
 NAME="$("$ENGINE" <<<"uci" | awk '/^id name/ {sub(/^id name /, ""); print; exit}')"
 
-cp $1 /usr/bin/compare-to
-
 fastchess \
   -each tc=40/1+0.05 \
   -engine cmd="$ENGINE" name="$NAME" \

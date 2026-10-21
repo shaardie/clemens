@@ -1,58 +1,121 @@
+# Settings, can be overridden on the command line, e.g. `make FEATURES=baseline GOOS=windows`.
+#
+# VERSION   version shown in the UCI engine name, e.g. "0587bb1" or "0587bb1-dirty"
+# GOOS      target operating system: linux or windows
+# FEATURES  CPU features to build for: baseline, popcnt, avx2 or avx512.
+#           The default avx2 needs a CPU with AVX2; use baseline for older CPUs.
 VERSION ?= $(shell git describe --always --dirty 2>/dev/null || echo dev)
-COMPARE_TO ?= $(PWD)/clemens-avx2
+GOOS ?= linux
+FEATURES ?= avx2
 
-# GOAMD64 target level (v1=baseline, v2=SSE4.2, v3=AVX2, v4=AVX-512)
-# Can be overridden: make clemens GOAMD64=v3
-GOAMD64 ?= v1
+# Output paths. Windows binaries get the .exe ending.
+EXECUTABLE_ENDING_linux =
+EXECUTABLE_ENDING_windows = .exe
+CLEMENS_BIN = bin/clemens-$(FEATURES)$(EXECUTABLE_ENDING_$(GOOS))
+PERFT_BIN = bin/perft-$(FEATURES)$(EXECUTABLE_ENDING_$(GOOS))
+ELO_BIN = bin/elo$(EXECUTABLE_ENDING_$(GOOS))
 
-# Human-readable feature names for each level
-GOAMD64_FEATURES_v1 = baseline
-GOAMD64_FEATURES_v2 = popcnt
-GOAMD64_FEATURES_v3 = avx2
-GOAMD64_FEATURES_v4 = avx512
+# Go's GOAMD64 level for each value of FEATURES.
+GOAMD64_baseline = v1
+GOAMD64_popcnt   = v2
+GOAMD64_avx2     = v3
+GOAMD64_avx512   = v4
 
-FEATURES = $(GOAMD64_FEATURES_$(GOAMD64))
-
+# Embed version and features into pkg/metadata.
 BUILD_LD_FLAGS = -ldflags="\
   -X 'github.com/shaardie/clemens/pkg/metadata.Version=$(VERSION)' \
   -X 'github.com/shaardie/clemens/pkg/metadata.Features=$(FEATURES)'"
 
-.PHONY: clemens perft benchmark test clean all-variants
+# User and group the measurement containers run as, so that files in save/ belong to the
+# caller and not to root.
+IMAGE_USER := $(shell id -u)
+IMAGE_GROUP := $(shell id -g)
 
-all: all-variants
+.PHONY: build clemens perft elo release benchmark benchmark_perft benchmark_search image test-elo compare-to test clean check-compare-to check-features
 
-clemens:
-	GOOS=linux GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o clemens-$(FEATURES) ./cmd/uci
-	GOOS=windows GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o clemens-$(FEATURES).exe ./cmd/uci
+# --- Build -----------------------------------------------------------------------------------
 
-perft: test
-	GOOS=linux GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o perft-$(FEATURES) ./cmd/perft
-	GOOS=windows GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o perft-$(FEATURES).exe ./cmd/perft
+# Build the engine, perft and the Elo tool into bin/ for one FEATURES/GOOS combination.
+build: clemens perft elo
 
+# The chess engine, e.g. bin/clemens-avx2.
+clemens: check-features
+	GOOS=$(GOOS) GOAMD64=$(GOAMD64_$(FEATURES)) go build $(BUILD_LD_FLAGS) -o $(CLEMENS_BIN) ./cmd/uci
+
+# Perft tool to verify the move generation, e.g. bin/perft-avx2.
+perft: check-features
+	GOOS=$(GOOS) GOAMD64=$(GOAMD64_$(FEATURES)) go build $(BUILD_LD_FLAGS) -o $(PERFT_BIN) ./cmd/perft
+
+# Elo measurement tool (cmd/elo). It does not depend on FEATURES and runs in the container.
 elo:
-	GOOS=linux GOAMD64=$(GOAMD64) go build $(BUILD_LD_FLAGS) -o elo ./cmd/elo
+	GOOS=$(GOOS) go build $(BUILD_LD_FLAGS) -o $(ELO_BIN) ./cmd/elo
 
-all-variants:
-	make clemens GOAMD64=v1
-	make clemens GOAMD64=v2
-	make clemens GOAMD64=v3
-	make clemens GOAMD64=v4
+# Run the tests and build the engine for all FEATURES, for Linux and Windows.
+release: test
+	$(MAKE) clemens FEATURES=baseline GOOS=linux
+	$(MAKE) clemens FEATURES=popcnt GOOS=linux
+	$(MAKE) clemens FEATURES=avx2 GOOS=linux
+	$(MAKE) clemens FEATURES=avx512 GOOS=linux
+	$(MAKE) clemens FEATURES=baseline GOOS=windows
+	$(MAKE) clemens FEATURES=popcnt GOOS=windows
+	$(MAKE) clemens FEATURES=avx2 GOOS=windows
+	$(MAKE) clemens FEATURES=avx512 GOOS=windows
 
+# --- Tests and benchmarks --------------------------------------------------------------------
+
+# Run all tests.
+test: check-features
+	GOAMD64=$(GOAMD64_$(FEATURES)) go test ./... -cover
+
+# Run the benchmarks. CPU profiles and test binaries are written to profile/, e.g. for
+# `go tool pprof profile/search.test profile/profile_search.out`.
 benchmark: benchmark_perft benchmark_search
 
-benchmark_search:
-	GOAMD64=$(GOAMD64) go test ./pkg/search -run=^$$ -bench ^BenchmarkSearch -cpuprofile profile_search.out
-benchmark_perft:
-	GOAMD64=$(GOAMD64) go test ./cmd/perft -run=^$$ -bench ^BenchmarkPerft -cpuprofile profile_perft.out
+benchmark_search: check-features profile
+	GOAMD64=$(GOAMD64_$(FEATURES)) go test ./pkg/search -run=^$$ -bench ^BenchmarkSearch -cpuprofile profile/profile_search.out -o profile/search.test
 
-test-elo:
-	docker build . -t elo --build-arg VERSION=$(VERSION) && mkdir -p $(PWD)/save && docker run --rm -v $(PWD)/save:/save elo:latest elo
+benchmark_perft: check-features profile
+	GOAMD64=$(GOAMD64_$(FEATURES)) go test ./cmd/perft -run=^$$ -bench ^BenchmarkPerft -cpuprofile profile/profile_perft.out -o profile/perft.test
 
-compare-to:
-	docker build . -t elo --build-arg VERSION=$(VERSION) && docker run --rm -v $(COMPARE_TO):/compare-to elo:latest /scripts/compare-to.sh /compare-to
+# --- Measurements in Docker ------------------------------------------------------------------
 
-test:
-	GOAMD64=$(GOAMD64) go test ./... -cover
+# Docker image with the current engine, fastchess, Stockfish and the openings.
+image:
+	docker build . -t clemens --build-arg VERSION=$(VERSION)
 
+# Measure the Elo of the current engine against Stockfish. PGNs are written to save/ and the
+# result is printed as a row for the changelog in README.md.
+test-elo: image save
+	docker run --rm \
+		--user=$(IMAGE_USER):$(IMAGE_GROUP) \
+		--mount type=bind,source=$(PWD)/save,target=/save \
+		clemens:latest elo
+
+# SPRT of the current engine against another engine binary, e.g.
+# `make compare-to COMPARE_TO=engines/clemens-0587bb1`. The binary has to run on Linux.
+compare-to: check-compare-to image save
+	docker run --rm \
+		--user=$(IMAGE_USER):$(IMAGE_GROUP) \
+		--mount type=bind,source=$(abspath $(COMPARE_TO)),target=/usr/bin/compare-to,readonly \
+		--mount type=bind,source=$(PWD)/save,target=/save \
+		clemens:latest /scripts/compare-to.sh
+
+# --- Helpers ---------------------------------------------------------------------------------
+
+# Stop make with a message if a setting is missing or invalid.
+check-features:
+	$(if $(GOAMD64_$(FEATURES)),,$(error unknown FEATURES '$(FEATURES)'))
+
+check-compare-to:
+	$(if $(COMPARE_TO),,$(error COMPARE_TO is missing))
+
+# Output directories.
+profile:
+	mkdir -p profile
+
+save:
+	mkdir -p save
+
+# Remove build output and profiles. Measurement results in save/ are kept.
 clean:
-	rm -rf clemens-* perft-* profile*.out search.test save
+	rm -rf bin profile
